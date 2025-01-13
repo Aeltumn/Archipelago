@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from Options import Range, DeathLink, DefaultOnToggle, Choice, OptionGroup
+from Options import Range, DeathLink, DefaultOnToggle, Choice, OptionGroup, T
 from worlds.AutoWorld import PerGameCommonOptions
 
 
@@ -10,7 +10,7 @@ class EndGoal(Choice):
 
     Crow's Nest: Defeat Razorbeard in the Crow's Nest.
     Treasure%: Take Jano's offer in the Cave of Bad Dreams.
-    100%: Requires collecting all lums and cages, then defeating Razorbeard.
+    100%: Requires collecting all 1000 lums, 80 cages, and 4 masks, then defeating Razorbeard.
     """
     display_name = "End Goal"
     option_crows_nest = 1
@@ -18,10 +18,18 @@ class EndGoal(Choice):
     option_100 = 3
     default = 1
 
+    def get_option_name(cls, value: T) -> str:
+        if value == "option_crows_nest":
+            return "Crow's Nest"
+        elif value == "option_treasure":
+            return "Treasure%"
+        else:
+            return "100%"
+
 
 class ShuffleRooms(DefaultOnToggle):
     """Whether rooms should be shuffled as well, if disabled only levels are shuffled."""
-    displayName = "Shuffle Rooms"
+    display_name = "Shuffle Rooms"
 
 
 class FirstMaskRequirement(Range):
@@ -89,7 +97,5 @@ class Rayman2Options(PerGameCommonOptions):
 def create_option_groups() -> List[OptionGroup]:
     return [
         OptionGroup(name="Lum Requirement Options",
-                    options=[FirstMaskRequirement, SecondMaskRequirement, ThirdMaskRequirement, FourthMaskRequirement,
-                             WalkOfLifeRequirement,
-                             WalkOfPowerRequirement])
+                    options=[FirstMaskRequirement, WalkOfLifeRequirement, SecondMaskRequirement, WalkOfPowerRequirement, ThirdMaskRequirement, FourthMaskRequirement])
     ]
