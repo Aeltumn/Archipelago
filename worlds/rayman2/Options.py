@@ -1,96 +1,95 @@
-from typing import List
 from dataclasses import dataclass
+from typing import List
+
+from Options import Range, DeathLink, DefaultOnToggle, Choice, OptionGroup
 from worlds.AutoWorld import PerGameCommonOptions
-from Options import Range, DeathLink
 
-class FirstLumDoorMin(Range):
-    """The lowest possible required yellow lums to pass the first lum requirement. This will be the amount you are required to obtain in the first 4 levels."""
-    display_name = "Lowest First Lum Requirement"
+
+class EndGoal(Choice):
+    """The end goal required to beat the game.
+
+    Crow's Nest: Defeat Razorbeard in the Crow's Nest.
+    Treasure%: Take Jano's offer in the Cave of Bad Dreams.
+    100%: Requires collecting all lums and cages, then defeating Razorbeard.
+    """
+    display_name = "End Goal"
+    option_crows_nest = 1
+    option_treasure = 2
+    option_100 = 3
+    default = 1
+
+
+class ShuffleRooms(DefaultOnToggle):
+    """Whether rooms should be shuffled as well, if disabled only levels are shuffled."""
+    displayName = "Shuffle Rooms"
+
+
+class FirstMaskRequirement(Range):
+    """The percentage of available lums required for the first mask level."""
+    display_name = "First Mask Lum Requirement Percentage"
     range_start = 0
-    range_end = 300
-    default = 50
+    range_end = 100
+    default = 33  # Base game requires 100 out of 300
 
-class FirstLumDoorMax(Range):
-    """The highest possible required yellow lums to pass the first lum requirement. This will be the amount you are required to obtain in the first 4 levels."""
-    display_name = "Highest First Lum Requirement"
+
+class SecondMaskRequirement(Range):
+    """The percentage of available lums required for the second mask level."""
+    display_name = "Second Mask Lum Requirement Percentage"
     range_start = 0
-    range_end = 300
-    default = 200
+    range_end = 100
+    default = 50  # Base game requires 300 out of 550
 
-class SecondLumDoorMin(Range):
-    """The lowest possible required yellow lums to pass the second lum requirement. This will be the amount you are required to obtain in the first 8 levels."""
-    display_name = "Lowest Second Lum Requirement"
+
+class ThirdMaskRequirement(Range):
+    """The percentage of available lums required for the third mask level."""
+    display_name = "Third Mask Lum Requirement Percentage"
     range_start = 0
-    range_end = 550
-    default = 200
+    range_end = 100
+    default = 60  # Base game requires 475 out of 800
 
 
-class SecondLumDoorMax(Range):
-    """The highest possible required yellow lums to pass the second lum requirement. This will be the amount you are required to obtain in the first 8 levels."""
-    display_name = "Highest Second Lum Requirement"
+class FourthMaskRequirement(Range):
+    """The percentage of available lums required for the fourth mask level."""
+    display_name = "Fourth Mask Lum Requirement Percentage"
     range_start = 0
-    range_end = 550
-    default = 400
+    range_end = 100
+    default = 60  # Base game requires 550 out of 900
 
-class ThirdLumDoorMin(Range):
-    """The lowest possible required yellow lums to pass the third lum requirement. This will be the amount you are required to obtain in the first 13 levels."""
-    display_name = "Lowest Third Lum Requirement"
-    range_start = 0
-    range_end = 800
-    default = 375
 
-class ThirdLumDoorMax(Range):
-    """The highest possible required yellow lums to pass the third lum requirement. This will be the amount you are required to obtain in the first 13 levels."""
-    display_name = "Highest Third Lum Requirement"
+class WalkOfLifeRequirement(Range):
+    """The percentage of available lums required to unlock the extra level in The Bayou."""
+    display_name = "Walk of Life Lum Requirement Percentage"
     range_start = 0
-    range_end = 800
-    default = 475
+    range_end = 100
+    default = 20  # Base game requires 60 out of 300
 
-class FourthLumDoorMin(Range):
-    """The lowest possible required yellow lums to pass the fourth lum requirement. This will be the amount you are required to obtain in the first 15 levels."""
-    display_name = "Lowest Fourth Lum Requirement"
-    range_start = 0
-    range_end = 900
-    default = 450
 
-class FourthLumDoorMax(Range):
-    """The highest possible required yellow lums to pass the fourth lum requirement. This will be the amount you are required to obtain in the first 15 levels."""
-    display_name = "Highest Fourth Lum Requirement"
+class WalkOfPowerRequirement(Range):
+    """The percentage of available lums required to unlock the extra level in The Sanctuary of Rock and Lava."""
+    display_name = "Walk of Power Lum Requirement Percentage"
     range_start = 0
-    range_end = 900
-    default = 650
+    range_end = 100
+    default = 55  # Base game requires 450 out of 800
+
 
 @dataclass
 class Rayman2Options(PerGameCommonOptions):
-    first_lum_min:          FirstLumDoorMin
-    first_lum_max:          FirstLumDoorMax
-    second_lum_min:         SecondLumDoorMin
-    second_lum_max:         SecondLumDoorMax
-    third_lum_min:          ThirdLumDoorMin
-    third_lum_max:          ThirdLumDoorMax
-    fourth_lum_min:         FourthLumDoorMin
-    fourth_lum_max:         FourthLumDoorMax
+    first_mask_required: FirstMaskRequirement
+    second_mask_required: SecondMaskRequirement
+    third_mask_required: ThirdMaskRequirement
+    fourth_mask_required: FourthMaskRequirement
+    walk_of_life_required: WalkOfLifeRequirement
+    walk_of_power_required: WalkOfPowerRequirement
 
-    death_link:             DeathLink
+    end_goal: EndGoal
+    shuffle_rooms: ShuffleRooms
+    death_link: DeathLink
+
 
 def create_option_groups() -> List[OptionGroup]:
     return [
-        OptionGroup(name="Lum Requirement Options", options=[FirstLumDoorMin, FirstLumDoorMax, SecondLumDoorMin, SecondLumDoorMax, ThirdLumDoorMin, ThirdLumDoorMax, FourthLumDoorMin, FourthLumDoorMax])
+        OptionGroup(name="Lum Requirement Options",
+                    options=[FirstMaskRequirement, SecondMaskRequirement, ThirdMaskRequirement, FourthMaskRequirement,
+                             WalkOfLifeRequirement,
+                             WalkOfPowerRequirement])
     ]
-
-def adjust_options(world: "Rayman2World"):
-    if world.options.FirstLumDoorMax < world.options.FirstLumDoorMin:
-        world.options.FirstLumDoorMax.value, world.options.FirstLumDoorMin.value = \
-         world.options.FirstLumDoorMin.value, world.options.FirstLumDoorMax.value
-
-    if world.options.SecondLumDoorMax < world.options.SecondLumDoorMin:
-        world.options.SecondLumDoorMax.value, world.options.SecondLumDoorMin.value = \
-         world.options.SecondLumDoorMin.value, world.options.SecondLumDoorMax.value
-    
-    if world.options.ThirdLumDoorMax < world.options.ThirdLumDoorMin:
-        world.options.ThirdLumDoorMax.value, world.options.ThirdLumDoorMin.value = \
-         world.options.ThirdLumDoorMin.value, world.options.ThirdLumDoorMax.value
-
-    if world.options.FourthLumDoorMax < world.options.FourthLumDoorMin:
-        world.options.FourthLumDoorMax.value, world.options.FourthLumDoorMin.value = \
-         world.options.FourthLumDoorMin.value, world.options.FourthLumDoorMax.value
