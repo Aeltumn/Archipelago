@@ -1,6 +1,10 @@
+from typing import Type, ClassVar
+
 from BaseClasses import Tutorial
-from .Options import create_option_groups
-from worlds.AutoWorld import  WebWorld
+from Options import PerGameCommonOptions
+from worlds.AutoWorld import WebWorld, World
+from .Options import create_option_groups, Rayman2Options
+
 
 class Rayman2Web(WebWorld):
     option_groups = create_option_groups()
@@ -22,3 +26,8 @@ class Rayman2World(World):
 
     game = "Rayman 2"
     web = Rayman2Web()
+    item_name_to_id = {}
+    location_name_to_id = {}
+
+    options_dataclass: ClassVar[Type[PerGameCommonOptions]] = Rayman2Options
+    options: Rayman2Options
