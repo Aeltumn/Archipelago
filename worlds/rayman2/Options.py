@@ -18,10 +18,11 @@ class EndGoal(Choice):
     option_100 = 3
     default = 1
 
-    def get_option_name(cls, value: T) -> str:
-        if value == "option_crows_nest":
+    @classmethod
+    def get_option_name(cls, value) -> str:
+        if value == 1:
             return "Crow's Nest"
-        elif value == "option_treasure":
+        elif value == 2:
             return "Treasure%"
         else:
             return "100%"
@@ -97,5 +98,5 @@ class Rayman2Options(PerGameCommonOptions):
 def create_option_groups() -> List[OptionGroup]:
     return [
         OptionGroup(name="Lum Requirement Options",
-                    options=[FirstMaskRequirement, WalkOfLifeRequirement, SecondMaskRequirement, WalkOfPowerRequirement, ThirdMaskRequirement, FourthMaskRequirement])
+                    options=[WalkOfLifeRequirement, FirstMaskRequirement, SecondMaskRequirement, WalkOfPowerRequirement, ThirdMaskRequirement, FourthMaskRequirement])
     ]
