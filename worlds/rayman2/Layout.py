@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, TypedDict, List
+from typing import Dict, List
 
 
 # This file contains the full game layout, defining all levels, which sub-levels they have,
@@ -12,6 +12,7 @@ class SubLevelInfo:
     cages: Dict[str, int] = field(default_factory=lambda: {})
     silverLums: int = 0
     needsSilver: bool = False
+    special: List[str] = field(default_factory=lambda: [])
 
 
 @dataclass
@@ -19,6 +20,7 @@ class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     extra: str = None
+    lumGate: bool = False
 
 
 extra_levels: Dict[str, LevelInfo] = {
@@ -116,6 +118,29 @@ levels: Dict[str, LevelInfo] = {
                     "FRG_CageLums_1": 1
                 }
             )
-        }
-    )
+        },
+        extra="Ly_10"
+    ),
+    "Water_10": LevelInfo(
+        "The Sanctuary of Water and Ice",
+        {
+            "Water_10": SubLevelInfo(
+                regularLums=24,
+                cages={
+                    "STH_ARG_CageLums_841": 3,
+                    "STH_ARG_CageLums_840": 3
+                },
+                superLums=[
+                    "STH_Alw_Lums_Model_172",
+                    "STH_Alw_bigLums_Model_161"
+                ]
+            ),
+            "Water_20": SubLevelInfo(
+                needsSilver=True,
+                regularLums=10,
+                special=["poloc_10"]
+            )
+        },
+        lumGate=True,
+    ),
 }
