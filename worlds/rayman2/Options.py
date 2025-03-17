@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from Options import Range, DeathLink, DefaultOnToggle, Choice, OptionGroup, T
+from Options import Range, DeathLink, Choice, OptionGroup, T
 from worlds.AutoWorld import PerGameCommonOptions
 
 
@@ -26,11 +26,6 @@ class EndGoal(Choice):
             return "Treasure%"
         else:
             return "100%"
-
-
-class ShuffleRooms(DefaultOnToggle):
-    """Whether rooms should be shuffled as well, if disabled only levels are shuffled."""
-    display_name = "Shuffle Rooms"
 
 
 class FirstMaskRequirement(Range):
@@ -91,7 +86,6 @@ class Rayman2Options(PerGameCommonOptions):
     walk_of_power_required: WalkOfPowerRequirement
 
     end_goal: EndGoal
-    shuffle_rooms: ShuffleRooms
     death_link: DeathLink
 
 
