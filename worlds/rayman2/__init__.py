@@ -68,18 +68,20 @@ class Rayman2World(World):
 
         lumTally = 0
         silverLumTally = 0
-        for levelName, levelInfo in levels:
+        for levelName, levelInfo in levels.items():
             # TODO Check for lum gates
 
             lastRegion = menu
-            for subLevelName, subLevelInfo in levelInfo.sublevels:
+            for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 # TODO Randomly swap around sub levels based on whether we need a silver
+                # Determine the level that gets put here
+
 
                 # TODO Add access rules for masks to enter the Pirate Ship
 
                 # Create this level and connect it
                 region = Region(subLevelName, self.player, self.multiworld)
-                self.multiworld.regions.append(menu)
+                self.multiworld.regions.append(region)
                 lastRegion.connect(region)
                 lastRegion = region
 
@@ -91,9 +93,11 @@ class Rayman2World(World):
                     self.create(region, superLum, ItemClassification.filler, LocationProgressType.DEFAULT)
 
                 # Create checks for all cages
-                for cage, lumsInside in subLevelInfo.cages:
+                for cage, lumsInside in subLevelInfo.cages.items():
                     self.create(region, cage, ItemClassification.useful, LocationProgressType.PRIORITY)
                     lumTally += lumsInside
+                    # TODO Update the lum tally based on which cage gets swapped in as it may contain
+                    # a different amount!
 
                 # Create checks for all special checks
                 for specialItem in subLevelInfo.special:
