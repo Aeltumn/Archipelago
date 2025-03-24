@@ -7,6 +7,7 @@ from typing import Dict, List
 # init.py to generate the items, locations, and regions.
 @dataclass
 class SubLevelInfo:
+    hasExitPortal: bool = False
     regularLums: int = 0
     superLums: List[str] = field(default_factory=lambda: [])
     cages: Dict[str, int] = field(default_factory=lambda: {})
@@ -29,6 +30,7 @@ extra_levels: Dict[str, LevelInfo] = {
         {
             "Ly_10": SubLevelInfo(
                 regularLums=50,
+                hasExitPortal=True,
             )
         }
     ),
@@ -40,6 +42,7 @@ levels: Dict[str, LevelInfo] = {
         {
             "Learn_10": SubLevelInfo(
                 regularLums=5,
+                hasExitPortal=True,
             )
         }
     ),
@@ -72,7 +75,8 @@ levels: Dict[str, LevelInfo] = {
                 regularLums=14,
                 cages={
                     "JCP_ARG_CageLums_I3": 3
-                }
+                },
+                hasExitPortal=True,
             )
         }
     ),
@@ -94,7 +98,8 @@ levels: Dict[str, LevelInfo] = {
                     "DOT_lums_08",
                     "DOT_lums_12",
                     "MIC_BigLums_Fin"
-                ]
+                ],
+                hasExitPortal=True,
             )
         }
     ),
@@ -116,7 +121,8 @@ levels: Dict[str, LevelInfo] = {
                 regularLums=14,
                 cages={
                     "FRG_CageLums_1": 1
-                }
+                },
+                hasExitPortal=True,
             )
         },
         extra="Ly_10"
@@ -141,7 +147,8 @@ levels: Dict[str, LevelInfo] = {
                 regularLums=10,
                 special={
                     "poloc_10": "Mask"
-                }
+                },
+                hasExitPortal=True,
             )
         },
     ),
