@@ -10,9 +10,10 @@ class SubLevelInfo:
     regularLums: int = 0
     superLums: List[str] = field(default_factory=lambda: [])
     cages: Dict[str, int] = field(default_factory=lambda: {})
-    silverLums: int = 0
+    silverLum: bool = False
     needsSilver: bool = False
-    special: List[str] = field(default_factory=lambda: [])
+    lumGate: bool = False
+    special: Dict[str, str] = field(default_factory=lambda: {})
 
 
 @dataclass
@@ -20,7 +21,6 @@ class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     extra: str = None
-    lumGate: bool = False
 
 
 extra_levels: Dict[str, LevelInfo] = {
@@ -65,7 +65,7 @@ levels: Dict[str, LevelInfo] = {
             ),
             "Bast_22": SubLevelInfo(
                 regularLums=4,
-                silverLums=1
+                silverLum=True
             ),
             "Learn_60": SubLevelInfo(
                 needsSilver=True,
@@ -125,6 +125,7 @@ levels: Dict[str, LevelInfo] = {
         "The Sanctuary of Water and Ice",
         {
             "Water_10": SubLevelInfo(
+                lumGate=True,
                 regularLums=24,
                 cages={
                     "STH_ARG_CageLums_841": 3,
@@ -138,9 +139,10 @@ levels: Dict[str, LevelInfo] = {
             "Water_20": SubLevelInfo(
                 needsSilver=True,
                 regularLums=10,
-                special=["poloc_10"]
+                special={
+                    "poloc_10": "Mask"
+                }
             )
         },
-        lumGate=True,
     ),
 }
