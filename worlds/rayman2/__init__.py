@@ -1,11 +1,10 @@
 import random
-from typing import Type, ClassVar, TextIO, List
+from typing import TextIO
 
 from BaseClasses import Tutorial, ItemClassification, Item, Region, Location, Entrance
-from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
-from .Data import item_table, location_table, idMap, silverLumItemNames
-from .Layout import levels, SubLevelInfo, LevelInfo
+from .Data import item_table, location_table
+from .Layout import levels
 from .Options import create_option_groups, Rayman2Options
 
 
@@ -42,7 +41,7 @@ class Rayman2World(World):
     item_name_to_id = {item.displayName: item.id for item in item_table}
     location_name_to_id = {loc.displayName: loc.id for loc in location_table}
 
-    options_dataclass: ClassVar[Type[PerGameCommonOptions]] = Rayman2Options
+    options_dataclass = Rayman2Options
     options: Rayman2Options
 
     def __init__(self, multiworld, player):
@@ -78,13 +77,9 @@ class Rayman2World(World):
             location.progression_type = data.progressionType
             region.locations.append(location)
 
-            if data.needsSilver:
-                location.access_rule = lambda state: state.has_any(silverLumItemNames, self.player)
-
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
         usedSubLevels = []
-        wouldHaveSilverLum = False
         for baseLevelName, levelInfo in levels.items():
             for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 # Determine what level to swap this level with already, but
@@ -94,13 +89,6 @@ class Rayman2World(World):
                     for otherSubLevelName, otherSubLevelInfo in otherLevelInfo.sublevels.items():
                         # Ignore sub levels that are already taken
                         if otherSubLevelName in usedSubLevels:
-                            continue
-
-                        # Ignore levels that need a silver lum when you wouldn't yet have one
-                        # in the base game. This adds a bit of a buffer at the start before you
-                        # need to obtain a silver lum.
-                        # TODO This should be rule-based!
-                        if otherSubLevelInfo.needsSilver and not wouldHaveSilverLum:
                             continue
 
                         # We need exit portals to always stay as the last sub-levels!
@@ -124,10 +112,6 @@ class Rayman2World(World):
                     # TODO Determine the value the lum gates should have later!
                     self.lumGates[subLevelName] = 0
 
-                # Mark down when we've reached a level where there would be a silver lum.
-                if subLevelInfo.silverLum:
-                    wouldHaveSilverLum = True
-
     # Create basic items
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
@@ -146,7 +130,6 @@ class Rayman2World(World):
         slot_data = {}
         slot_data["level_swaps"] = self.levelSwaps
         slot_data["lum_gates"] = self.lumGates
-        slot_data["id_map"] = idMap
         return slot_data
 
     # Write slot data to the spoiler file for testing
@@ -154,4 +137,3 @@ class Rayman2World(World):
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
         spoiler_handle.write(f"Level Swaps: {self.levelSwaps}\n")
         spoiler_handle.write(f"Lum Gates: {self.lumGates}\n")
-        spoiler_handle.write(f"ID Map: {idMap}\n")

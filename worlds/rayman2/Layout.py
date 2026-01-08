@@ -8,13 +8,11 @@ from typing import Dict, List
 @dataclass
 class SubLevelInfo:
     hasExitPortal: bool = False
-    regularLums: List[str] = field(default_factory=lambda: [])
-    superLums: List[str] = field(default_factory=lambda: [])
-    cages: List[str] = field(default_factory=lambda: [])
-    silverLums: List[str] = field(default_factory=lambda: [])
-    needsSilver: bool = False
+    regularLums: List[int] = field(default_factory=lambda: [])
+    superLums: List[int] = field(default_factory=lambda: [])
+    cages: List[int] = field(default_factory=lambda: [])
     lumGate: bool = False
-    special: List[str] = field(default_factory=lambda: [])
+    special: List[int] = field(default_factory=lambda: [])
 
 
 @dataclass
@@ -23,26 +21,23 @@ class LevelInfo:
     sublevels: Dict[str, SubLevelInfo]
     extra: str = None
 
-
-human_readable_names: Dict[str, str] = {
-    # jail_20
-    "1089": "Silver Lum from Globox",
+human_readable_names: Dict[int, str] = {
     # learn_10
-    "840": "Cage above wooden grate",
-    "1399": "Lum from cage above wooden grate",
-    "1396": "Lum above Murfy stone",
-    "1398": "Lum on grass next to waterfall",
-    "1400": "Lum underneath waterfal",
-    "1397": "Lum between stone walls",
-    "841": "Cage with Teensies",
+    840: "Cage above wooden grate",
+    1399: "Lum from cage above wooden grate",
+    1396: "Lum above Murfy stone",
+    1398: "Lum on grass next to waterfall",
+    1400: "Lum underneath waterfal",
+    1397: "Lum between stone walls",
+    841: "Cage with Teensies",
     # Learn_30
-    "7": "Lum above mushroom",
-    "8": "Lum on tree branch",
-    "843": "Cage on tree branch",
-    "12": "Lum in cage on tree branch",
-    "842": "Underwater cage",
-    "1": "Super Lum in underwater cage",
-    "6": "Lum under bridge",
+    7: "Lum above mushroom",
+    8: "Lum on tree branch",
+    843: "Cage on tree branch",
+    12: "Lum in cage on tree branch",
+    842: "Underwater cage",
+    1: "Super Lum in underwater cage",
+    6: "Lum under bridge",
 }
 
 extra_levels: Dict[str, LevelInfo] = {
@@ -52,23 +47,18 @@ levels: Dict[str, LevelInfo] = {
     "learn_10": LevelInfo(
         "The Woods of Light",
         {
-            "jail_20": SubLevelInfo(
-                special=[
-                    # This probably can't be a check unless we can disable shooting entirely!
-                    "1089"
-                ]
-            ),
+            "jail_20": SubLevelInfo(),
             "learn_10": SubLevelInfo(
                 regularLums=[
-                    "1396",
-                    "1397",
-                    "1398",
-                    "1399",
-                    "1400"
+                    1396,
+                    1397,
+                    1398,
+                    1399,
+                    1400
                 ],
                 cages=[
-                    "840",
-                    "841",
+                    840,
+                    841,
                 ],
                 hasExitPortal=True,
             )
@@ -79,17 +69,17 @@ levels: Dict[str, LevelInfo] = {
         {
             "Learn_30": SubLevelInfo(
                 regularLums=[
-                    "6",
-                    "7",
-                    "8",
-                    "12",
+                    6,
+                    7,
+                    8,
+                    12,
                 ],
                 superLums=[
-                    "1",
+                    1,
                 ],
                 cages=[
-                    "842",
-                    "843",
+                    842,
+                    843,
                 ],
             ),
         }
