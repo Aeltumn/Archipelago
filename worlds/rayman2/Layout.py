@@ -1,19 +1,30 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
-
+from enum import Enum
 
 # This file contains the full game layout, defining all levels, which sub-levels they have,
 # which ids everything uses, and all items contained within. This layout object is used by
 # init.py to generate the items, locations, and regions.
+class Tech(Enum):
+    """The types of tech required to accomplish something."""
+    PURPLE_SWING = 1
+    EARLY_ECHOING_CAVES_OR_REVISIT = 2
+    BAYOU_DAMAGE_BOOST = 3
+
 @dataclass
-class SubLevelInfo:
+class Checks:
     regularLums: List[int] = field(default_factory=lambda: [])
     superLums: List[int] = field(default_factory=lambda: [])
     cages: List[int] = field(default_factory=lambda: [])
     special: List[int] = field(default_factory=lambda: [])
+
+@dataclass
+class SubLevelInfo:
+    checks: Checks = Checks()
+    exitRequirements: List[Tech] = field(default_factory=lambda: [])
+    behindRequirements: Dict[Tech, Checks] = field(default_factory=lambda: {}),
     lumGate: bool = False
     hasExitPortal: bool = False
-    needsPurpleLum: bool = False
 
 
 @dataclass
@@ -112,7 +123,68 @@ human_readable_names: Dict[int, str] = {
     57: "Lum floating abvove rock #3",
     51: "Super lum on fishing rod",
     96: "Super lum behind single bomb",
-    853: "Cage with Teensie"
+    853: "Cage with Teensie",
+
+    # The Bayou
+    # chase_10
+    854: "Cage on mossy tree branch",
+    122: "Lum in cage on mossy tree branch #1",
+    123: "Lum in cage on mossy tree branch #2",
+    101: "Lum inside hollow tree #1",
+    102: "Lum inside hollow tree #2",
+    103: "Lum inside hollow tree #3",
+    120: "Lum floating at big switch jump #1",
+    121: "Lum floating at big switch jump #2",
+    128: "Lum on unstable bridge #1",
+    129: "Lum on unstable bridge #2",
+    130: "Lum on unstable bridge #3",
+    131: "Lum on unstable bridge #4",
+    856: "Cage above sleeping pirate",
+    104: "Lum on river #1",
+    105: "Lum on river #2",
+    106: "Lum on river #3",
+    107: "Lum on river #4",
+    108: "Lum on river #5",
+    855: "Cage under mossy tree branch",
+    118: "Lum in cage under mossy tree branch #1",
+    119: "Lum in cage under mossy tree branch #2",
+    109: "Lum in air over checkpoint bridge #1",
+    110: "Lum in air over checkpoint bridge #2",
+    111: "Lum in air over checkpoint bridge #3",
+    135: "Lum in air over checkpoint bridge #4",
+    124: "Lums arcing around corner #1",
+    125: "Lums arcing around corner #2",
+    126: "Lums arcing around corner #3",
+    127: "Lums arcing around corner #4",
+    857: "Cage in hollow tree",
+    132: "Lum in cage in hollow tree #1",
+    133: "Lum in cage in hollow tree #2",
+    134: "Lum in cage in hollow tree #3",
+    114: "Lum on bridges blown up by bombs #1",
+    115: "Lum on bridges blown up by bombs #2",
+    116: "Lum on bridges blown up by bombs #3",
+    117: "Lum on bridges blown up by bombs #4",
+    858: "Cage under wooden platform",
+    112: "Lum in cage under wooden platform #1",
+    113: "Lum in cage under wooden platform #2",
+    # chase_22
+    137: "Lum above piranha",
+    144: "Lum on ground behind piranha #1",
+    145: "Lum on ground behind piranha #2",
+    146: "Lum on rolling barrel platform #1",
+    147: "Lum on rolling barrel platform #2",
+    148: "Lum on rolling barrel platform #3",
+    149: "Lum next to switch",
+    150: "Lum floating in front of spooky tree",
+    859: "Cage next to falling barrels",
+    136: "Lum in cage next to falling barrels",
+    138: "Lum above trampoline #1",
+    139: "Lum above trampoline #2",
+    140: "Lum above trampoline #3",
+    141: "Lum above trampoline #4",
+    142: "Lum above trampoline #5",
+    143: "Lum above trampoline #6",
+    860: "Cage with Teensie",
 }
 
 extra_levels: Dict[str, LevelInfo] = {
@@ -124,17 +196,19 @@ levels: Dict[str, LevelInfo] = {
         {
             "jail_20": SubLevelInfo(),
             "learn_10": SubLevelInfo(
-                regularLums=[
-                    1396,
-                    1397,
-                    1398,
-                    1399,
-                    1400
-                ],
-                cages=[
-                    840,
-                    841,
-                ],
+                checks=Checks(
+                    regularLums=[
+                        1396,
+                        1397,
+                        1398,
+                        1399,
+                        1400
+                    ],
+                    cages=[
+                        840,
+                        841,
+                    ]
+                ),
                 hasExitPortal=True,
             )
         }
@@ -143,85 +217,109 @@ levels: Dict[str, LevelInfo] = {
         "The Fairy Glade",
         {
             "Learn_30": SubLevelInfo(
-                regularLums=[
-                    6,
-                    7,
-                    8,
-                    12,
-                ],
-                superLums=[
-                    1,
-                ],
-                cages=[
-                    842,
-                    843,
-                ],
+                checks=Checks(
+                    regularLums=[
+                        6,
+                        7,
+                        8,
+                        12,
+                    ],
+                    superLums=[
+                        1,
+                    ],
+                    cages=[
+                        842,
+                        843,
+                    ]
+                )
             ),
             "learn_31": SubLevelInfo(
-                regularLums=[
-                    11,
-                    9, # requires revisit
-                    10 # requires revisit
-                ],
-                cages=[
-                    844 # requires revisit
-                ],
+                checks=Checks(
+                    regularLums=[
+                        11
+                    ]
+                ),
+                behindRequirements={
+                    Tech.EARLY_ECHOING_CAVES_OR_REVISIT: Checks(
+                        regularLums=[
+                            9,
+                            10
+                        ],
+                        cages=[
+                            844
+                        ]
+                    )
+                }
             ),
             "bast_20": SubLevelInfo(
-                regularLums=[
-                    27,
-                    26,
-                    25,
-                    29,
-                    28,
-                    23,
-                    24
-                ],
-                superLums=[
-                    13,
-                    18
-                ],
-                cages=[
-                    845,
-                    846
-                ],
+                checks=Checks(
+                    regularLums=[
+                        27,
+                        26,
+                        25,
+                        29,
+                        28,
+                        23,
+                        24
+                    ],
+                    superLums=[
+                        13,
+                        18
+                    ],
+                    cages=[
+                        845,
+                        846
+                    ]
+                ),
             ),
             "bast_22": SubLevelInfo(
-                regularLums=[
-                    31,
-                    30,
-                    32, # requires purple
-                    33 # requires purple
-                ],
-                special=[
-                    1095
-                ],
-                needsPurpleLum=True,
+                checks=Checks(
+                    regularLums=[
+                        31,
+                        30                        
+                    ],
+                    special=[
+                        1095
+                    ],
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            32,
+                            33
+                        ]
+                    )
+                },
+                exitRequirements=[
+                    Tech.PURPLE_SWING
+                ]
             ),
             "learn_60": SubLevelInfo(
-                regularLums=[
-                    34,
-                    35,
-                    36,
-                    37,
-                    48,
-                    49,
-                    50,
-                    38,
-                    42,
-                    45,
-                    44,
-                    43,
-                    39,
-                    46,
-                    47,
-                    41,
-                    40
-                ],
-                cages=[
-                    847,
-                    848
-                ],
+                checks=Checks(
+                    regularLums=[
+                        34,
+                        35,
+                        36,
+                        37,
+                        48,
+                        49,
+                        50,
+                        38,
+                        42,
+                        45,
+                        44,
+                        43,
+                        39,
+                        46,
+                        47,
+                        41,
+                        40
+                    ],
+                    cages=[
+                        847,
+                        848
+                    ]
+                ),
                 hasExitPortal=True,
             ),
         }
@@ -230,45 +328,154 @@ levels: Dict[str, LevelInfo] = {
         "The Marshes of Awakening",
         {
             "Ski_10": SubLevelInfo(
-                regularLums=[
-                    76,
-                    77,
-                    78,
-                    79,
-                    80
-                ],
-                superLums=[
-                    66,
-                    81,
-                    86,
-                    91
-                ],
-                cages=[
-                    852,
-                    849,
-                    850,
-                    851
-                ],
+                checks=Checks(
+                    regularLums=[
+                        76,
+                        77,
+                        78,
+                        79,
+                        80
+                    ],
+                    superLums=[
+                        66,
+                        81,
+                        86,
+                        91
+                    ],
+                    cages=[
+                        852,
+                        849,
+                        850,
+                        851
+                    ]
+                )
             ),
             "ski_60": SubLevelInfo(
-                regularLums=[
-                    59,
-                    60,
-                    56,
-                    58,
-                    57
-                ],
-                superLums=[
-                    71,
-                    61,
-                    51,
-                    96
-                ],
-                cages=[
-                    853
-                ],
+                checks=Checks(
+                    regularLums=[
+                        59,
+                        60,
+                        56,
+                        58,
+                        57
+                    ],
+                    superLums=[
+                        71,
+                        61,
+                        51,
+                        96
+                    ],
+                    cages=[
+                        853
+                    ]
+                ),
                 hasExitPortal=True,
             ),
+        }
+    ),
+    "chase_10": LevelInfo(
+        "The Bayou",
+        {
+            "chase_10": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        854,
+                        856,
+                    ],
+                    regularLums=[
+                        122,
+                        123,
+                        101,
+                        102,
+                        103,
+                        120,
+                        121,
+                        128,
+                        129,
+                        130,
+                        131,
+                    ]
+                ),
+                behindRequirements={
+                    Tech.BAYOU_DAMAGE_BOOST: Checks(
+                        cages=[
+                            855,
+                            858
+                        ],
+                        regularLums=[
+                            104,
+                            105,
+                            106,
+                            107,
+                            108,
+                            118,
+                            119,
+                            109,
+                            110,
+                            111,
+                            135,
+                            124,
+                            125,
+                            126,
+                            127,
+                            114,
+                            115,
+                            116,
+                            117,
+                            112,
+                            113
+                        ]
+                    ),
+                    Tech.PURPLE_SWING: Checks(
+                        cages=[
+                            857
+                        ],
+                        regularLums=[
+                            132,
+                            133,
+                            134
+                        ]
+                    )
+                },
+                exitRequirements=[
+                    Tech.BAYOU_DAMAGE_BOOST
+                ]
+            ),
+            "chase_22": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        137,
+                        144,
+                        145,
+                        146,
+                        147,
+                        148,
+                        149
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            150,
+                            136,
+                            138,
+                            139,
+                            140,
+                            141,
+                            142,
+                            143
+                        ],
+                        cages=[
+                            859,
+                            860
+                        ]
+                    )
+                },
+                exitRequirements=[
+                    Tech.PURPLE_SWING,
+                ],
+                hasExitPortal=True
+            )
         }
     )
 }
