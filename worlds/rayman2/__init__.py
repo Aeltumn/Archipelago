@@ -57,9 +57,9 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
-        for baseLevelName, levelInfo in levels.items():
+        for _, levelInfo in levels.items():
             lastRegion = menu
-            for subLevelName, subLevelInfo in levelInfo.sublevels.items():
+            for subLevelName, _ in levelInfo.sublevels.items():
                 # Create this level and connect it
                 region = Region(subLevelName, self.player, self.multiworld)
                 self.multiworld.regions.append(region)
@@ -80,7 +80,7 @@ class Rayman2World(World):
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
         usedSubLevels = []
-        for baseLevelName, levelInfo in levels.items():
+        for _, levelInfo in levels.items():
             for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 # Determine what level to swap this level with already, but
                 # create the connections later!
