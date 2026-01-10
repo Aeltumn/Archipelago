@@ -130,9 +130,11 @@ class Rayman2World(World):
         slot_data = {}
         slot_data["level_swaps"] = self.levelSwaps
         slot_data["lum_gates"] = self.lumGates
+        slot_data["death_link"] = self.options.death_link.value
+        slot_data["end_goal"] = self.options.end_goal.value
         return slot_data
 
-    # Write slot data to the spoiler file for testing
+    # Write slot data to the spoiler file for extra info
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
         spoiler_handle.write(f"Level Swaps: {self.levelSwaps}\n")
