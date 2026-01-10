@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 from BaseClasses import LocationProgressType, ItemClassification
-from .Layout import levels, human_readable_names
+from .Layout import Checks, levels, extra_levels, human_readable_names
 
 
 @dataclass
@@ -45,6 +45,22 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
         )
     )
 
+def createForChecks(subLevelName, levelName, checks: Checks):
+    # Create checks for all regular lums
+    for lum in checks.regularLums:
+        create(subLevelName, levelName, lum, "Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
+
+    # Create checks for all super lums
+    for superLum in checks.superLums:
+        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
+
+    # Create checks for all cages
+    for cage in checks.cages:
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.useful, LocationProgressType.PRIORITY)
+
+    # Create checks for all special checks
+    for specialItem, name in checks.special.items():
+        create(subLevelName, levelName, specialItem, name, ItemClassification.progression, LocationProgressType.PRIORITY)
 
 # Go through all levels to create regions and items
 for baseLevelName, levelInfo in levels.items():
@@ -53,23 +69,19 @@ for baseLevelName, levelInfo in levels.items():
         subLevelIndex += 1
         levelName = f"{levelInfo.displayName} #{subLevelIndex}"
 
-        # TODO Add access rules for masks to enter the Pirate Ship
-        # TODO Figure out and add lum doors
+        # Create items out of any defined checks
+        createForChecks(subLevelName, levelName, subLevelInfo.checks)
+        for _, checks in subLevelInfo.behindRequirements.items():
+            createForChecks(subLevelName, levelName, checks)
 
-        # Create checks for all regular lums
-        for lum in subLevelInfo.regularLums:
-            create(subLevelName, levelName, lum, "Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
+# Also go through all extra levels!
+for baseLevelName, levelInfo in extra_levels.items():
+    subLevelIndex = 0
+    for subLevelName, subLevelInfo in levelInfo.sublevels.items():
+        subLevelIndex += 1
+        levelName = f"{levelInfo.displayName} #{subLevelIndex}"
 
-        # Create checks for all super lums
-        for superLum in subLevelInfo.superLums:
-            create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
-
-        # Create checks for all cages
-        for cage in subLevelInfo.cages:
-            create(subLevelName, levelName, cage, "Cage", ItemClassification.useful, LocationProgressType.PRIORITY)
-
-        # Create checks for all special checks
-        for specialItem, name in subLevelInfo.special.items():
-            create(subLevelName, levelName, specialItem, name, ItemClassification.progression, LocationProgressType.PRIORITY)
-
-    # TODO Process the extra level
+        # Create items out of any defined checks
+        createForChecks(subLevelName, levelName, subLevelInfo.checks)
+        for _, checks in subLevelInfo.behindRequirements.items():
+            createForChecks(subLevelName, levelName, checks)
