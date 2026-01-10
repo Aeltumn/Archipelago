@@ -592,9 +592,9 @@ levels: Dict[str, LevelInfo] = {
                         regularLums=[
                             200
                         ],
-                        masks=[
-                            1112
-                        ]
+                        special={
+                            1112: "Water Mask"
+                        }
                     )
                 },
                 exitRequirements=[
