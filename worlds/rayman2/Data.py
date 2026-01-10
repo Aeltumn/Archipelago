@@ -25,13 +25,13 @@ item_table: List[ItemDefinition] = []
 location_table: List[LocationDefinition] = []
 
 # Creates items and locations for every input
-def create(subLevelName, levelName, id, classification: ItemClassification, progression: LocationProgressType):
+def create(subLevelName, levelName, id, itemName, classification: ItemClassification, progression: LocationProgressType):
     hint = human_readable_names[id]
     displayName = f"{levelName} - {hint}"
 
     item_table.append(
         ItemDefinition(
-            displayName=displayName,
+            displayName=itemName,
             id=base_id + id,
             classification=classification,
         )
@@ -58,18 +58,18 @@ for baseLevelName, levelInfo in levels.items():
 
         # Create checks for all regular lums
         for lum in subLevelInfo.regularLums:
-            create(subLevelName, levelName, lum, ItemClassification.filler, LocationProgressType.DEFAULT)
+            create(subLevelName, levelName, lum, "Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
 
         # Create checks for all super lums
         for superLum in subLevelInfo.superLums:
-            create(subLevelName, levelName, superLum, ItemClassification.filler, LocationProgressType.DEFAULT)
+            create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.filler, LocationProgressType.DEFAULT)
 
         # Create checks for all cages
         for cage in subLevelInfo.cages:
-            create(subLevelName, levelName, cage, ItemClassification.useful, LocationProgressType.PRIORITY)
+            create(subLevelName, levelName, cage, "Cage", ItemClassification.useful, LocationProgressType.PRIORITY)
 
         # Create checks for all special checks
-        for specialItem in subLevelInfo.special:
-            create(subLevelName, levelName, specialItem, ItemClassification.progression, LocationProgressType.PRIORITY)
+        for specialItem, name in subLevelInfo.special.items():
+            create(subLevelName, levelName, specialItem, name, ItemClassification.progression, LocationProgressType.PRIORITY)
 
     # TODO Process the extra level

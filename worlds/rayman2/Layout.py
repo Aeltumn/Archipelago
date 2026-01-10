@@ -16,7 +16,7 @@ class Checks:
     regularLums: List[int] = field(default_factory=lambda: [])
     superLums: List[int] = field(default_factory=lambda: [])
     cages: List[int] = field(default_factory=lambda: [])
-    special: List[int] = field(default_factory=lambda: [])
+    special: Dict[int, str] = field(default_factory=lambda: {})
 
 @dataclass
 class SubLevelInfo:
@@ -278,9 +278,9 @@ levels: Dict[str, LevelInfo] = {
                         31,
                         30                        
                     ],
-                    special=[
-                        1095
-                    ],
+                    special={
+                        1095: "Silver Lum"
+                    },
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
