@@ -10,6 +10,7 @@ class Tech(Enum):
     PURPLE_SWING = 1
     EARLY_ECHOING_CAVES_OR_REVISIT = 2
     BAYOU_DAMAGE_BOOST = 3
+    PURPLE_SWING_OR_BACKWARDS_JUMP = 4
 
 @dataclass
 class Checks:
@@ -185,6 +186,55 @@ human_readable_names: Dict[int, str] = {
     142: "Lum above trampoline #5",
     143: "Lum above trampoline #6",
     860: "Cage with Teensie",
+    
+    # The Sanctuary of Water and Ice
+    # water_10
+    862: "Cage on pier",
+    156: "Lum in cage on pier #1",
+    157: "Lum in cage on pier #2",
+    158: "Lum in cage on pier #3",
+    166: "Lum on slope #1",
+    167: "Lum on slope #2",
+    168: "Lum on slope #3",
+    169: "Lum on slope #4",
+    170: "Lum on slope #5",
+    171: "Lum before cave pool",
+    172: "Super lum in pool tunnel",
+    178: "Lum in pool tunnel #1",
+    177: "Lum in pool tunnel #2",
+    861: "Cage in cave",
+    151: "Lum in cage in cave #1",
+    152: "Lum in cage in cave #2",
+    153: "Lum in cage in cave #3",
+    154: "Lum on ladder #1",
+    155: "Lum on ladder #2",
+    159: "Lum on ladder #3",
+    160: "Lum on ladder #4",
+    161: "Super lum near barrel",
+    180: "Lum between balconies",
+    182: "Lum on balcony #1",
+    183: "Lum on balcony #2",
+    181: "Lum on balcony #3",
+    184: "Lum on balcony #4",
+    186: "Lum on balcony #5",
+    187: "Lum on balcony #6",
+    185: "Lum on balcony #7",
+    188: "Lum on balcony #8",
+    189: "Lum on balcony #9",
+    179: "Lum on balcony #10",
+    190: "Lum on balcony #11",
+    # water_20
+    197: "Lum on first jump of slide",
+    199: "Lum on right side of slide",
+    193: "Lum in centre of slide #1",
+    194: "Lum in centre of slide #2",
+    195: "Lum in centre of slide #3",
+    198: "Lum on midway jump of slide",
+    196: "Lum on final jump of slide #1",
+    191: "Lum on final jump of slide #2",
+    192: "Lum on final jump of slide #3",
+    200: "Lum above waterfall",
+    1112: "Water Mask of Polokus"
 }
 
 extra_levels: Dict[str, LevelInfo] = {
@@ -477,5 +527,81 @@ levels: Dict[str, LevelInfo] = {
                 hasExitPortal=True
             )
         }
-    )
+    ),
+    "water_10": LevelInfo(
+        "The Sanctuary of Water and Ice",
+        {
+            "water_10": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        862,
+                        861
+                    ],
+                    regularLums=[
+                        156,
+                        157,
+                        158,
+                        166,
+                        167,
+                        168,
+                        169,
+                        170,
+                        171,
+                        178,
+                        177,
+                        151,
+                        152,
+                        153,
+                        154,
+                        155,
+                        159,
+                        160,
+                        180,
+                        181,
+                        184,
+                        186,
+                        187,
+                        185,
+                        188,
+                        189,
+                        179,
+                        190
+                    ],
+                    superLums=[
+                        172,
+                        161
+                    ]
+                )  
+            ),
+            "water_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        197,
+                        199,
+                        193,
+                        194,
+                        195,
+                        198,
+                        196,
+                        191,
+                        192,                   
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING_OR_BACKWARDS_JUMP: Checks(
+                        regularLums=[
+                            200
+                        ],
+                        masks=[
+                            1112
+                        ]
+                    )
+                },
+                exitRequirements=[
+                    Tech.PURPLE_SWING_OR_BACKWARDS_JUMP,
+                ],
+                hasExitPortal=False
+            )
+        }
+    ),
 }
