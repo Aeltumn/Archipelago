@@ -29,51 +29,51 @@ class EndGoal(Choice):
 
 
 class FirstMaskRequirement(Range):
-    """The percentage of available lums required for the first mask level."""
-    display_name = "First Mask Lum Requirement Percentage"
+    """The amount of lums required to enter the Sanctuary of Water and Ice."""
+    display_name = "First Lum Gate Requirement"
     range_start = 0
-    range_end = 100
-    default = 33  # Base game requires 100 out of 300
+    range_end = 1000
+    default = 100
 
 
 class SecondMaskRequirement(Range):
-    """The percentage of available lums required for the second mask level."""
-    display_name = "Second Mask Lum Requirement Percentage"
+    """The amount of lums required to enter the Sanctuary of Stone & Fire."""
+    display_name = "Second Lum Gate Requirement"
     range_start = 0
-    range_end = 100
-    default = 50  # Base game requires 300 out of 550
+    range_end = 1000
+    default = 300
 
 
 class ThirdMaskRequirement(Range):
-    """The percentage of available lums required for the third mask level."""
-    display_name = "Third Mask Lum Requirement Percentage"
+    """The amount of lums required to enter Beneath the Sanctuary of Rock & Lava."""
+    display_name = "Third Lum Gate Requirement"
     range_start = 0
-    range_end = 100
-    default = 60  # Base game requires 475 out of 800
+    range_end = 1000
+    default = 450
 
 
 class FourthMaskRequirement(Range):
-    """The percentage of available lums required for the fourth mask level."""
-    display_name = "Fourth Mask Lum Requirement Percentage"
+    """The amount of lums required to enter the Iron Mountains."""
+    display_name = "Fourth Lum Gate Requirement"
     range_start = 0
-    range_end = 100
-    default = 60  # Base game requires 550 out of 900
+    range_end = 1000
+    default = 550
 
 
 class WalkOfLifeRequirement(Range):
-    """The percentage of available lums required to unlock the extra level in The Bayou."""
-    display_name = "Walk of Life Lum Requirement Percentage"
+    """The amount of lums required to enter the Walk of Life."""
+    display_name = "Walk of Life Lum Requirement"
     range_start = 0
-    range_end = 100
-    default = 20  # Base game requires 60 out of 300
+    range_end = 1000
+    default = 60
 
 
 class WalkOfPowerRequirement(Range):
-    """The percentage of available lums required to unlock the extra level in The Sanctuary of Rock and Lava."""
-    display_name = "Walk of Power Lum Requirement Percentage"
+    """The amount of lums required to enter the Walk of Power."""
+    display_name = "Walk of Power Lum Requirement"
     range_start = 0
-    range_end = 100
-    default = 55  # Base game requires 450 out of 800
+    range_end = 1000
+    default = 475
 
 
 @dataclass

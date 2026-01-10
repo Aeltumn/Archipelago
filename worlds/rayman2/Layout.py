@@ -1,12 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
-from enum import Enum
+from enum import IntEnum
+
+from BaseClasses import Entrance
 
 # This file contains the full game layout, defining all levels, which sub-levels they have,
 # which ids everything uses, and all items contained within. This layout object is used by
 # init.py to generate the items, locations, and regions.
-class Tech(Enum):
+class Tech(IntEnum):
     """The types of tech required to accomplish something."""
+    NONE = 0
     PURPLE_SWING = 1
     EARLY_ECHOING_CAVES_OR_REVISIT = 2
     BAYOU_DAMAGE_BOOST = 3
@@ -14,25 +17,22 @@ class Tech(Enum):
 
 @dataclass
 class Checks:
-    regularLums: List[int] = field(default_factory=lambda: [])
-    superLums: List[int] = field(default_factory=lambda: [])
-    cages: List[int] = field(default_factory=lambda: [])
-    special: Dict[int, str] = field(default_factory=lambda: {})
+    regularLums: List[int] = field(default_factory=list)
+    superLums: List[int] = field(default_factory=list)
+    cages: List[int] = field(default_factory=list)
+    special: Dict[int, str] = field(default_factory=dict)
 
 @dataclass
 class SubLevelInfo:
-    checks: Checks = Checks()
-    exitRequirements: List[Tech] = field(default_factory=lambda: [])
-    behindRequirements: Dict[Tech, Checks] = field(default_factory=lambda: {}),
-    lumGate: bool = False
+    checks: Checks = field(default_factory=lambda: Checks())
+    exitRequirement: Tech = Tech.NONE
+    behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
     hasExitPortal: bool = False
-
 
 @dataclass
 class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
-    extra: str = None
 
 human_readable_names: Dict[int, str] = {
     # Woods of Light
@@ -237,14 +237,13 @@ human_readable_names: Dict[int, str] = {
     1112: "Water Mask of Polokus"
 }
 
-extra_levels: Dict[str, LevelInfo] = {
-}
+extra_levels: list[LevelInfo] = [
+]
 
-levels: Dict[str, LevelInfo] = {
-    "learn_10": LevelInfo(
+levels: list[LevelInfo] = [
+    LevelInfo(
         "The Woods of Light",
         {
-            "jail_20": SubLevelInfo(),
             "learn_10": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
@@ -263,7 +262,7 @@ levels: Dict[str, LevelInfo] = {
             )
         }
     ),
-    "Learn_30": LevelInfo(
+    LevelInfo(
         "The Fairy Glade",
         {
             "Learn_30": SubLevelInfo(
@@ -298,7 +297,7 @@ levels: Dict[str, LevelInfo] = {
                         cages=[
                             844
                         ]
-                    )
+                    ),
                 }
             ),
             "bast_20": SubLevelInfo(
@@ -329,7 +328,7 @@ levels: Dict[str, LevelInfo] = {
                         30                        
                     ],
                     special={
-                        1095: "Silver Lum"
+                        1095: "Silver Lum",
                     },
                 ),
                 behindRequirements={
@@ -338,11 +337,9 @@ levels: Dict[str, LevelInfo] = {
                             32,
                             33
                         ]
-                    )
+                    ),
                 },
-                exitRequirements=[
-                    Tech.PURPLE_SWING
-                ]
+                exitRequirement=Tech.PURPLE_SWING
             ),
             "learn_60": SubLevelInfo(
                 checks=Checks(
@@ -374,7 +371,7 @@ levels: Dict[str, LevelInfo] = {
             ),
         }
     ),
-    "Ski_10": LevelInfo(
+    LevelInfo(
         "The Marshes of Awakening",
         {
             "Ski_10": SubLevelInfo(
@@ -423,7 +420,7 @@ levels: Dict[str, LevelInfo] = {
             ),
         }
     ),
-    "chase_10": LevelInfo(
+    LevelInfo(
         "The Bayou",
         {
             "chase_10": SubLevelInfo(
@@ -485,11 +482,9 @@ levels: Dict[str, LevelInfo] = {
                             133,
                             134
                         ]
-                    )
+                    ),
                 },
-                exitRequirements=[
-                    Tech.BAYOU_DAMAGE_BOOST
-                ]
+                exitRequirement=Tech.BAYOU_DAMAGE_BOOST
             ),
             "chase_22": SubLevelInfo(
                 checks=Checks(
@@ -519,16 +514,14 @@ levels: Dict[str, LevelInfo] = {
                             859,
                             860
                         ]
-                    )
+                    ),
                 },
-                exitRequirements=[
-                    Tech.PURPLE_SWING,
-                ],
+                exitRequirement=Tech.PURPLE_SWING,
                 hasExitPortal=True
             )
         }
     ),
-    "water_10": LevelInfo(
+    LevelInfo(
         "The Sanctuary of Water and Ice",
         {
             "water_10": SubLevelInfo(
@@ -593,15 +586,20 @@ levels: Dict[str, LevelInfo] = {
                             200
                         ],
                         special={
-                            1112: "Water Mask"
+                            1112: "Water Mask",
                         }
-                    )
+                    ),
                 },
-                exitRequirements=[
-                    Tech.PURPLE_SWING_OR_BACKWARDS_JUMP,
-                ],
-                hasExitPortal=False
+                exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP,
+                hasExitPortal=True
             )
-        }
+        },
     ),
-}
+    # Added so EEC doesn't crash
+    LevelInfo(
+        "The Echoing Caves",
+        {
+            "Cask_10": SubLevelInfo()
+        }
+    )
+]

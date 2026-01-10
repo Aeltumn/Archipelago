@@ -2,9 +2,10 @@ import random
 from typing import TextIO
 
 from BaseClasses import Tutorial, ItemClassification, Item, Region, Location, Entrance
+import entrance_rando
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table
-from .Layout import levels
+from .Layout import Tech, levels
 from .Options import create_option_groups, Rayman2Options
 
 
@@ -47,9 +48,20 @@ class Rayman2World(World):
     def __init__(self, multiworld, player):
         super(Rayman2World, self).__init__(multiworld, player)
 
-        # Store variables with the level shuffle and lum gates
+        # Store variables with the level shuffle
         self.levelSwaps = {}
-        self.lumGates = {}
+
+    def applyAccessRequirement(self, accessible, tech):
+        # Applies the relevant access requirement to an accessible object
+        match tech:
+                case Tech.PURPLE_SWING, Tech.BAYOU_DAMAGE_BOOST, Tech.PURPLE_SWING_OR_BACKWARDS_JUMP:
+                    accessible.access_rule = lambda state: state.has("Silver Lum", self.player)
+                    return
+                case Tech.EARLY_ECHOING_CAVES_OR_REVISIT:
+                    accessible.access_rule = lambda state: state.can_reach_region("Cask_10", self.player)
+                    return
+                case _:
+                    return
 
     def create_regions(self) -> None:
         # Start by creating the menu
@@ -57,60 +69,50 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
-        for _, levelInfo in levels.items():
+        for levelInfo in levels:
             lastRegion = menu
-            for subLevelName, _ in levelInfo.sublevels.items():
+            lastLevelInfo = None
+            for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 # Create this level and connect it
                 region = Region(subLevelName, self.player, self.multiworld)
                 self.multiworld.regions.append(region)
-                lastRegion.exits.append(Entrance(self.player, f"{subLevelName} Entrance", lastRegion))
-                lastRegion = region
 
-            # Connect the last sub-level back to the menu directly always (through the exit portal)
+                # Add exit requirements to whether this region can be left!
+                exit = lastRegion.create_exit(subLevelName)
+                if lastLevelInfo is not None:
+                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+
+                region.create_er_target(subLevelName)
+                lastRegion = region
+                lastLevelInfo = subLevelInfo
+
+            # Connect the last sub-level back to the menu directly always (through the exit portal, not randomised)
             if lastRegion.name != menu.name:
-                lastRegion.connect(menu)
+                exit = lastRegion.connect(menu)
+                if lastLevelInfo is not None:
+                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
 
         # Go through all location and create them
         for data in location_table:
             region = self.multiworld.get_region(data.region, self.player)
             location = Rayman2Location(self.player, data.displayName, data.id, region)
             location.progression_type = data.progressionType
+            
+            # Add an access rule based on the tech type!
+            self.applyAccessRequirement(location, data.tech)
+            
             region.locations.append(location)
 
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
-        usedSubLevels = []
-        for _, levelInfo in levels.items():
-            for subLevelName, subLevelInfo in levelInfo.sublevels.items():
-                # Determine what level to swap this level with already, but
-                # create the connections later!
-                subLevelOptions = []
-                for _, otherLevelInfo in levels.items():
-                    for otherSubLevelName, otherSubLevelInfo in otherLevelInfo.sublevels.items():
-                        # Ignore sub levels that are already taken
-                        if otherSubLevelName in usedSubLevels:
-                            continue
-
-                        # We need exit portals to always stay as the last sub-levels!
-                        if subLevelInfo.hasExitPortal != otherSubLevelInfo.hasExitPortal:
-                            continue
-
-                        # Add this as a valid option
-                        subLevelOptions.append(otherSubLevelName)
-
-                choice = random.choice(subLevelOptions)
-                print(f"Connecting {subLevelName} -> {choice}")
-                self.levelSwaps[subLevelName] = choice
-                self.multiworld.get_entrance(f"{subLevelName} Entrance", self.player).connect(
-                    self.multiworld.get_region(choice, self.player))
-                usedSubLevels.append(choice)
-
-                # If this sub level has a lum gate we need to
-                # define how high it should be based on how many
-                # lums have been obtained thus far.
-                if subLevelInfo.lumGate:
-                    # TODO Determine the value the lum gates should have later!
-                    self.lumGates[subLevelName] = 0
+        placement = entrance_rando.randomize_entrances(self, False, {0: [0]})
+        
+        # Go through the decided entrances and determine for each base game
+        # sub level what level should we actually send them to.
+        for exit, entrance in placement.pairings:
+            # Entrance is the level to actually be played, where we want
+            # to send the player, exit is where they would normally go.
+            self.levelSwaps[exit] = entrance
 
     # Create basic items
     def create_item(self, item: str,
@@ -124,12 +126,18 @@ class Rayman2World(World):
             itempool.append(self.create_item(item.displayName, item.classification))
         self.multiworld.itempool += itempool
 
-    # Include level swaps and lum gate information in the slot data
-    # sent to the game on connection
-    def fill_slot_data(self):
+    # Include information the game needs in the slot data
+    def fill_slot_data(self):        
         slot_data = {}
         slot_data["level_swaps"] = self.levelSwaps
-        slot_data["lum_gates"] = self.lumGates
+        slot_data["lum_gates"] = [
+            self.options.first_mask_required.value,
+            self.options.second_mask_required.value,
+            self.options.third_mask_required.value,
+            self.options.fourth_mask_required.value,
+            self.options.walk_of_life_required.value,
+            self.options.walk_of_power_required.value
+        ]
         slot_data["death_link"] = self.options.death_link.value
         slot_data["end_goal"] = self.options.end_goal.value
         return slot_data
@@ -138,4 +146,3 @@ class Rayman2World(World):
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
         spoiler_handle.write(f"Level Swaps: {self.levelSwaps}\n")
-        spoiler_handle.write(f"Lum Gates: {self.lumGates}\n")
