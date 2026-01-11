@@ -374,7 +374,7 @@ human_readable_names: Dict[int, str] = {
     387: "Lum on stone block next to Umber",
     385: "Lum on Umber's head",
     389: "Lum hidden in sanctuary room",
-    1113: "Water Mask of Polokus",
+    1113: "Earth Mask of Polokus",
     
     # The Echoing Caves
     # bast_10
@@ -533,6 +533,12 @@ human_readable_names: Dict[int, str] = {
     514: "Lum in cage behind crates #1",
     515: "Lum in cage behind crates #2",
     516: "Lum in cage behind crates #3",
+
+    # Beneath the Sanctuary of Rock and Lava
+    1114: "Fire Mask of Polokus",
+
+    # Iron Mountains
+    1115: "Air Mask of Polokus",
 }
 
 extra_levels: list[ExtraLevelInfo] = [
@@ -1120,7 +1126,7 @@ levels: list[LevelInfo] = [
                         886
                     ],
                     special={
-                        1113: "Stone Mask"
+                        1113: "Earth Mask"
                     }
                 )
             ),
@@ -1348,5 +1354,29 @@ levels: list[LevelInfo] = [
                 )
             )
         }
-    )
+    ),
+    LevelInfo(
+        "Beneath the Sanctuary of Rock and Lava",
+        {
+            "helic_30": SubLevelInfo(
+                checks=Checks(
+                    special={
+                        1114: "Fire Mask",
+                    }
+                )
+            )
+        }
+    ),
+    LevelInfo(
+        "The Iron Mountains",
+        {
+            "mine_10": SubLevelInfo(
+                checks=Checks(
+                    special={
+                        1115: "Air Mask",
+                    }
+                )
+            )
+        }
+    ),
 ]
