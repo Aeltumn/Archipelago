@@ -54,11 +54,14 @@ class Rayman2World(World):
     def applyAccessRequirement(self, accessible, tech):
         # Applies the relevant access requirement to an accessible object
         match tech:
-                case Tech.PURPLE_SWING, Tech.BAYOU_DAMAGE_BOOST, Tech.PURPLE_SWING_OR_BACKWARDS_JUMP:
+                case Tech.PURPLE_SWING, Tech.BAYOU_DAMAGE_BOOST, Tech.PURPLE_SWING_OR_BACKWARDS_JUMP, Tech.PURPLE_SWING_OR_GLM:
                     accessible.access_rule = lambda state: state.has("Silver Lum", self.player)
                     return
+                case Tech.ELIXIR_AND_PURPLE_SWING:
+                    accessible.access_rule = lambda state: (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
+                    return
                 case Tech.EARLY_ECHOING_CAVES_OR_REVISIT:
-                    accessible.access_rule = lambda state: state.can_reach_region("Cask_10", self.player)
+                    accessible.access_rule = lambda state: state.can_reach_region("cask_10", self.player)
                     return
                 case _:
                     return
