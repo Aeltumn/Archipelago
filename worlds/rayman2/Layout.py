@@ -18,6 +18,7 @@ class Tech(IntEnum):
     EARLY_ECHOING_CAVES_OR_REVISIT = 2
     BAYOU_DAMAGE_BOOST = 3
     PURPLE_SWING_OR_BACKWARDS_JUMP = 4
+    ELIXIR_AND_PURPLE_SWING = 5
 
 @dataclass
 class Checks:
@@ -237,7 +238,89 @@ human_readable_names: Dict[int, str] = {
     191: "Lum on final jump of slide #2",
     192: "Lum on final jump of slide #3",
     200: "Lum above waterfall",
-    1112: "Water Mask of Polokus"
+    1112: "Water Mask of Polokus",
+    
+    # The Menhir Hills
+    # rodeo_10
+    864: "Cage in hole",
+    206: "Super lum in cage in hole",
+    865: "Cage behind bandage",
+    201: "Super lum in cage behind bandage",
+    863: "Cage behind pirate door",
+    211: "Super lum in cage behind pirate door",    
+    # rodeo_40
+    226: "Lum behind tree",
+    227: "Lum on platform after purple lum",
+    868: "Cage across platform after purple lum",
+    219: "Lum in cage across platform after purple lum #1",
+    220: "Lum in cage across platform after purple lum #2",
+    221: "Lum in cage across platform after purple lum #3",
+    224: "Lum on start of shell ride #1",
+    223: "Lum on start of shell ride #2",
+    225: "Lum on start of shell ride #3",
+    231: "Lum on boardwark during shell ride",
+    228: "Lum on midway point of shell ride #1",
+    222: "Lum on midway point of shell ride #2",
+    233: "Lum on midway point of shell ride #3",
+    232: "Lum on midway point of shell ride #4",
+    230: "Lum on final turn of shell ride #1",
+    235: "Lum on final turn of shell ride #2",
+    234: "Lum on final turn of shell ride #3",
+    229: "Lum after bandage",
+    866: "Cage after flying barrel",
+    216: "Lum in cage after flying barrel #1",
+    217: "Lum in cage after flying barrel #2",
+    218: "Lum in cage after flying barrel #3",  
+    867: "Cage after purple lums",
+    236: "Lum in cage after purple lums #1",
+    237: "Lum in cage after purple lums #2",
+    238: "Lum in cage after purple lums #3",    
+    # rodeo_60
+    870: "Cage after purple lum swing",
+    241: "Lum in cage after purple lum swing #1",
+    242: "Lum in cage after purple lum swing #2",
+    246: "Lum on vine behind shell #1",
+    245: "Lum on vine behind shell #2",
+    869: "Cage near vine behind shell",
+    239: "Lum in cage near vine behind shell #1",
+    240: "Lum in cage near vine behind shell #2",
+    243: "Lum on start of shell ride #1",
+    244: "Lum on start of shell ride #2",
+    248: "Lum on start of shell ride #3",
+    247: "Lum on start of shell ride #4",
+    249: "Lum on boardwalk during shell ride #1",
+    250: "Lum on boardwalk during shell ride #2",    
+    # The Cave of Bad Dreams
+    # vulca_10
+    751: "Lum on skeleton at start",
+    752: "Lum on bone wall at start",
+    753: "Lum after first skeleton arm",
+    754: "Lum on bone wall after purple swing",
+    755: "Lum on bridge",
+    756: "Lum between skeleton arms",
+    757: "Lum before climbing wall",
+    758: "Lum between climbing wall",
+    759: "Lum near mini-janos #1",
+    760: "Lum near mini-janos #2",
+    761: "Lum near mini-janos #3",
+    762: "Super lum after sphere trapdoor",
+    769: "Lum on blue sphere path #1",
+    768: "Lum on blue sphere path #2",
+    767: "Lum on blue sphere path #3",
+    770: "Lum on orange sphere path #1",
+    771: "Lum on orange sphere path #2",
+    772: "Lum on orange sphere path #3",
+    773: "Lum on orange sphere path #4",
+    774: "Lum on orange sphere path #5",
+    775: "Lum on orange sphere path #6",
+    776: "Super lum after sphere gate",
+    # vulca_20
+    781: "Super lum on slide #1",
+    786: "Super lum on slide #2",
+    791: "Super lum on slide #3",
+    796: "Super lum on platform",
+    1120: "Elixir of Life",
+    # The above could be 1123, both happened at the same time, need to check
 }
 
 extra_levels: list[LevelInfo] = [
@@ -584,14 +667,171 @@ levels: list[LevelInfo] = [
                         regularLums=[
                             200
                         ],
-                        special={
+                        special=[
                             1112: "Water Mask",
-                        }
+                        ]
                     ),
                 },
-                exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP,
+                exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP
             )
         },
+    ),
+    LevelInfo(
+        "The Menhir Hills",
+        {
+            "rodeo_10": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        864,
+                        865,
+                        863
+                    ],
+                    superLums=[
+                        206,
+                        201,
+                        211
+                    ]
+                )  
+            ),
+            "rodeo_40": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        866,
+                        867
+                    ],
+                    regularLums=[
+                        226,
+                        224,
+                        223,
+                        225,
+                        231,
+                        228,
+                        222,
+                        233,
+                        232,
+                        230,
+                        235,
+                        234,
+                        229,
+                        216,
+                        217,
+                        218,
+                        236,
+                        237,
+                        238
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            227,
+                            219,
+                            220,
+                            221                            
+                        ],
+                        cages=[
+                            868
+                        ]
+                    ),
+                    Tech.ELIXIR_AND_PURPLE_SWING: Checks(
+                        regularLums=[
+                            236,
+                            237,
+                            238
+                        ],
+                        cages=[
+                            867
+                        ]
+                    ),
+                },
+                exitRequirement=Tech.ELIXIR_AND_PURPLE_SWING               
+            ),
+            "rodeo_60": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        869
+                    ],
+                    regularLums=[
+                        246,
+                        245,
+                        239,
+                        240,
+                        243,
+                        244,
+                        248,
+                        247,
+                        249,
+                        250
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            241,
+                            242
+                        ],
+                        cages=[
+                            870
+                        ]
+                    ),
+                },
+            )
+        },
+    ),
+    LevelInfo(
+        "The Cave of Bad Dreams",
+        {
+            "vulca_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        751,
+                        752,
+                        753
+                    ]                    
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            754,
+                            755,
+                            756,
+                            757,
+                            758,
+                            759,
+                            760,
+                            761,
+                            769,
+                            768,
+                            767,
+                            770,
+                            771,
+                            772,
+                            773,
+                            774,
+                            775                            
+                        ],
+                        superLums=[
+                            762,
+                            776
+                        ]
+                    ),
+                },
+                exitRequirement=Tech.PURPLE_SWING
+            ),
+            "vulca_20": SubLevelInfo(
+                checks=Checks(
+                    superLums=[
+                        781,
+                        786,
+                        791,
+                        796
+                    ],
+                    special=[
+                        1113: "Elixir of Life",
+                    ]
+                ),
+            )
+        }
     ),
     # Added so EEC doesn't crash
     LevelInfo(
