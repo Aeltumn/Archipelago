@@ -19,6 +19,7 @@ class Tech(IntEnum):
     BAYOU_DAMAGE_BOOST = 3
     PURPLE_SWING_OR_BACKWARDS_JUMP = 4
     ELIXIR_AND_PURPLE_SWING = 5
+    PURPLE_SWING_OR_GLM = 6
 
 @dataclass
 class Checks:
@@ -32,6 +33,12 @@ class SubLevelInfo:
     checks: Checks = field(default_factory=lambda: Checks())
     exitRequirement: Tech = Tech.NONE
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
+
+@dataclass
+class ExtraLevelInfo:
+    mapName: str
+    displayName: str
+    info: SubLevelInfo
 
 @dataclass
 class LevelInfo:
@@ -290,6 +297,7 @@ human_readable_names: Dict[int, str] = {
     247: "Lum on start of shell ride #4",
     249: "Lum on boardwalk during shell ride #1",
     250: "Lum on boardwalk during shell ride #2",    
+
     # The Cave of Bad Dreams
     # vulca_10
     751: "Lum on skeleton at start",
@@ -321,9 +329,239 @@ human_readable_names: Dict[int, str] = {
     796: "Super lum on platform",
     1120: "Elixir of Life",
     # The above could be 1123, both happened at the same time, need to check
+
+    # The Sanctuary of Stone and Fire
+    # plum_00
+    353: "Lum on pillar in lava",
+    356: "Lum in air next to gold fist",
+    354: "Lum in cave next to lava river",
+    885: "Cage in cave behind gorilla pirate",
+    364: "Super lum in cage behind gorilla pirate",
+    357: "Lum on lava river",
+    883: "Cave below trampoline",
+    359: "Super lum in cave below trampoline",
+    352: "Lum on spider webs",
+    358: "Lum outside above side temple #1",
+    351: "Lum outside above side temple #2",
+    884: "Cage next to pirate above lava river",
+    369: "Super lum in cage next to pirate above lava river",
+    355: "Lum on pillar next to crumbling floor",
+
+    # plum_20
+    879: "Cage on stone pillar",
+    391: "Lum in cage on stone pillar",
+    880: "Cage in middle of lava river",
+    392: "Lum in cage in middle of lava river #1",
+    393: "Lum in cage in middle of lava river #2",
+    881: "Cage on lava stairs",
+    394: "Lum in cage on lava stairs #1",
+    395: "Lum in cage on lava stairs #2",
+    396: "Lum in cage on lava stairs #3",
+    882: "Cage above golden fist",
+    397: "Lum in cage above golden fist #1",
+    398: "Lum in cage above golden fist #2",
+    399: "Lum in cage above golden fist #3",
+    400: "Lum in cage above golden fist #4",
+
+    # plum_10
+    386: "Lum on stone wall during lava river",
+    380: "Super lum after red lum chain in lava river",
+    390: "Lum high above floor next to plum plant",
+    388: "Lum on lava river",
+    886: "Cage on ceiling high above lava river",
+    375: "Super lum in cage on ceiling high above lava river",
+    374: "Lum on slide",
+    387: "Lum on stone block next to Umber",
+    385: "Lum on Umber's head",
+    389: "Lum hidden in sanctuary room",
+    1113: "Water Mask of Polokus",
+    
+    # The Echoing Caves
+    # bast_10
+    406: "Super lum behind tree",
+    401: "Super lum above platform",
+    416: "Super lum on ledge #1",
+    411: "Super lum on ledge #2",
+
+    # cask_10
+    887: "Cage behind breakable door",
+    421: "Lum above acid #1",
+    422: "Lum above acid #2",
+    423: "Lum above acid #3",
+    888: "Cage on wooden tower",
+    430: "Lum in cage on wooden tower #1",
+    431: "Lum in cage on wooden tower #2",
+    432: "Lum in cage on wooden tower #3",
+    428: "Lum on wooden tower #1",
+    429: "Lum on wooden tower #2",
+    424: "Lum above acid #4",
+    425: "Lum above acid #5",
+    426: "Lum above acid #6",
+    427: "Lum above acid #7",
+    433: "Lum above acid #8",
+    434: "Lum above acid #9",
+    435: "Lum above acid #10",
+
+    # cask_30
+    889: "Cage on ceiling",
+    436: "Lum above acid #1",
+    437: "Lum above acid #2",
+    438: "Lum above acid #3",
+    448: "Lum on trampoline",
+    890: "Cage that triggers a cutscene",
+    449: "Lum above gap in bridge",
+    446: "Lum above acid #4",
+    447: "Lum above acid #5",
+    439: "Lum above acid #6",
+    440: "Lum above acid #7",
+    441: "Lum above acid #8",
+    442: "Lum above acid #9",
+    443: "Lum above acid #10",
+    444: "Lum above acid #11",
+    445: "Lum above acid #12",
+    450: "Lum between two wooden structures",
+    891: "Cage with Teensie",
+
+    # The Precipice
+    # nave_10
+    451: "Lum on bridge #1", 
+    452: "Lum on bridge #2",
+    892: "Cage above green lum",
+    454: "Lum in cage above green lum #1",
+    455: "Lum in cage above green lum #2",
+    460: "Lum on bridge #3",
+    893: "Cage above corner platform",
+    456: "Lum in cage above corner platform #1",
+    457: "Lum in cage above corner platform #2",
+    453: "Lum on bridge #4",
+    894: "Cage in wooden skull",
+    458: "Lum in cage in wooden skull #1",
+    459: "Lum in cage in wooden skull #2",
+
+    # nave_15
+    465: "Lum around tower #1",
+    466: "Lum around tower #2",
+    468: "Lum around tower #3",
+    896: "Cage hanging on tower",
+    470: "Lum in cage hanging on tower #1",
+    471: "Lum in cage hanging on tower #2",
+    472: "Lum in cage hanging on tower #3",
+    469: "Lum around tower #4",
+    462: "Lum around tower #5",
+    895: "Cage next to switch",
+    473: "Lum in cage next to switch #1",
+    474: "Lum in cage next to switch #2",
+    463: "Lum on crane #1",
+    467: "Lum on crane #2",
+    475: "Lum on crane #3",
+    461: "Lum on crane #4",
+    464: "Lum on crane #5",
+
+    # nave_20
+    489: "Lum in ravine #1",
+    476: "Lum in ravine #2",
+    480: "Lum in ravine #3",
+    483: "Lum in ravine #4",
+    485: "Lum in ravine #5",
+    481: "Lum in ravine #6",
+    484: "Lum in ravine #7",
+    478: "Lum in ravine #8",
+    490: "Lum in ravine #9",
+    477: "Lum in ravine #10",
+    479: "Lum in ravine #11",
+    482: "Lum in ravine #12",
+    487: "Lum in ravine #13",
+    486: "Lum in ravine #14",
+    488: "Lum in ravine #15",
+    491: "Super lum in pirate fort #1",
+    496: "Super lum in pirate fort #2",
+    897: "Cage with Teensie",
+
+    # The Top of the World
+    # Seat_10
+    540: "Lum on chair track #1",
+    521: "Lum on chair track #2",
+    541: "Lum on chair track #3",
+    542: "Lum on chair track #4",
+    543: "Lum on chair track #5",
+    518: "Lum on chair track #6",
+    519: "Lum on chair track #7",
+    520: "Lum on chair track #8",
+    531: "Lum on chair track #9",
+    539: "Lum on chair track #10",
+    532: "Lum on chair track #11",
+    524: "Lum on chair track #12",
+    525: "Lum on chair track #13",
+    533: "Lum on chair track #14",
+    522: "Lum on chair track #15",
+    523: "Lum on chair track #16",
+    527: "Lum on chair track #17",
+    528: "Lum on chair track #18",
+    529: "Lum on chair track #19",
+    530: "Lum on chair track #20",
+    526: "Lum on chair track #21",
+    537: "Lum on chair track #22",
+    536: "Lum on chair track #23",
+    535: "Lum on chair track #24",
+    538: "Lum on chair track #25",
+    544: "Lum on chair track #26",
+    545: "Lum on chair track #27",
+    546: "Lum on chair track #28",
+    547: "Lum on chair track #29",
+    548: "Lum on chair track #30",
+    534: "Lum on chair track #31",
+    549: "Lum on chair track #32",
+    550: "Lum on chair track #33",
+
+    # seat_11
+    501: "Lum next to barrel pirate",
+    502: "Lum above pit",
+    505: "Lum in Teensie jail",
+    504: "Lum on spider web",
+    503: "Lum on tall crate",
+    899: "Cage next to barrel pirate",
+    511: "Lum in cage next to barrel pirate #1",
+    512: "Lum in cage next to barrel pirate #2",
+    513: "Lum in cage next to barrel pirate #3",
+    506: "Lum in hallway",
+    507: "Lower lum in dead end",
+    508: "Upper lum in dead end",
+    517: "Lum behind crate",
+    509: "Lum on top of big crate",
+    510: "Lum on top of crate next to cage",
+    898: "Cage behind crates",
+    514: "Lum in cage behind crates #1",
+    515: "Lum in cage behind crates #2",
+    516: "Lum in cage behind crates #3",
 }
 
-extra_levels: list[LevelInfo] = [
+extra_levels: list[ExtraLevelInfo] = [
+    ExtraLevelInfo(
+        mapName="plum_20",
+        displayName="The Sanctuary of Stone and Fire - Side Temple",
+        info=SubLevelInfo(
+            checks=Checks(
+                cages=[
+                    879,
+                    880,
+                    881,
+                    882
+                ],
+                regularLums=[
+                    391,
+                    392,
+                    393,
+                    394,
+                    395,
+                    396,
+                    397,
+                    398,
+                    399,
+                    400
+                ]
+            )
+        )
+    ),
 ]
 
 levels: list[LevelInfo] = [
@@ -667,14 +905,14 @@ levels: list[LevelInfo] = [
                         regularLums=[
                             200
                         ],
-                        special=[
+                        special={
                             1112: "Water Mask",
-                        ]
-                    ),
+                        }
+                    )
                 },
                 exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP
             )
-        },
+        }
     ),
     LevelInfo(
         "The Menhir Hills",
@@ -826,18 +1064,289 @@ levels: list[LevelInfo] = [
                         791,
                         796
                     ],
-                    special=[
-                        1113: "Elixir of Life",
-                    ]
+                    special={
+                        1120: "Elixir of Life",
+                    }
                 ),
             )
         }
     ),
-    # Added so EEC doesn't crash
+    LevelInfo(
+        "The Sanctuary of Stone and Fire",
+        {
+            "plum_00": SubLevelInfo(
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            353,
+                            356,
+                            354,
+                            357,
+                            352,
+                            358,
+                            351,
+                            355
+                        ],
+                        superLums=[
+                            364,
+                            359,
+                            369
+                        ],
+                        cages=[
+                            885,
+                            883,
+                            884
+                        ]
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING_OR_GLM
+            ),
+            "plum_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        386,
+                        390,
+                        388,
+                        374,
+                        387,
+                        385,
+                        389
+                    ],
+                    superLums=[
+                        380,
+                        375
+                    ],
+                    cages=[
+                        886
+                    ],
+                    special={
+                        1113: "Stone Mask"
+                    }
+                )
+            ),
+        }
+    ),
     LevelInfo(
         "The Echoing Caves",
         {
-            "Cask_10": SubLevelInfo()
+            "bast_10": SubLevelInfo(
+                checks=Checks(
+                    superLums=[
+                        406,
+                        401,
+                        416,
+                        411
+                    ]
+                )
+            ),
+            "cask_10": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        887,
+                        888
+                    ],
+                    regularLums=[
+                        421,
+                        422,
+                        423,
+                        430,
+                        431,
+                        432,
+                        428,
+                        429,
+                        424,
+                        425,
+                        426,
+                        427,
+                        433,
+                        434,
+                        435
+                    ]
+                )
+            ),
+            "cask_30": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        889,
+                        890,
+                        891
+                    ],
+                    regularLums=[
+                        436,
+                        437,
+                        438,
+                        448,
+                        449,
+                        446,
+                        447,
+                        439,
+                        440,
+                        441,
+                        442,
+                        443,
+                        444,
+                        445,
+                        450,
+                    ]
+                )
+            )
+        }
+    ),
+    LevelInfo(
+        "The Precipice",
+        {
+            "nave_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        451
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            452,
+                            454,
+                            455,
+                            460,
+                            456,
+                            457,
+                            453,
+                            458,
+                            459,
+                        ],
+                        cages=[
+                            892,
+                            893,
+                            894,
+                        ]
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING,
+            ),
+            "nave_15": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        465,
+                        466,
+                        468,
+                        470,
+                        471,
+                        472,
+                        469,
+                        462,
+                        473,
+                        474,
+                        463,
+                        467,
+                        475,
+                        461,
+                        464,
+                    ],
+                    cages=[
+                        896,
+                        895,
+                    ]
+                )
+            ),
+            "nave_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        489,
+                        476,
+                        480,
+                        483,
+                        485,
+                        481,
+                        484,
+                        478,
+                        490,
+                        477,
+                        479,
+                        482,
+                        487,
+                        486,
+                        488,
+                    ],
+                    cages=[
+                        897,
+                    ],
+                    superLums=[
+                        491,
+                        496,
+                    ]
+                )
+            )
+        }
+    ),
+    LevelInfo(
+        "The Top of the World",
+        {
+            "seat_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        540,
+                        521,
+                        541,
+                        542,
+                        543,
+                        518,
+                        519,
+                        520,
+                        531,
+                        539,
+                        532,
+                        524,
+                        525,
+                        533,
+                        522,
+                        523,
+                        527,
+                        528,
+                        529,
+                        530,
+                        526,
+                        537,
+                        536,
+                        535,
+                        538,
+                        544,
+                        545,
+                        546,
+                        547,
+                        548,
+                        534,
+                        549,
+                        550
+                    ]
+                )
+            ),
+            "seat_11": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        501,
+                        502,
+                        505,
+                        504,
+                        503,
+                        511,
+                        512,
+                        513,
+                        506,
+                        507,
+                        508,
+                        517,
+                        509,
+                        510,
+                        514,
+                        515,
+                        516,
+                    ],
+                    cages=[
+                        899,
+                        898,
+                    ]
+                )
+            )
         }
     )
 ]
