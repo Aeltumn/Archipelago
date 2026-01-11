@@ -77,13 +77,10 @@ for levelInfo in levels:
             createForChecks(subLevelName, levelName, checks, tech)
 
 # Also go through all extra levels!
-for levelInfo in extra_levels:
-    subLevelIndex = 0
-    for subLevelName, subLevelInfo in levelInfo.sublevels.items():
-        subLevelIndex += 1
-        levelName = f"{levelInfo.displayName} #{subLevelIndex}"
+for subLevelName, subLevelInfo in extra_levels.items():
+    levelName = f"{levelInfo.displayName} #{subLevelIndex}"
 
-        # Create items out of any defined checks
-        createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech.NONE)
-        for tech, checks in subLevelInfo.behindRequirements.items():
-            createForChecks(subLevelName, levelName, checks, tech)
+    # Create items out of any defined checks
+    createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech.NONE)
+    for tech, checks in subLevelInfo.behindRequirements.items():
+        createForChecks(subLevelName, levelName, checks, tech)
