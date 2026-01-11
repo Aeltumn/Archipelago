@@ -5,7 +5,7 @@ from BaseClasses import Tutorial, ItemClassification, Item, Region, Location, En
 import entrance_rando
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table
-from .Layout import Tech, levels
+from .Layout import Tech, Connection, levels
 from .Options import create_option_groups, Rayman2Options
 
 
@@ -79,16 +79,23 @@ class Rayman2World(World):
 
                 # Add exit requirements to whether this region can be left!
                 exit = lastRegion.create_exit(subLevelName)
-                if lastLevelInfo is not None:
-                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+                entrance = region.create_er_target(subLevelName)
 
-                region.create_er_target(subLevelName)
+                if lastLevelInfo is not None:
+                    entrance.randomization_group = Connection.INTERNAL
+                    exit.randomization_group = Connection.INTERNAL
+                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+                else:
+                    entrance.randomization_group = Connection.ENTRY_PORTAL
+                    exit.randomization_group = Connection.ENTRY_PORTAL
+
                 lastRegion = region
                 lastLevelInfo = subLevelInfo
 
             # Connect the last sub-level back to the menu directly always (through the exit portal, not randomised)
             if lastRegion.name != menu.name:
                 exit = lastRegion.connect(menu)
+                exit.randomization_group = Connection.EXIT_PORTAL
                 if lastLevelInfo is not None:
                     self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
 
@@ -105,7 +112,15 @@ class Rayman2World(World):
 
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
-        placement = entrance_rando.randomize_entrances(self, False, {0: [0]})
+        placement = entrance_rando.randomize_entrances(
+            self,
+            False, 
+            {
+                Connection.ENTRY_PORTAL: [Connection.ENTRY_PORTAL],
+                Connection.INTERNAL: [Connection.INTERNAL],
+                Connection.EXIT_PORTAL: [Connection.EXIT_PORTAL]
+            }
+        )
         
         # Go through the decided entrances and determine for each base game
         # sub level what level should we actually send them to.
