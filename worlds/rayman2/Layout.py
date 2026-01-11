@@ -2,11 +2,15 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 from enum import IntEnum
 
-from BaseClasses import Entrance
-
 # This file contains the full game layout, defining all levels, which sub-levels they have,
 # which ids everything uses, and all items contained within. This layout object is used by
 # init.py to generate the items, locations, and regions.
+class Connection(IntEnum):
+    """The types of connections between rooms."""
+    ENTRY_PORTAL = 0
+    INTERNAL = 1
+    EXIT_PORTAL = 2
+
 class Tech(IntEnum):
     """The types of tech required to accomplish something."""
     NONE = 0
@@ -27,7 +31,6 @@ class SubLevelInfo:
     checks: Checks = field(default_factory=lambda: Checks())
     exitRequirement: Tech = Tech.NONE
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
-    hasExitPortal: bool = False
 
 @dataclass
 class LevelInfo:
@@ -258,7 +261,6 @@ levels: list[LevelInfo] = [
                         841,
                     ]
                 ),
-                hasExitPortal=True,
             )
         }
     ),
@@ -367,7 +369,6 @@ levels: list[LevelInfo] = [
                         848
                     ]
                 ),
-                hasExitPortal=True,
             ),
         }
     ),
@@ -416,7 +417,6 @@ levels: list[LevelInfo] = [
                         853
                     ]
                 ),
-                hasExitPortal=True,
             ),
         }
     ),
@@ -517,7 +517,6 @@ levels: list[LevelInfo] = [
                     ),
                 },
                 exitRequirement=Tech.PURPLE_SWING,
-                hasExitPortal=True
             )
         }
     ),
@@ -591,7 +590,6 @@ levels: list[LevelInfo] = [
                     ),
                 },
                 exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP,
-                hasExitPortal=True
             )
         },
     ),
