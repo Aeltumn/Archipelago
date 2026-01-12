@@ -805,8 +805,99 @@ human_readable_names: Dict[int, str] = {
     746: "Super lum behind entrance",
     741: "Super Lum on top of pipe",
     1115: "Air Mask of Polokus",
+    
+    # The Prison Ship
+    # boat01
+    1370: "Lum on slide #1",
+    1359: "Lum on slide #2",
+    1369: "Lum on slide #3",
+    1373: "Lum on slide #4",
+    1371: "Lum on slide #5",
+    1377: "Lum on slide #6",
+    1372: "Lum on slide #7",
+    1379: "Lum on slide #8",
+    1374: "Lum on slide #9",
+    1375: "Lum on slide #10",
+    1368: "Lum on slide #11",
+    1376: "Lum on slide #12",
+    1360: "Lum on slide #13",
+    1361: "Lum on slide #14",
+    1367: "Lum on slide #15",
+    1362: "Lum on slide #16",
+    1366: "Lum on slide #17",
+    1364: "Lum on slide #18",
+    1365: "Lum on slide #19",
+    1378: "Lum on slide #20",
+    1363: "Lum on slide #21",
+    # boat02
+    1334: "Lum on slide #1",
+    1333: "Lum on slide #2",
+    1352: "Lum on slide #3",
+    1351: "Lum on slide #4",
+    1353: "Lum on slide #5",
+    1348: "Lum on slide #6",
+    1424: "Lum on slide #7",
+    1317: "Lum on slide #8",
+    1319: "Lum on slide #9",
+    1321: "Lum on slide #10",
+    1322: "Lum on slide #11",
+    1331: "Lum on slide #12",
+    1316: "Lum on slide #13",
+    1332: "Lum on slide #14",
+    1320: "Lum on slide #15",
+    1323: "Lum on slide #16",
+    1329: "Lum on slide #17",
+    1330: "Lum on slide #18",
+    1336: "Lum on slide #19",
+    1343: "Lum on slide #20",
+    1341: "Lum on slide #21",
+    1328: "Lum on slide #22",
+    1337: "Lum on slide #23",
+    1338: "Lum on slide #24",
+    1339: "Lum on slide #25",
+    1342: "Lum on slide #26",
+    1344: "Lum on slide #27",
+    1327: "Lum on slide #28",
+    1340: "Lum on slide #29",
+    1326: "Lum on slide #30",
+    1325: "Lum on slide #31",
+    1335: "Lum on slide #32",
+    1345: "Lum on slide #33",
+    1347: "Lum surrounding exit #1",
+    1346: "Lum surrounding exit #2",
+    1349: "Lum surrounding exit #3",
+    1350: "Lum surrounding exit #4",
+    1354: "Super lum near exit",
+    # astro_00
+    1387: "Lum on metal path",
+    1388: "Lum on sloped metal",
+    1389: "Super lum underneath metal path",
+    1385: "Lum midair on right #1",
+    1383: "Lum midair on right #2",
+    1382: "Lum near lava #1",
+    1381: "Lum near lava #2",
+    1380: "Lum near lava #3",
+    1384: "Lum midair on left",
+    1386: "Lum on exit switch #1",
+    1394: "Lum on exit switch #2",
+    # astro_10
+    1301: "Lum on flight path #1",
+    1302: "Lum on flight path #2",
+    1303: "Lum on flight path #3",
+    1304: "Lum on flight path #4",
+    1305: "Lum on flight path #5",
+    1306: "Lum on flight path #6",
+    1307: "Lum on flight path #7",
+    1308: "Lum on flight path #8",
+    1309: "Lum on flight path #9",
+    1310: "Lum on flight path #10",
+    1311: "Super lum on flight path",
+    
+    # The Crow's Nest
+    # Note items 1145 and 1144 are collected during ending sequence
+    # Map also advances to "end_10"
+    
 }
-
 extra_levels: list[ExtraLevelInfo] = [
     ExtraLevelInfo(
         mapName="plum_20",
@@ -2096,6 +2187,122 @@ levels: list[LevelInfo] = [
                     )
                 },
                 exitRequirement=Tech.PURPLE_SWING
+            )
+        }
+    ),
+    LevelInfo(
+        "The Prison Ship",
+        {
+            "boat01": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1370,
+                        1359,
+                        1369,
+                        1373,
+                        1371,
+                        1377,
+                        1372,
+                        1379,
+                        1374,
+                        1375,
+                        1368,
+                        1376,
+                        1360,
+                        1361,
+                        1367,
+                        1362,
+                        1366,
+                        1364,
+                        1365,
+                        1378,
+                        1363
+                    ]
+                )
+            ),
+            "boat02": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1334,
+                        1333,
+                        1352,
+                        1351,
+                        1353,
+                        1348,
+                        1424,
+                        1317,
+                        1319,
+                        1321,
+                        1322,
+                        1331,
+                        1316,
+                        1332,
+                        1320,
+                        1323,
+                        1329,
+                        1330,
+                        1336,
+                        1343,
+                        1341,
+                        1328,
+                        1337,
+                        1338,
+                        1339,
+                        1342,
+                        1344,
+                        1327,
+                        1340,
+                        1326,
+                        1325,
+                        1335,
+                        1345,
+                        1347,
+                        1346,
+                        1349,
+                        1350
+                    ],
+                    superLums=[
+                        1354
+                    ]
+                )
+            ),
+            "astro_00": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1387,
+                        1388,
+                        1385,
+                        1383,
+                        1382,
+                        1381,
+                        1380,
+                        1384,
+                        1386,
+                        1394
+                    ],
+                    superLums=[
+                        1389
+                    ]
+                )
+            ),
+            "astro_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1301,
+                        1302,
+                        1303,
+                        1304,
+                        1305,
+                        1306,
+                        1307,
+                        1308,
+                        1309,
+                        1310
+                    ],
+                    superLums=[
+                        1311
+                    ]
+                )
             )
         }
     ),
