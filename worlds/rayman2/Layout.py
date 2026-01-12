@@ -896,7 +896,7 @@ human_readable_names: Dict[int, str] = {
     1311: "Super lum on flight path",
     
     # The Crow's Nest
-    1145: "Defeat Razorbeard",
+    1500: "Defeat Razorbeard",
 }
 extra_levels: list[ExtraLevelInfo] = [
     ExtraLevelInfo(
@@ -989,7 +989,7 @@ extra_levels: list[ExtraLevelInfo] = [
         info=SubLevelInfo(
             checks=Checks(
                 special={
-                    1145: "Defeat Razorbeard"
+                    1500: "Defeat Razorbeard"
                 }
             )
         )
@@ -1826,7 +1826,7 @@ levels: list[LevelInfo] = [
     LevelInfo(
         "The Top of the World",
         {
-            "seat_10": SubLevelInfo(
+            "Seat_10": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
                         540,
