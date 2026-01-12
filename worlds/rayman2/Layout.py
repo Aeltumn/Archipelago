@@ -329,7 +329,104 @@ human_readable_names: Dict[int, str] = {
     796: "Super lum on platform",
     1120: "Elixir of Life",
     # The above could be 1123, both happened at the same time, need to check
-
+    
+    # The Canopy
+    # glob_30
+    266: "Lum on spiderweb #1",
+    251: "Lum on spiderweb #2",
+    262: "Lum on spiderweb #3",
+    252: "Lum on spiderweb #4",
+    253: "Lum on spiderweb #5",
+    254: "Lum on spiderweb #6",
+    263: "Lum on spiderweb #7",
+    258: "Lum on spiderweb #8",
+    264: "Lum on spiderweb #9",
+    259: "Lum on spiderweb #10",
+    255: "Lum on spiderweb #11",
+    265: "Lum on spiderweb #12",
+    256: "Lum on spiderweb #13",
+    261: "Lum on spiderweb #14",
+    260: "Lum on spiderweb #15",
+    257: "Lum on spiderweb #16",
+    871: "Cage beneath red lum",
+    267: "Lum in cage beneath red lum #1",
+    268: "Lum in cage beneath red lum #2",
+    872: "Cage over gap",
+    269: "Lum in cage over gap #1",
+    270: "Lum in cage over gap #2",
+    # glob_10
+    283: "Lum on bridge",
+    276: "Lum next to laser barrier",
+    275: "Lum on mushroom",
+    271: "Lum in midair near bridge",
+    274: "Lum near pirate",
+    281: "Lum midair after laser barrier",
+    285: "Lum next to tall mushroom",
+    280: "Lum next to platform sprout #1",
+    284: "Lum next to platform sprout #2",
+    282: "Lum on edge near gap",
+    277:" Lum above platform sprout",
+    273: "Lum over gap #1",
+    272: "Lum over gap #2",
+    279: "Lum near pillar",
+    278: "Lum near fire",
+    # glob_20
+    291: "Lum beneath firing ship",
+    290: "Lum after laser barrier",
+    287: "Lum around bush #1",
+    288: "Lum around bush #2",
+    289: "Lum around bush #3",
+    874: "Cage hanging from mushroom",
+    297: "Lum in cage hanging from mushroom #1",
+    298: "Lum in cage hanging from mushroom #2",
+    292: "Super lum above security door",
+    873: "Cage with teensies",
+    299: "Lum in cage with teensies #1",
+    300: "Lum in cage with teensies #2",
+    
+    # Whale Bay
+    # whale_00
+    339: "Lum underwater in chest",
+    341: "Lum underneath rope #1",
+    327: "Lum underneath rope #2",
+    320: "Lum underneath rope #3",
+    323: "Lum underneath rope #4",
+    321: "Lum above rolling barrels #1",
+    326: "Lum above rolling barrels #2",
+    338: "Lum above rolling barrels #3",
+    340: "Lum above rolling barrels #4",
+    322: "Lum above rolling barrels #5",
+    875: "Cage with purple lum",
+    315: "Super lum in cage with purple lum",  
+    # whale_05
+    325: "Lum on shell ride #1",
+    324: "Lum on shell ride #2",
+    876: "Cage after shell ride",
+    333: "Super lum in cage after shell ride #1",
+    328: "Super lum in cage after shell ride #2",
+    # whale_10
+    303: "Lum exiting underwater #1",
+    302: "Lum exiting underwater #2",
+    877: "Cage atop ship",
+    310: "Super lum in cage atop ship",
+    348: "Lum on waterfall slide #1",
+    307: "Lum on waterfall slide #2",
+    306: "Lum on waterfall slide #3",
+    345: "Lum on waterfall slide #4",
+    308: "Lum on waterfall slide #5",
+    309: "Lum on waterfall slide #6",
+    350: "Lum on waterfall slide #7",
+    344: "Lum on waterfall slide #8",
+    346: "Lum on waterfall slide #9",
+    349: "Lum on waterfall slide #10",
+    347: "Lum on top of sand #1",
+    342: "Lum on top of sand #2",
+    343: "Lum in front of exit portal",
+    304: "Lum near gorilla pirate #1",
+    301: "Lum near gorilla pirate #2",
+    305: "Lum near gorilla pirate #3",
+    878: "Cage with teensies",
+    
     # The Sanctuary of Stone and Fire
     # plum_00
     353: "Lum on pillar in lava",
@@ -1074,6 +1171,185 @@ levels: list[LevelInfo] = [
                         1120: "Elixir of Life",
                     }
                 ),
+            )
+        }
+    ),
+        LevelInfo(
+        "The Canopy",
+        {
+            "glob_30": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        871,
+                        872
+                    ],
+                    regularLums=[
+                        266,
+                        251,
+                        262,
+                        252,
+                        253,
+                        254,
+                        263,
+                        258,
+                        264,
+                        259,
+                        255,
+                        265,
+                        256,
+                        261,
+                        260,
+                        257,
+                        267,
+                        268,
+                        269,
+                        270
+                    ]                    
+                )
+            ),
+            "glob_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        283,
+                        276,
+                        275,
+                        271,
+                        274,
+                        281,
+                        285,
+                        280,
+                        284,
+                        282,
+                        277,
+                        273,
+                        272,
+                        279,
+                        278
+                    ]
+                )
+            ),
+            "glob_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        283,
+                        276,
+                        275,
+                        271,
+                        274,
+                        281,
+                        285,
+                        280,
+                        284,
+                        282,
+                        277,
+                        273,
+                        272,
+                        279,
+                        278
+                    ]
+                )
+            ),
+            "glob_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        291,
+                        290,
+                        287,
+                        288,
+                        289,
+                        299,
+                        300
+                    ],
+                    cages=[
+                        874,
+                        873
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            297,
+                            298
+                        ],
+                        superLums=[
+                            292
+                        ]
+                    )
+                }
+            )
+        }
+    ),
+    LevelInfo(
+        "Whale Bay",
+        {
+            "whale_00": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        339,
+                        341,
+                        327,
+                        320,
+                        323,
+                        321,
+                        326,
+                        338,
+                        340,
+                        322
+                    ],
+                    cages=[
+                        875
+                    ],
+                    superLums=[
+                        315
+                    ]
+                ),
+                exitRequirement=Tech.PURPLE_SWING
+            ),
+            "whale_05": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        325,
+                        324
+                    ],
+                    cages=[
+                        876
+                    ],
+                    superLums=[
+                        333,
+                        328
+                    ]
+                )
+            ),
+            "whale_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        303,
+                        302,
+                        348,
+                        307,
+                        306,
+                        345,
+                        308,
+                        309,
+                        350,
+                        344,
+                        346,
+                        349,
+                        347,
+                        342,
+                        343,
+                        304,
+                        301,
+                        305
+                    ],
+                    cages=[
+                        877,
+                        878
+                    ],
+                    superLums=[
+                        310
+                    ]
+                )
             )
         }
     ),
