@@ -728,7 +728,45 @@ human_readable_names: Dict[int, str] = {
     636: "Super lum in flight track #3",
     #helic_30
     1114: "Fire Mask of Polokus",
-
+    
+    # Tomb of the Ancients
+    # morb_00
+    911: "Cage in room at start",
+    697: "Lum in cage in room at start #1",
+    698: "Lum in cage in room at start #2",
+    699: "Lum in cage in room at start #3",
+    700: "Lum in cage in room at start #4",
+    694: "Lum surrounding grave #1",
+    695: "Lum surrounding grave #2",
+    696: "Lum surrounding grave #3",
+    691: "Lum surrounding grave #4",
+    692: "Lum surrounding grave #5",
+    693: "Lum surrounding grave #6",
+    1014: "1000th Lum",
+    # morb_10
+    656: "Lum on flying barrel ride #1",
+    655: "Lum on flying barrel ride #2",
+    654: "Lum on flying barrel ride #3",
+    914: "Cage with purple lum",
+    912: "Cage hanging from bridge",
+    686: "Super lum in cage hanging from bridge #1",
+    681: "Super lum in cage hanging from bridge #2",
+    657: "Lum below spider web",
+    913: "Cage amongst zombie chickens",
+    671: "Super lum in cage amongst zombie chickens #1",
+    676: "Super lum in cage amongst zombie chickens #2",
+    652: "Lum on barrel sludge ride #1",
+    653: "Lum on barrel sludge ride #2",
+    651: "Lum on barrel sludge ride #3",
+    658: "Lum on barrel sludge ride #4",
+    660: "Lum on barrel sludge ride #5",
+    659: "Lum on barrel sludge ride #6",
+    915: "Cage behind bandage door",
+    666: "Super lum in cage behind bandage door #1",
+    661: "Super lum in cage behind bandage door #2",    
+    # morb_20
+    916: "Cage with teensies",
+    
     # Iron Mountains
     1115: "Air Mask of Polokus",
 }
@@ -1873,6 +1911,79 @@ levels: list[LevelInfo] = [
                     )
                 },
                 exitRequirement=Tech.PURPLE_SWING
+            )
+        }
+    ),
+    LevelInfo(
+        "Tomb of the Ancients",
+        {
+            "morb_00": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        697,
+                        698,
+                        699,
+                        700,
+                        694,
+                        695,
+                        696,
+                        691,
+                        692,
+                        693
+                    ],
+                    cages=[
+                        911
+                    ],
+                    special={
+                        1014: "1000th Lum"
+                    }
+                )
+            ),
+            "morb_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        656,
+                        655,
+                        654,
+                        657,
+                        652,
+                        653,
+                        651,
+                        658,
+                        660,
+                        659
+                    ],
+                    cages=[
+                        914,
+                        912,
+                        915
+                    ],
+                    superLums=[
+                        686,
+                        681,
+                        661,
+                        666
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        cages=[
+                            913
+                        ],
+                        superLums=[
+                            671,
+                            676
+                        ]
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING
+            ),
+            "morb_20": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        916
+                    ]
+                )
             )
         }
     ),
