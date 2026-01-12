@@ -5,7 +5,7 @@ from BaseClasses import Tutorial, ItemClassification, Item, Region, Location, En
 import entrance_rando
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table
-from .Layout import Tech, Connection, levels
+from .Layout import Tech, Connection, ExtraLevelInfo, levels, extra_levels
 from .Options import create_option_groups, Rayman2Options
 
 
@@ -72,6 +72,7 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
+        regionsById: dict[str, Region] = {}
         for levelInfo in levels:
             lastRegion = menu
             lastLevelInfo = None
@@ -79,6 +80,7 @@ class Rayman2World(World):
                 # Create this level and connect it
                 region = Region(subLevelName, self.player, self.multiworld)
                 self.multiworld.regions.append(region)
+                regionsById[subLevelName] = region
 
                 # Add exit requirements to whether this region can be left!
                 exit = lastRegion.create_exit(subLevelName)
@@ -92,6 +94,20 @@ class Rayman2World(World):
                     entrance.randomization_group = Connection.ENTRY_PORTAL
                     exit.randomization_group = Connection.ENTRY_PORTAL
 
+                    # Determine the lum requirement to reach this portal
+                    lumRequirement = 0
+                    match levelInfo.lumGate:
+                        case 0:
+                            lumRequirement = self.options.first_mask_required.value
+                        case 1:
+                            lumRequirement = self.options.second_mask_required.value
+                        case 2:
+                            lumRequirement = self.options.third_mask_required.value
+                        case 3:
+                            lumRequirement = self.options.fourth_mask_required.value
+
+                    entrance.access_rule = lambda state: (self.prog_items[self.player]["Lum"] + (5 * self.prog_items[self.player]["Super Lum"])) >= lumRequirement
+
                 lastRegion = region
                 lastLevelInfo = subLevelInfo
 
@@ -101,6 +117,51 @@ class Rayman2World(World):
                 exit.randomization_group = Connection.EXIT_PORTAL
                 if lastLevelInfo is not None:
                     self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+
+        # Connect all the optional levels
+        extraLevelsById: dict[str, ExtraLevelInfo] = {}
+        for level in extra_levels:
+            extraLevelsById[level.mapName] = level
+
+        # Add the cave of bad dreams side-entrance
+        cobd1 = extraLevelsById["vulca_10"]
+        cobd1Region =Region(cobd1.mapName, self.player, self.multiworld)
+        self.multiworld.regions.append(cobd1Region)
+        cobd2 = extraLevelsById["vulca_20"]
+        cobd2Region = Region(cobd2.mapName, self.player, self.multiworld)
+        self.multiworld.regions.append(cobd2Region)
+        marshes = regionsById["Ski_10"]
+        cobd1Exit = marshes.create_exit(cobd1.mapName)
+        cobd1Entrance = cobd1Region.create_er_target(cobd1.mapName)
+        cobd1Entrance.randomization_group = Connection.INTERNAL
+        cobd1Exit.randomization_group = Connection.INTERNAL
+        cobd2Exit = cobd1Region.create_exit(cobd2.mapName)
+        cobd2Entrance = cobd2Region.create_er_target(cobd2.mapName)
+        cobd2Entrance.randomization_group = Connection.INTERNAL
+        cobd2Exit.randomization_group = Connection.INTERNAL
+        cobd2Region.connect(menu).randomization_group = Connection.EXIT_PORTAL
+
+        # Add the side temple which requires a purple swing to access
+        sideTemple = extraLevelsById["plum_20"]
+        sideTempleRegion = Region(sideTemple.mapName, self.player, self.multiworld)
+        self.multiworld.regions.append(sideTempleRegion)
+        mainSanctuary = regionsById["plum_00"]
+        sideTempleExit = mainSanctuary.create_exit(sideTemple.mapName)
+        sideTempleEntrance = sideTempleRegion.create_er_target(sideTemple.mapName)
+        sideTempleEntrance.randomization_group = Connection.INTERNAL
+        sideTempleExit.randomization_group = Connection.INTERNAL
+        self.applyAccessRequirement(exit, Tech.PURPLE_SWING)
+        # We pretend the side temple is a dead end, exiting it in-game will send you
+        # to wherever the stone and fire portal took you. Since we can't rando entrances
+        # in-game and instead rando maps if we hooked this up there might be two maps
+        # we expect to send you to when entering plum_00.
+
+        # Add the non-randomised crows nest at the end!
+        crowsNest = extraLevelsById["Rhop_10"]
+        crowsNestRegion = Region(crowsNest.mapName, self.player, self.multiworld)
+        self.multiworld.regions.append(crowsNestRegion)
+        menu.connect(crowsNestRegion).randomization_group = Connection.NOT_RANDOM  
+        crowsNestRegion.connect(menu).randomization_group = Connection.NOT_RANDOM
 
         # Go through all location and create them
         for data in location_table:
