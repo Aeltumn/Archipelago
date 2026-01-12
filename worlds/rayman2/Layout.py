@@ -767,7 +767,43 @@ human_readable_names: Dict[int, str] = {
     # morb_20
     916: "Cage with teensies",
     
-    # Iron Mountains
+    # The Iron Mountains
+    # learn_40
+    711: "Lum midair with purple lums #1",
+    708: "Lum midair with purple lums #2",
+    707: "Lum midair with purple lums #3",
+    712: "Lum midair with purple lums #4",
+    712: "Lum midair after purple lums #1",
+    713: "Lum midair after purple lums #2",
+    717: "Lum on spinning laser disc #1",
+    716: "Lum on spinning laser disc #2",
+    715: "Lum on spinning laser disc #3",
+    714: "Lum on spinning laser disc #4",
+    719: "Lum on spinning laser disc #5",
+    718: "Lum on spinning laser disc #6",
+    710: "Lum atop wooden tower",
+    917: "Cage hanging from wooden tower",
+    701: "Lum in cage hanging from wooden tower #1",
+    702: "Lum in cage hanging from wooden tower #2",
+    703: "Lum in cage hanging from wooden tower #3",
+    918: "Cage in windy river",
+    706: "Lum in cage in windy river #1",
+    705: "Lum in cage in windy river #2",
+    704: "Lum in cage in windy river #3",    
+    # ile_10
+    919: "Cage across bridge",
+    721: "Super lum in cage across bridge",
+    736: "Super lum atop structure #1",
+    731: "Super lum atop structure #2",
+    730: "Lum atop structure",
+    726: "Lum underneath menhirs #1",
+    728: "Lum underneath menhirs #2",
+    727: "Lum underneath menhirs #3",
+    729: "Lum underneath menhirs #4",
+    # mine_10
+    720: "Lum atop box",
+    746: "Super lum behind entrance",
+    741: "Super Lum on top of pipe",
     1115: "Air Mask of Polokus",
 }
 
@@ -1929,14 +1965,12 @@ levels: list[LevelInfo] = [
                         696,
                         691,
                         692,
-                        693
+                        693,
+                        1014
                     ],
                     cages=[
                         911
-                    ],
-                    special={
-                        1014: "1000th Lum"
-                    }
+                    ]
                 )
             ),
             "morb_10": SubLevelInfo(
@@ -1967,6 +2001,7 @@ levels: list[LevelInfo] = [
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
+                        regularLums=[],
                         cages=[
                             913
                         ],
@@ -1990,12 +2025,77 @@ levels: list[LevelInfo] = [
     LevelInfo(
         "The Iron Mountains",
         {
+            "learn_40": SubLevelInfo(
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            711,
+                            708,
+                            707,
+                            712,
+                            712,
+                            713,
+                            717,
+                            716,
+                            715,
+                            714,
+                            719,
+                            718,
+                            710,
+                            701,
+                            702,
+                            703,
+                            706,
+                            705,
+                            704
+                        ],
+                        cages=[
+                            917,
+                            918
+                        ]
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING
+            ),
+            "ile_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        730,
+                        726,
+                        728,
+                        727,
+                        729
+                    ],
+                    cages=[
+                        919
+                    ],
+                    superLums=[
+                        721,
+                        736,
+                        731
+                    ]
+                )
+            ),
             "mine_10": SubLevelInfo(
                 checks=Checks(
-                    special={
-                        1115: "Air Mask",
-                    }
-                )
+                    regularLums=[
+                        720
+                    ],
+                    superLums=[
+                        746
+                    ]
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        superLums=[
+                            741
+                        ],
+                        special={
+                            1115: "Air Mask"
+                        }
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING
             )
         }
     ),
