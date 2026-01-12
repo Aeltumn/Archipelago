@@ -10,6 +10,7 @@ class Connection(IntEnum):
     ENTRY_PORTAL = 0
     INTERNAL = 1
     EXIT_PORTAL = 2
+    NOT_RANDOM = 3
 
 class Tech(IntEnum):
     """The types of tech required to accomplish something."""
@@ -44,6 +45,7 @@ class ExtraLevelInfo:
 class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
+    lumGate: int = -1
 
 human_readable_names: Dict[int, str] = {
     # Woods of Light
@@ -327,8 +329,7 @@ human_readable_names: Dict[int, str] = {
     786: "Super lum on slide #2",
     791: "Super lum on slide #3",
     796: "Super lum on platform",
-    1120: "Elixir of Life",
-    # The above could be 1123, both happened at the same time, need to check
+    1123: "Elixir of Life",
     
     # The Canopy
     # glob_30
@@ -370,6 +371,7 @@ human_readable_names: Dict[int, str] = {
     272: "Lum over gap #2",
     279: "Lum near pillar",
     278: "Lum near fire",
+    1143: "Silver Lum from Globox",
     # glob_20
     291: "Lum beneath firing ship",
     290: "Lum after laser barrier",
@@ -685,9 +687,9 @@ human_readable_names: Dict[int, str] = {
     596: "Lum in cage before pushing walls #1",
     597: "Lum in cage before pushing walls #2",
     598: "Lum in cage before pushing walls #3",
-    599: "Lum behind right pillar"
-    600: "Lum behind left pillar"
-    906: "Cage with teensies"
+    599: "Lum behind right pillar",
+    600: "Lum behind left pillar",
+    906: "Cage with teensies",
     
     # Beneath the Sanctuary of Rock and Lava
     #helic_10
@@ -720,7 +722,7 @@ human_readable_names: Dict[int, str] = {
     642: "Lum in flight track #8",
     628: "Lum in flight track #9",
     910: "Cage leftmost in stop",
-    518: "Super lum in cage leftmost in stop"
+    518: "Super lum in cage leftmost in stop",
     909: "Cage rightmost in stop",
     613: "Super lum in cage rightmost in stop",
     630: "Lum in flight track #10",
@@ -894,11 +896,67 @@ human_readable_names: Dict[int, str] = {
     1311: "Super lum on flight path",
     
     # The Crow's Nest
-    # Note items 1145 and 1144 are collected during ending sequence
-    # Map also advances to "end_10"
-    
+    1145: "Defeat Razorbeard",
 }
 extra_levels: list[ExtraLevelInfo] = [
+    ExtraLevelInfo(
+        mapName="vulca_10",
+        displayName = "The Cave of Bad Dreams #1",
+        info=SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        751,
+                        752,
+                        753
+                    ]                    
+                ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            754,
+                            755,
+                            756,
+                            757,
+                            758,
+                            759,
+                            760,
+                            761,
+                            769,
+                            768,
+                            767,
+                            770,
+                            771,
+                            772,
+                            773,
+                            774,
+                            775                            
+                        ],
+                        superLums=[
+                            762,
+                            776
+                        ]
+                    ),
+                },
+                exitRequirement=Tech.PURPLE_SWING
+        )
+    ),
+    ExtraLevelInfo(
+        mapName="vulca_20",
+        displayName = "The Cave of Bad Dreams #2",
+        info=SubLevelInfo(
+            checks=Checks(
+                superLums=[
+                    781,
+                    786,
+                    791,
+                    796
+                ],
+                special={
+                    1123: "Elixir of Life",
+                }
+            ),
+        )
+    ),
     ExtraLevelInfo(
         mapName="plum_20",
         displayName="The Sanctuary of Stone and Fire - Side Temple",
@@ -922,6 +980,17 @@ extra_levels: list[ExtraLevelInfo] = [
                     399,
                     400
                 ]
+            )
+        )
+    ),
+    ExtraLevelInfo(
+        mapName="Rhop_10",
+        displayName="The Crow's Nest",
+        info=SubLevelInfo(
+            checks=Checks(
+                special={
+                    1145: "Defeat Razorbeard"
+                }
             )
         )
     ),
@@ -1275,7 +1344,8 @@ levels: list[LevelInfo] = [
                 },
                 exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP
             )
-        }
+        },
+        lumGate=0,
     ),
     LevelInfo(
         "The Menhir Hills",
@@ -1378,63 +1448,9 @@ levels: list[LevelInfo] = [
                 },
             )
         },
+        lumGate=0,
     ),
     LevelInfo(
-        "The Cave of Bad Dreams",
-        {
-            "vulca_10": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        751,
-                        752,
-                        753
-                    ]                    
-                ),
-                behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
-                        regularLums=[
-                            754,
-                            755,
-                            756,
-                            757,
-                            758,
-                            759,
-                            760,
-                            761,
-                            769,
-                            768,
-                            767,
-                            770,
-                            771,
-                            772,
-                            773,
-                            774,
-                            775                            
-                        ],
-                        superLums=[
-                            762,
-                            776
-                        ]
-                    ),
-                },
-                exitRequirement=Tech.PURPLE_SWING
-            ),
-            "vulca_20": SubLevelInfo(
-                checks=Checks(
-                    superLums=[
-                        781,
-                        786,
-                        791,
-                        796
-                    ],
-                    special={
-                        1120: "Elixir of Life",
-                    }
-                ),
-            )
-        }
-    ),
-        LevelInfo(
         "The Canopy",
         {
             "glob_30": SubLevelInfo(
@@ -1485,28 +1501,10 @@ levels: list[LevelInfo] = [
                         272,
                         279,
                         278
-                    ]
-                )
-            ),
-            "glob_10": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        283,
-                        276,
-                        275,
-                        271,
-                        274,
-                        281,
-                        285,
-                        280,
-                        284,
-                        282,
-                        277,
-                        273,
-                        272,
-                        279,
-                        278
-                    ]
+                    ],
+                    special={
+                        1143: "Silver Lum",
+                    },
                 )
             ),
             "glob_20": SubLevelInfo(
@@ -1523,7 +1521,7 @@ levels: list[LevelInfo] = [
                     cages=[
                         874,
                         873
-                    ]
+                    ],
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
@@ -1537,7 +1535,8 @@ levels: list[LevelInfo] = [
                     )
                 }
             )
-        }
+        },
+        lumGate=0,
     ),
     LevelInfo(
         "Whale Bay",
@@ -1611,7 +1610,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=0,
     ),
     LevelInfo(
         "The Sanctuary of Stone and Fire",
@@ -1666,7 +1666,8 @@ levels: list[LevelInfo] = [
                     }
                 )
             ),
-        }
+        },
+        lumGate=1,
     ),
     LevelInfo(
         "The Echoing Caves",
@@ -1732,7 +1733,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=1,
     ),
     LevelInfo(
         "The Precipice",
@@ -1818,7 +1820,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=1,
     ),
     LevelInfo(
         "The Top of the World",
@@ -1889,7 +1892,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=1,
     ),
     LevelInfo(
         "The Sanctuary of Rock and Lava",
@@ -1970,7 +1974,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=1,
     ),
     LevelInfo(
         "Beneath the Sanctuary of Rock and Lava",
@@ -2039,7 +2044,8 @@ levels: list[LevelInfo] = [
                 },
                 exitRequirement=Tech.PURPLE_SWING
             )
-        }
+        },
+        lumGate=2,
     ),
     LevelInfo(
         "Tomb of the Ancients",
@@ -2111,7 +2117,8 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=2,
     ),
     LevelInfo(
         "The Iron Mountains",
@@ -2188,7 +2195,8 @@ levels: list[LevelInfo] = [
                 },
                 exitRequirement=Tech.PURPLE_SWING
             )
-        }
+        },
+        lumGate=3,
     ),
     LevelInfo(
         "The Prison Ship",
@@ -2304,6 +2312,7 @@ levels: list[LevelInfo] = [
                     ]
                 )
             )
-        }
+        },
+        lumGate=3,
     ),
 ]
