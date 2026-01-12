@@ -630,8 +630,103 @@ human_readable_names: Dict[int, str] = {
     514: "Lum in cage behind crates #1",
     515: "Lum in cage behind crates #2",
     516: "Lum in cage behind crates #3",
-
+    
+    # The Sanctuary of Rock and Lava
+    # earth_10
+    900: "Cage with purple lum",
+    555: "Lum in eyeball room #1",
+    551: "Lum in eyeball room #2",
+    552: "Lum in eyeball room #3",
+    553: "Lum in eyeball room #4",
+    554: "Lum in eyeball room #5",
+    901: "Cage hanging from bridge",
+    556: "Super lum in cage hanging from bridge",   
+    # earth_20
+    561: "Lum on climable metal grate #1",
+    562: "Lum on climable metal grate #2",
+    563: "Lum on climable metal grate #3",
+    902: "Cage behind stained glass",
+    575: "Lum in cage behind stained glass #1",
+    576: "Lum in cage behind stained glass #2",
+    577: "Lum in cage behind stained glass #3",
+    564: "Lum around water lily #1",
+    565: "Lum around water lily #2",
+    566: "Lum around water lily #3",
+    567: "Lum during water lily ride #1",
+    568: "Lum during water lily ride #2",
+    569: "Lum during water lily ride #3",
+    570: "Lum during water lily ride #4",
+    571: "Lum midair after water lily #1",
+    572: "Lum midair after water lily #2",
+    574: "Lum on green platform",
+    903: "Cage hanging from green platform",
+    579: "Lum in cage hanging from green platform #1",
+    578: "Lum in cage hanging from green platform #2",
+    580: "Lum in cage hanging from green platform #3",
+    573: "Lum before button",
+    # earth_30
+    581: "Lum on green platform",
+    582: "Lum on rotating monolith",
+    583: "Lum on platform beneath climbable metal grate",
+    584: "Lum on climable metal grate #1",
+    585: "Lum on climable metal grate #2",
+    586: "Lum on platform atop climable metal grate",
+    904: "Cage hanging from platform",
+    593: "Lum in cage hanging from platform #1",
+    594: "Lum in cage hanging from platform #2",
+    595: "Lum in cage hanging from platform #3",
+    587: "Lum before button",
+    588: "Lum amongst baby caterpillars #1",
+    589: "Lum amongst baby caterpillars #2",
+    591: "Lum on lower climable metal grate #1",
+    592: "Lum on lower climable metal grate #2",
+    590: "Lum before pushing walls",
+    905: "Cage before pushing walls",
+    596: "Lum in cage before pushing walls #1",
+    597: "Lum in cage before pushing walls #2",
+    598: "Lum in cage before pushing walls #3",
+    599: "Lum behind right pillar"
+    600: "Lum behind left pillar"
+    906: "Cage with teensies"
+    
     # Beneath the Sanctuary of Rock and Lava
+    #helic_10
+    907: "Cage behind breakable wall",
+    610: "Lum in cage behind breakable wall #1",
+    611: "Lum in cage behind breakable wall #2",
+    612: "Lum in cage behind breakable wall #3",
+    643: "Lum in first ascent",
+    644: "Lum in flight track #1",
+    645: "Lum in flight track #2",
+    606: "Lum in flight track #3",
+    601: "Lum atop pillar #1",
+    602: "Lum atop pillar #2",
+    908: "Cage hanging from bridge",
+    607: "Lum in cage hanging from bridge #1",
+    608: "Lum in cage hanging from bridge #2",
+    609: "Lum in cage hanging from bridge #3",
+    603: "Lum on bridge #1",
+    504: "Lum on bridge #2",
+    605: "Lum midair before exit",
+    646: "Super lum behind slanted wall",
+    #helic_20
+    623: "Lum in flight track #1",
+    624: "Lum in flight track #2",
+    641: "Lum in flight track #3",
+    625: "Lum in flight track #4",
+    627: "Lum in flight track #5",
+    629: "Lum in flight track #6",
+    626: "Lum in flight track #7",
+    642: "Lum in flight track #8",
+    628: "Lum in flight track #9",
+    910: "Cage leftmost in stop",
+    518: "Super lum in cage leftmost in stop"
+    909: "Cage rightmost in stop",
+    613: "Super lum in cage rightmost in stop",
+    630: "Lum in flight track #10",
+    631: "Super lum in flight track #1",
+    636: "Super lum in flight track #3",
+    #helic_30
     1114: "Fire Mask of Polokus",
 
     # Iron Mountains
@@ -1632,14 +1727,152 @@ levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "The Sanctuary of Rock and Lava",
+        {
+            "earth_10": SubLevelInfo(
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            555,
+                            551,
+                            552,
+                            553,
+                            554
+                        ],
+                        cages=[
+                            900,
+                            901
+                        ],
+                        superLums=[
+                            556
+                        ]
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING
+            ),
+            "earth_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        561,
+                        562,
+                        563,
+                        575,
+                        576,
+                        577,
+                        564,
+                        565,
+                        566,
+                        567,
+                        568,
+                        569,
+                        570,
+                        571,
+                        572,
+                        574,
+                        573
+                    ],
+                    cages=[
+                        902,
+                        903
+                    ]
+                )
+            ),
+            "earth_30": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        581,
+                        582,
+                        583,
+                        584,
+                        585,
+                        586,
+                        587,
+                        588,
+                        589,
+                        591,
+                        592,
+                        590,
+                        596,
+                        597,
+                        598,
+                        599,
+                        600
+                    ],
+                    cages=[
+                        904,
+                        905,
+                        906
+                    ]
+                )
+            )
+        }
+    ),
+    LevelInfo(
         "Beneath the Sanctuary of Rock and Lava",
         {
-            "helic_30": SubLevelInfo(
+            "helic_10": SubLevelInfo(
                 checks=Checks(
-                    special={
-                        1114: "Fire Mask",
-                    }
+                    regularLums=[
+                        610,
+                        611,
+                        612,
+                        643,
+                        644,
+                        645,
+                        606,
+                        601,
+                        602,
+                        607,
+                        608,
+                        609,
+                        603,
+                        504,
+                        605
+                    ],
+                    cages=[
+                        907,
+                        908
+                    ],
+                    superLums=[
+                        646
+                    ]
                 )
+            ),
+            "helic_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        623,
+                        624,
+                        641,
+                        625,
+                        627,
+                        629,
+                        626,
+                        642,
+                        628,
+                        630
+                    ],
+                    cages=[
+                        910,
+                        909
+                    ],
+                    superLums=[
+                        518,
+                        613,
+                        631,
+                        636
+                    ]
+                )
+            ),
+            "helic_30": SubLevelInfo(
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        special={
+                            1114: "Fire Mask"
+                        }
+                    )
+                },
+                exitRequirement=Tech.PURPLE_SWING
             )
         }
     ),
