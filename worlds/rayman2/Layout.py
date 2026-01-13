@@ -948,9 +948,14 @@ extra_levels: list[ExtraLevelInfo] = [
                 superLums=[
                     781,
                     786,
-                    791,
+                    791
+                ]
+            ),
+            behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                superLums=[ 
                     796
-                ],
+                ]
                 special={
                     1123: "Elixir of Life",
                 }
