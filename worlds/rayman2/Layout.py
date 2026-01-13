@@ -905,14 +905,14 @@ extra_levels: list[ExtraLevelInfo] = [
         info=SubLevelInfo(
                 checks=Checks(
                     regularLums=[
-                        751,
-                        752,
-                        753
+                        751
                     ]                    
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
                         regularLums=[
+                            752,
+                            753,
                             754,
                             755,
                             756,
@@ -956,6 +956,7 @@ extra_levels: list[ExtraLevelInfo] = [
                 }
             ),
         )
+        exitRequirement=Tech.PURPLE_SWING
     ),
     ExtraLevelInfo(
         mapName="plum_20",
