@@ -36,16 +36,10 @@ class SubLevelInfo:
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
 
 @dataclass
-class ExtraLevelInfo:
-    mapName: str
-    displayName: str
-    info: SubLevelInfo
-
-@dataclass
 class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
-    lumGate: int = -1
+    lumGate: int = None
 
 human_readable_names: Dict[int, str] = {
     # Woods of Light
@@ -202,56 +196,56 @@ human_readable_names: Dict[int, str] = {
     
     # The Walk of Life
     # Ly_10
-    1201: "Lum in Time Race #1",
-    1202: "Lum in Time Race #2",
-    1203: "Lum in Time Race #3",
-    1236: "Lum in Time Race #4",
-    1206: "Lum in Time Race #5",
-    1205: "Lum in Time Race #6",
-    1208: "Lum in Time Race #7",
-    1210: "Lum in Time Race #8",
-    1212: "Lum in Time Race #9",
-    1209: "Lum in Time Race #10",
-    1214: "Lum in Time Race #11",
-    1211: "Lum in Time Race #12",
-    1215: "Lum in Time Race #13",
-    1217: "Lum in Time Race #14",
-    1216: "Lum in Time Race #15",
-    1218: "Lum in Time Race #16",
-    1219: "Lum in Time Race #17",
-    1220: "Lum in Time Race #18",
-    1221: "Lum in Time Race #19",
-    1222: "Lum in Time Race #20",
-    1223: "Lum in Time Race #21",
-    1224: "Lum in Time Race #22",
-    1225: "Lum in Time Race #23",
-    1226: "Lum in Time Race #24",
-    1227: "Lum in Time Race #25",
-    1229: "Lum in Time Race #26",
-    1230: "Lum in Time Race #27",
-    1231: "Lum in Time Race #28",
-    1233: "Lum in Time Race #29",
-    1244: "Lum in Time Race #30",
-    1246: "Lum in Time Race #31",
-    1242: "Lum in Time Race #32",
-    1232: "Lum in Time Race #33",
-    1243: "Lum in Time Race #34",
-    1238: "Lum in Time Race #35",
-    1239: "Lum in Time Race #36",
-    1240: "Lum in Time Race #37",
-    1245: "Lum in Time Race #38",
-    1247: "Lum in Time Race #39",
-    1237: "Lum in Time Race #40",
-    1234: "Lum in Time Race #41",
-    1228: "Lum in Time Race #42",
-    1207: "Lum in Time Race #43",
-    1235: "Lum in Time Race #44",
-    1241: "Lum in Time Race #45",
-    1249: "Lum in Time Race #46",
-    1213: "Lum in Time Race #47",
-    1250: "Lum in Time Race #48",
-    1248: "Lum in Time Race #49",
-    1204: "Lum in Time Race #50",
+    1201: "Lum in time race #1",
+    1202: "Lum in time race #2",
+    1203: "Lum in time race #3",
+    1236: "Lum in time race #4",
+    1206: "Lum in time race #5",
+    1205: "Lum in time race #6",
+    1208: "Lum in time race #7",
+    1210: "Lum in time race #8",
+    1212: "Lum in time race #9",
+    1209: "Lum in time race #10",
+    1214: "Lum in time race #11",
+    1211: "Lum in time race #12",
+    1215: "Lum in time race #13",
+    1217: "Lum in time race #14",
+    1216: "Lum in time race #15",
+    1218: "Lum in time race #16",
+    1219: "Lum in time race #17",
+    1220: "Lum in time race #18",
+    1221: "Lum in time race #19",
+    1222: "Lum in time race #20",
+    1223: "Lum in time race #21",
+    1224: "Lum in time race #22",
+    1225: "Lum in time race #23",
+    1226: "Lum in time race #24",
+    1227: "Lum in time race #25",
+    1229: "Lum in time race #26",
+    1230: "Lum in time race #27",
+    1231: "Lum in time race #28",
+    1233: "Lum in time race #29",
+    1244: "Lum in time race #30",
+    1246: "Lum in time race #31",
+    1242: "Lum in time race #32",
+    1232: "Lum in time race #33",
+    1243: "Lum in time race #34",
+    1238: "Lum in time race #35",
+    1239: "Lum in time race #36",
+    1240: "Lum in time race #37",
+    1245: "Lum in time race #38",
+    1247: "Lum in time race #39",
+    1237: "Lum in time race #40",
+    1234: "Lum in time race #41",
+    1228: "Lum in time race #42",
+    1207: "Lum in time race #43",
+    1235: "Lum in time race #44",
+    1241: "Lum in time race #45",
+    1249: "Lum in time race #46",
+    1213: "Lum in time race #47",
+    1250: "Lum in time race #48",
+    1248: "Lum in time race #49",
+    1204: "Lum in time race #50",
     
     # The Sanctuary of Water and Ice
     # water_10
@@ -336,7 +330,8 @@ human_readable_names: Dict[int, str] = {
     867: "Cage after purple lums",
     236: "Lum in cage after purple lums #1",
     237: "Lum in cage after purple lums #2",
-    238: "Lum in cage after purple lums #3",    
+    238: "Lum in cage after purple lums #3",
+    1101: "Knowledge of the Cave of Bad Dreams",
     # rodeo_60
     870: "Cage after purple lum swing",
     241: "Lum in cage after purple lum swing #1",
@@ -1000,75 +995,75 @@ human_readable_names: Dict[int, str] = {
     1309: "Lum on flight path #9",
     1310: "Lum on flight path #10",
     1311: "Super lum on flight path",
-    
-    # The Crow's Nest
-    1500: "Defeat Razorbeard",
 }
-extra_levels: list[ExtraLevelInfo] = [
-    ExtraLevelInfo(
-        mapName="Ly_10",
-        displayName="The Walk of Life",
-        info=SubLevelInfo(
-            checks=Checks(
-                regularLums=[
-                    1201,
-                    1202,
-                    1203,
-                    1236,
-                    1206,
-                    1205,
-                    1208,
-                    1210,
-                    1212,
-                    1209,
-                    1214,
-                    1211,
-                    1215,
-                    1217,
-                    1216,
-                    1218,
-                    1219,
-                    1220,
-                    1221,
-                    1222,
-                    1223,
-                    1224,
-                    1225,
-                    1226,
-                    1227,
-                    1229,
-                    1230,
-                    1231,
-                    1233,
-                    1244,
-                    1246,
-                    1242,
-                    1232,
-                    1243,
-                    1238,
-                    1239,
-                    1240,
-                    1245,
-                    1247,
-                    1237,
-                    1234,
-                    1228,
-                    1207,
-                    1235,
-                    1241,
-                    1249,
-                    1213,
-                    1250,
-                    1248,
-                    1204
-                ]
-            ),
-        )
+
+extra_levels: list[LevelInfo] = [
+    LevelInfo(
+        "The Walk of Life",
+        {
+            "Ly_10": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1201,
+                        1202,
+                        1203,
+                        1236,
+                        1206,
+                        1205,
+                        1208,
+                        1210,
+                        1212,
+                        1209,
+                        1214,
+                        1211,
+                        1215,
+                        1217,
+                        1216,
+                        1218,
+                        1219,
+                        1220,
+                        1221,
+                        1222,
+                        1223,
+                        1224,
+                        1225,
+                        1226,
+                        1227,
+                        1229,
+                        1230,
+                        1231,
+                        1233,
+                        1244,
+                        1246,
+                        1242,
+                        1232,
+                        1243,
+                        1238,
+                        1239,
+                        1240,
+                        1245,
+                        1247,
+                        1237,
+                        1234,
+                        1228,
+                        1207,
+                        1235,
+                        1241,
+                        1249,
+                        1213,
+                        1250,
+                        1248,
+                        1204
+                    ]
+                ),
+            )
+        },
+        lumGate=4,
     ),
-    ExtraLevelInfo(
-        mapName="vulca_10",
-        displayName = "The Cave of Bad Dreams #1",
-        info=SubLevelInfo(
+    LevelInfo(
+        "The Cave of Bad Dreams",
+        {
+            "vulca_10": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
                         751
@@ -1104,127 +1099,117 @@ extra_levels: list[ExtraLevelInfo] = [
                     ),
                 },
                 exitRequirement=Tech.PURPLE_SWING
-        )
-    ),
-    ExtraLevelInfo(
-        mapName="vulca_20",
-        displayName = "The Cave of Bad Dreams #2",
-        info=SubLevelInfo(
-            checks=Checks(
-                superLums=[
-                    781,
-                    786,
-                    791
-                ]
             ),
-            behindRequirements={
+            "vulca_20": SubLevelInfo(
+                checks=Checks(
+                    superLums=[
+                        781,
+                        786,
+                        791
+                    ]
+                ),
+                behindRequirements={
                     Tech.PURPLE_SWING: Checks(
-                superLums=[ 
-                    796
-                ]
-                special={
-                    1123: "Elixir of Life",
-                }
-            ),
-        )
-        exitRequirement=Tech.PURPLE_SWING
-    ),
-    ExtraLevelInfo(
-        mapName="plum_20",
-        displayName="The Sanctuary of Stone and Fire - Side Temple",
-        info=SubLevelInfo(
-            checks=Checks(
-                cages=[
-                    879,
-                    880,
-                    881,
-                    882
-                ],
-                regularLums=[
-                    391,
-                    392,
-                    393,
-                    394,
-                    395,
-                    396,
-                    397,
-                    398,
-                    399,
-                    400
-                ]
+                        superLums=[ 
+                            796
+                        ],
+                        special={
+                            1123: "Elixir of Life",
+                        }
+                    ),
+                },
+                exitRequirement=Tech.PURPLE_SWING
             )
-        )
+        }
     ),
-    ExtraLevelInfo(
-        mapName="Ly_20",
-        displayName="The Walk of Power",
-        info=SubLevelInfo(
-            checks=Checks(
-                regularLums=[
-                    1272,
-                    1251,
-                    1271,
-                    1273,
-                    1274,
-                    1275,
-                    1252,
-                    1253,
-                    1278,
-                    1277,
-                    1254,
-                    1279,
-                    1255,
-                    1280,
-                    1281,
-                    1282,
-                    1256,
-                    1257,
-                    1284,
-                    1258,
-                    1285,
-                    1276,
-                    1259,
-                    1286,
-                    1269,
-                    1289,
-                    1288,
-                    1260,
-                    1261,
-                    1287,
-                    1262,
-                    1263,
-                    1290,
-                    1291,
-                    1295,
-                    1267,
-                    1292,
-                    1270,
-                    1293,
-                    1265,
-                    1266,
-                    1294,
-                    1296,
-                    1299,
-                    1298,
-                    1268,
-                    1300,
-                    1283,
-                    1297,
-                    1264
-                ]
+    LevelInfo(
+        "The Sanctuary of Stone and Fire - Side Temple",
+        {
+            "plum_20": SubLevelInfo(
+                checks=Checks(
+                    cages=[
+                        879,
+                        880,
+                        881,
+                        882
+                    ],
+                    regularLums=[
+                        391,
+                        392,
+                        393,
+                        394,
+                        395,
+                        396,
+                        397,
+                        398,
+                        399,
+                        400
+                    ]
+                )
             ),
-        )
+        }
     ),
-    ExtraLevelInfo(
-        mapName="Rhop_10",
-        displayName="The Crow's Nest",
-        info=SubLevelInfo(
-            checks=Checks(
-                special={
-                    1500: "Defeat Razorbeard"
-                }
+    LevelInfo(
+        "The Walk of Power",
+        {
+            "Ly_20": SubLevelInfo(
+                checks=Checks(
+                    regularLums=[
+                        1272,
+                        1251,
+                        1271,
+                        1273,
+                        1274,
+                        1275,
+                        1252,
+                        1253,
+                        1278,
+                        1277,
+                        1254,
+                        1279,
+                        1255,
+                        1280,
+                        1281,
+                        1282,
+                        1256,
+                        1257,
+                        1284,
+                        1258,
+                        1285,
+                        1276,
+                        1259,
+                        1286,
+                        1269,
+                        1289,
+                        1288,
+                        1260,
+                        1261,
+                        1287,
+                        1262,
+                        1263,
+                        1290,
+                        1291,
+                        1295,
+                        1267,
+                        1292,
+                        1270,
+                        1293,
+                        1265,
+                        1266,
+                        1294,
+                        1296,
+                        1299,
+                        1298,
+                        1268,
+                        1300,
+                        1283,
+                        1297,
+                        1264
+                    ]
+                ),
             )
-        )
+        },
+        lumGate=5,
     ),
 ]
 
@@ -1622,7 +1607,10 @@ levels: list[LevelInfo] = [
                         236,
                         237,
                         238
-                    ]
+                    ],
+                    special={
+                        1101: "Knowledge of the Cave of Bad Dreams"
+                    }
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
@@ -1680,7 +1668,6 @@ levels: list[LevelInfo] = [
                 },
             )
         },
-        lumGate=0,
     ),
     LevelInfo(
         "The Canopy",
@@ -1768,7 +1755,6 @@ levels: list[LevelInfo] = [
                 }
             )
         },
-        lumGate=0,
     ),
     LevelInfo(
         "Whale Bay",
@@ -1843,7 +1829,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=0,
     ),
     LevelInfo(
         "The Sanctuary of Stone and Fire",
@@ -1966,7 +1951,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=1,
     ),
     LevelInfo(
         "The Precipice",
@@ -2053,7 +2037,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=1,
     ),
     LevelInfo(
         "The Top of the World",
@@ -2125,7 +2108,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=1,
     ),
     LevelInfo(
         "The Sanctuary of Rock and Lava",
@@ -2207,7 +2189,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=1,
     ),
     LevelInfo(
         "Beneath the Sanctuary of Rock and Lava",
@@ -2350,7 +2331,6 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=2,
     ),
     LevelInfo(
         "The Iron Mountains",
@@ -2545,6 +2525,5 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-        lumGate=3,
     ),
 ]

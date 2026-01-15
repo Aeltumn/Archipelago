@@ -73,6 +73,7 @@ class Rayman2World(World):
 
         # Go through all levels to create regions and items
         regionsById: dict[str, Region] = {}
+        lumGate = -1
         for levelInfo in levels:
             lastRegion = menu
             lastLevelInfo = None
@@ -95,8 +96,12 @@ class Rayman2World(World):
                     exit.randomization_group = Connection.ENTRY_PORTAL
 
                     # Determine the lum requirement to reach this portal
+                    if levelInfo.lumGate:
+                        lumGate += 1
+
+                    # Determine the lum requirement based on when the last lum gate was
                     lumRequirement = 0
-                    match levelInfo.lumGate:
+                    match lumGate:
                         case 0:
                             lumRequirement = self.options.first_mask_required.value
                         case 1:
@@ -132,6 +137,7 @@ class Rayman2World(World):
         self.multiworld.regions.append(cobd2Region)
         marshes = regionsById["Ski_10"]
         cobd1Exit = marshes.create_exit(cobd1.mapName)
+        cobd1Exit.access_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
         cobd1Entrance = cobd1Region.create_er_target(cobd1.mapName)
         cobd1Entrance.randomization_group = Connection.INTERNAL
         cobd1Exit.randomization_group = Connection.INTERNAL
@@ -155,13 +161,6 @@ class Rayman2World(World):
         # to wherever the stone and fire portal took you. Since we can't rando entrances
         # in-game and instead rando maps if we hooked this up there might be two maps
         # we expect to send you to when entering plum_00.
-
-        # Add the non-randomised crows nest at the end!
-        crowsNest = extraLevelsById["Rhop_10"]
-        crowsNestRegion = Region(crowsNest.mapName, self.player, self.multiworld)
-        self.multiworld.regions.append(crowsNestRegion)
-        menu.connect(crowsNestRegion).randomization_group = Connection.NOT_RANDOM  
-        crowsNestRegion.connect(menu).randomization_group = Connection.NOT_RANDOM
 
         # Go through all location and create them
         for data in location_table:
