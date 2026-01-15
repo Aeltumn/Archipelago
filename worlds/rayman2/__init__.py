@@ -164,6 +164,10 @@ class Rayman2World(World):
 
         # Go through all location and create them
         for data in location_table:
+            # If not on lumsanity, don't shuffle in the lums!
+            if data.itemName == "Lum" and not self.options.lumsanity.value:
+                continue
+
             region = self.multiworld.get_region(data.region, self.player)
             location = Rayman2Location(self.player, data.displayName, data.id, region)
             location.progression_type = data.progressionType
@@ -173,6 +177,9 @@ class Rayman2World(World):
             
             # Add this location to this region
             region.locations.append(location)
+
+        # Set the victory condition
+        self.multiworld.completion_condition[self.player] = lambda state: state.has("Defeat Razorbeard", self.player)
 
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
@@ -202,6 +209,9 @@ class Rayman2World(World):
     def create_items(self):
         itempool = []
         for item in item_table:
+            # If not on lumsanity, don't shuffle in the lums!
+            if item.displayName == "Lum" and not self.options.lumsanity.value:
+                continue
             itempool.append(self.create_item(item.displayName, item.classification))
         self.multiworld.itempool += itempool
 
@@ -210,15 +220,17 @@ class Rayman2World(World):
         slot_data = {}
         slot_data["level_swaps"] = self.levelSwaps
         slot_data["lum_gates"] = [
-            self.options.first_mask_required.value,
-            self.options.second_mask_required.value,
-            self.options.third_mask_required.value,
-            self.options.fourth_mask_required.value,
+            self.options.first_gate_required.value,
+            self.options.second_gate_required.value,
+            self.options.third_gate_required.value,
+            self.options.fourth_gate_required.value,
             self.options.walk_of_life_required.value,
             self.options.walk_of_power_required.value
         ]
         slot_data["death_link"] = self.options.death_link.value
         slot_data["end_goal"] = self.options.end_goal.value
+        slot_data["room_randomisation"] = self.options.room_randomisation.value
+        slot_data["lumsanity"] = self.options.lumsanity.value
         return slot_data
 
     # Write slot data to the spoiler file for extra info
