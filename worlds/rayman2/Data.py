@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 from BaseClasses import LocationProgressType, ItemClassification
-from .Layout import Checks, Tech, levels, extra_levels, human_readable_names
+from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, human_readable_names
 
 
 @dataclass
@@ -65,22 +65,23 @@ def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
         create(subLevelName, levelName, specialItem, name, ItemClassification.progression, LocationProgressType.PRIORITY, tech)
 
 # Go through all levels to create regions and items
-for levelInfo in levels:
-    subLevelIndex = 0
-    for subLevelName, subLevelInfo in levelInfo.sublevels.items():
-        subLevelIndex += 1
-        levelName = f"{levelInfo.displayName} #{subLevelIndex}"
+allLevels: list[LevelInfo] = []
+allLevels += levels
+allLevels += extra_levels
 
-        # Create items out of any defined checks            )
+for levelInfo in allLevels:
+    subLevelIndex = 0
+    hasMultipleRooms = len(levelInfo.sublevels) > 1
+
+    for subLevelName, subLevelInfo in levelInfo.sublevels.items():
+        # If there's multiple levels add the sub level number to the name!
+        subLevelIndex += 1
+        if hasMultipleRooms:
+            levelName = f"{levelInfo.displayName} #{subLevelIndex}"
+        else:
+            levelName = levelInfo.displayName
+
+        # Create items out of any defined checks
         createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech.NONE)
         for tech, checks in subLevelInfo.behindRequirements.items():
             createForChecks(subLevelName, levelName, checks, tech)
-
-# Also go through all extra levels!
-for extraLevelInfo in extra_levels:
-    levelName = extraLevelInfo.displayName
-
-    # Create items out of any defined checks
-    createForChecks(extraLevelInfo.mapName, levelName, extraLevelInfo.info.checks, Tech.NONE)
-    for tech, checks in extraLevelInfo.info.behindRequirements.items():
-        createForChecks(extraLevelInfo.mapName, levelName, checks, tech)
