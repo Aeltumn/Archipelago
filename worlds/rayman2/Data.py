@@ -15,6 +15,7 @@ class ItemDefinition:
 @dataclass
 class LocationDefinition:
     region: str
+    itemName: str
     displayName: str
     id: int
     progressionType: LocationProgressType
@@ -40,6 +41,7 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
     location_table.append(
         LocationDefinition(
             region=subLevelName,
+            itemName=itemName,
             displayName=displayName,
             id=base_id + id,
             progressionType=progression,

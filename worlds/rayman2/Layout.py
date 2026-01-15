@@ -40,6 +40,7 @@ class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     lumGate: int = None
+    masks: int = None
 
 human_readable_names: Dict[int, str] = {
     # Woods of Light
@@ -995,6 +996,9 @@ human_readable_names: Dict[int, str] = {
     1309: "Lum on flight path #9",
     1310: "Lum on flight path #10",
     1311: "Super lum on flight path",
+
+    # The Crow's Nest
+    1500: "Defeat Razorbeard",
 }
 
 extra_levels: list[LevelInfo] = [
@@ -2526,4 +2530,17 @@ levels: list[LevelInfo] = [
             )
         },
     ),
+    LevelInfo(
+        "The Crow's Nest",
+        {
+            "Rhop_10": SubLevelInfo(
+                checks=Checks(
+                    special={
+                        1500: "Defeat Razorbeard"
+                    }
+                )
+            )
+        },
+        masks=4
+    )
 ]

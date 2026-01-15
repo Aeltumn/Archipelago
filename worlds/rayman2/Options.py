@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from Options import Range, DeathLink, Choice, OptionGroup, T
+from Options import Range, DeathLink, Choice, OptionGroup, T, Toggle
 from worlds.AutoWorld import PerGameCommonOptions
 
 
@@ -27,8 +27,17 @@ class EndGoal(Choice):
         else:
             return "100%"
 
+class RoomRandomisation(Toggle):
+    """Whether to enable room randomisation."""
+    display_name = "Room Randomisation"
+    default = True
 
-class FirstMaskRequirement(Range):
+class Lumsanity(Toggle):
+    """Whether all individual yellow lums should be their own checks. If disabled, only super yellow lums are checks instead of all yellow lums."""
+    display_name = "Shuffle All Yellow Lums"
+    default = True
+
+class FirstGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Water and Ice."""
     display_name = "First Lum Gate Requirement"
     range_start = 0
@@ -36,7 +45,7 @@ class FirstMaskRequirement(Range):
     default = 100
 
 
-class SecondMaskRequirement(Range):
+class SecondGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Stone & Fire."""
     display_name = "Second Lum Gate Requirement"
     range_start = 0
@@ -44,7 +53,7 @@ class SecondMaskRequirement(Range):
     default = 300
 
 
-class ThirdMaskRequirement(Range):
+class ThirdGateRequirement(Range):
     """The amount of lums required to enter Beneath the Sanctuary of Rock & Lava."""
     display_name = "Third Lum Gate Requirement"
     range_start = 0
@@ -52,7 +61,7 @@ class ThirdMaskRequirement(Range):
     default = 450
 
 
-class FourthMaskRequirement(Range):
+class FourthGateRequirement(Range):
     """The amount of lums required to enter the Iron Mountains."""
     display_name = "Fourth Lum Gate Requirement"
     range_start = 0
@@ -78,19 +87,22 @@ class WalkOfPowerRequirement(Range):
 
 @dataclass
 class Rayman2Options(PerGameCommonOptions):
-    first_mask_required: FirstMaskRequirement
-    second_mask_required: SecondMaskRequirement
-    third_mask_required: ThirdMaskRequirement
-    fourth_mask_required: FourthMaskRequirement
-    walk_of_life_required: WalkOfLifeRequirement
-    walk_of_power_required: WalkOfPowerRequirement
-
     end_goal: EndGoal
     death_link: DeathLink
+
+    room_randomisation: RoomRandomisation
+    lumsanity: Lumsanity
+
+    first_gate_required: FirstGateRequirement
+    second_gate_required: SecondGateRequirement
+    third_gate_required: ThirdGateRequirement
+    fourth_gate_required: FourthGateRequirement
+    walk_of_life_required: WalkOfLifeRequirement
+    walk_of_power_required: WalkOfPowerRequirement
 
 
 def create_option_groups() -> List[OptionGroup]:
     return [
         OptionGroup(name="Lum Requirement Options",
-                    options=[WalkOfLifeRequirement, FirstMaskRequirement, SecondMaskRequirement, WalkOfPowerRequirement, ThirdMaskRequirement, FourthMaskRequirement])
+                    options=[WalkOfLifeRequirement, FirstGateRequirement, SecondGateRequirement, WalkOfPowerRequirement, ThirdGateRequirement, FourthGateRequirement])
     ]
