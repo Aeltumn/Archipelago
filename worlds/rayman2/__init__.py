@@ -51,19 +51,17 @@ class Rayman2World(World):
         # Store variables with the level shuffle
         self.levelSwaps = {}
 
-    def applyAccessRequirement(self, accessible, tech):
+    def applyAccessRequirement(self, accessible, tech, region):
         # Applies the relevant access requirement to an accessible object
         match tech:
                 case Tech.PURPLE_SWING, Tech.BAYOU_DAMAGE_BOOST, Tech.PURPLE_SWING_OR_BACKWARDS_JUMP, Tech.PURPLE_SWING_OR_GLM:
-                    accessible.access_rule = lambda state: state.has("Silver Lum", self.player)
+                    accessible.access_rule = lambda state: state.has("Silver Lum", self.player) and state.can_reach_region(region, self.player)
                     return
                 case Tech.ELIXIR_AND_PURPLE_SWING:
-                    accessible.access_rule = lambda state: (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
-                    return
-                case Tech.EARLY_ECHOING_CAVES_OR_REVISIT:
-                    accessible.access_rule = lambda state: state.can_reach_region("cask_10", self.player)
+                    accessible.access_rule = lambda state: state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player) and state.can_reach_region(region, self.player)
                     return
                 case _:
+                    accessible.access_rule = lambda state: state.can_reach_region(region, self.player)
                     return
 
     def create_regions(self) -> None:
@@ -76,6 +74,7 @@ class Rayman2World(World):
         lumGate = -1
         for levelInfo in levels:
             lastRegion = menu
+            lastLevelName = None
             lastLevelInfo = None
             for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 # Create this level and connect it
@@ -90,7 +89,7 @@ class Rayman2World(World):
                 if lastLevelInfo is not None:
                     entrance.randomization_group = Connection.INTERNAL
                     exit.randomization_group = Connection.INTERNAL
-                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement, lastLevelName)
                 else:
                     entrance.randomization_group = Connection.ENTRY_PORTAL
                     exit.randomization_group = Connection.ENTRY_PORTAL
@@ -114,6 +113,7 @@ class Rayman2World(World):
                     entrance.access_rule = lambda state: (self.prog_items[self.player]["Lum"] + (5 * self.prog_items[self.player]["Super Lum"])) >= lumRequirement
 
                 lastRegion = region
+                lastLevelName = subLevelName
                 lastLevelInfo = subLevelInfo
 
             # Connect the last sub-level back to the menu directly always (through the exit portal, not randomised)
@@ -121,7 +121,7 @@ class Rayman2World(World):
                 exit = lastRegion.connect(menu)
                 exit.randomization_group = Connection.EXIT_PORTAL
                 if lastLevelInfo is not None:
-                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement)
+                    self.applyAccessRequirement(exit, lastLevelInfo.exitRequirement, lastLevelName)
 
         # Connect all the optional levels
         extraLevelsById: dict[str, ExtraLevelInfo] = {}
@@ -156,7 +156,7 @@ class Rayman2World(World):
         sideTempleEntrance = sideTempleRegion.create_er_target(sideTemple.mapName)
         sideTempleEntrance.randomization_group = Connection.INTERNAL
         sideTempleExit.randomization_group = Connection.INTERNAL
-        self.applyAccessRequirement(exit, Tech.PURPLE_SWING)
+        self.applyAccessRequirement(sideTempleExit, Tech.PURPLE_SWING, sideTemple.mapName)
         # We pretend the side temple is a dead end, exiting it in-game will send you
         # to wherever the stone and fire portal took you. Since we can't rando entrances
         # in-game and instead rando maps if we hooked this up there might be two maps
@@ -168,9 +168,10 @@ class Rayman2World(World):
             location = Rayman2Location(self.player, data.displayName, data.id, region)
             location.progression_type = data.progressionType
             
-            # Add an access rule based on the tech type!
-            self.applyAccessRequirement(location, data.tech)
+            # Add an access rule based on the tech type and this region being accessible!
+            self.applyAccessRequirement(location, data.tech, data.region)
             
+            # Add this location to this region
             region.locations.append(location)
 
     # Run room randomization when we need to connect everything up
