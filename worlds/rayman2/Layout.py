@@ -9,18 +9,17 @@ class Connection(IntEnum):
     """The types of connections between rooms."""
     ENTRY_PORTAL = 0
     INTERNAL = 1
-    EXIT_PORTAL = 2
-    NOT_RANDOM = 3
+    NOT_RANDOM = 2
 
 class Tech(IntEnum):
     """The types of tech required to accomplish something."""
     NONE = 0
     PURPLE_SWING = 1
-    EARLY_ECHOING_CAVES_OR_REVISIT = 2
-    BAYOU_DAMAGE_BOOST = 3
-    PURPLE_SWING_OR_BACKWARDS_JUMP = 4
-    ELIXIR_AND_PURPLE_SWING = 5
-    PURPLE_SWING_OR_GLM = 6
+    BAYOU_DAMAGE_BOOST = 2
+    PURPLE_SWING_OR_BACKWARDS_JUMP = 3
+    ELIXIR_AND_PURPLE_SWING = 4
+    PURPLE_SWING_OR_GLM = 5
+    HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT = 6
 
 @dataclass
 class Checks:
@@ -40,7 +39,7 @@ class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     lumGate: int = None
-    masks: int = None
+    requireAllMasks: bool = False
 
 human_readable_names: Dict[int, str] = {
     # Woods of Light
@@ -996,12 +995,28 @@ human_readable_names: Dict[int, str] = {
     1309: "Lum on flight path #9",
     1310: "Lum on flight path #10",
     1311: "Super lum on flight path",
-
-    # The Crow's Nest
-    1500: "Defeat Razorbeard",
 }
 
 extra_levels: list[LevelInfo] = [
+    LevelInfo(
+        "The Fairly Glade #2 - Revisit",
+        {
+            # The game does not distinguish this area but we do! We give it the custom ID of Learn_32.
+            "Learn_32": SubLevelInfo(
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        regularLums=[
+                            9,
+                            10
+                        ],
+                        cages=[
+                            844
+                        ]
+                    )
+                }
+            ),
+        }
+    ),
     LevelInfo(
         "The Walk of Life",
         {
@@ -1149,7 +1164,8 @@ extra_levels: list[LevelInfo] = [
                         399,
                         400
                     ]
-                )
+                ),
+                exitRequirement=Tech.PURPLE_SWING,
             ),
         }
     ),
@@ -1263,18 +1279,7 @@ levels: list[LevelInfo] = [
                     regularLums=[
                         11
                     ]
-                ),
-                behindRequirements={
-                    Tech.EARLY_ECHOING_CAVES_OR_REVISIT: Checks(
-                        regularLums=[
-                            9,
-                            10
-                        ],
-                        cages=[
-                            844
-                        ]
-                    ),
-                }
+                )
             ),
             "bast_20": SubLevelInfo(
                 checks=Checks(
@@ -1846,8 +1851,6 @@ levels: list[LevelInfo] = [
                             354,
                             357,
                             352,
-                            358,
-                            351,
                             355
                         ],
                         superLums=[
@@ -1859,6 +1862,12 @@ levels: list[LevelInfo] = [
                             885,
                             883,
                             884
+                        ]
+                    ),
+                    Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT: Checks(
+                        regularLums=[
+                            358,
+                            351,
                         ]
                     )
                 },
@@ -2533,14 +2542,8 @@ levels: list[LevelInfo] = [
     LevelInfo(
         "The Crow's Nest",
         {
-            "Rhop_10": SubLevelInfo(
-                checks=Checks(
-                    special={
-                        1500: "Defeat Razorbeard"
-                    }
-                )
-            )
+            "Rhop_10": SubLevelInfo()
         },
-        masks=4
+        requireAllMasks=True
     )
 ]
