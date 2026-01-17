@@ -28,11 +28,12 @@ class Checks:
     cages: List[int] = field(default_factory=list)
     special: Dict[int, str] = field(default_factory=dict)
 
-    def total(self) -> int:
+    def total(self, lumsanity: bool) -> int:
         """Returns the total amount of checks in this segment."""
         count = 0
-        count += len(self.regularLums)
-        count += len(self.superLums)
+        if lumsanity:
+            count += len(self.regularLums)
+            count += len(self.superLums)
         count += len(self.cages)
         count += len(self.special)
         return count
