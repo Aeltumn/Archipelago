@@ -120,14 +120,24 @@ class Rayman2World(World):
             # Update variables for next loop
             lastRegion = region
         return lastRegion
-            
+    
+    def create_mapmonde_portal_event(self, region: Region) -> Location:
+        """Creates an event for generating a portal in the Hall of Doors."""
+        event = self.create_event(region, "Create Hall of Doors Portal")
+        event.access_rule = lambda state: self.generating or state.has(f"Finish {region.name}")
+        return event
+
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
         """Creates an event for finishing this level."""
-        name = f"Finish {region.name}"
+        event = self.create_event(region, f"Finish {region.name}")
+        if levelInfo is not None:
+            self.applyAccessRequirement(event, levelInfo.exitRequirement)
+        return event
+    
+    def create_event(self, region: Region, name: str) -> Location:
+        """Creates a new generic event in the given region that requires finishing the given level."""
         event_location = Location(self.player, name, None, region)
         event_location.show_in_spoiler = True
-        if levelInfo is not None:
-            self.applyAccessRequirement(event_location, levelInfo.exitRequirement)
         event_item = Item(name, ItemClassification.progression, None, self.player)
         event_location.place_locked_item(event_item)
         region.locations.append(event_location)
@@ -235,9 +245,11 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
-        lastLevel = menu
         for levelInfo in levels:
-            lastLevel = self.create_level(levelInfo, lastLevel)
+            level = self.create_level(levelInfo, menu)
+
+            # Finishing the last level of each standard world creates a hall of doors portal!
+            self.create_mapmonde_portal_event(level)
          
         # Go through the extra levels and create them seperately
         for extraLevelInfo in extra_levels:
@@ -262,10 +274,6 @@ class Rayman2World(World):
                     lastLevel = self.get_region("chase_10")
                 case "The Walk of Power":
                     lastLevel = self.get_region("earth_10")
-                case "The Crow's Nest":
-                    # The Crow's Nest is the only level to connect only to
-                    # the Hall of Doors (aside from the first)!
-                    lastLevel = menu
                 case _:
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
