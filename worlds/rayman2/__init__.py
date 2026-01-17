@@ -245,8 +245,10 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
+        lastLevel = menu
         for levelInfo in levels:
-            level = self.create_level(levelInfo, menu)
+            level = self.create_level(levelInfo, lastLevel)
+            lastLevel = level
 
             # Finishing the last level of each standard world creates a hall of doors portal!
             self.create_mapmonde_portal_event(level)
