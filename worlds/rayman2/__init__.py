@@ -124,7 +124,7 @@ class Rayman2World(World):
     def create_mapmonde_portal_event(self, region: Region) -> Location:
         """Creates an event for generating a portal in the Hall of Doors."""
         event = self.create_event(region, "Create Hall of Doors Portal")
-        event.access_rule = lambda state: self.generating or state.has(f"Finish {region.name}")
+        event.access_rule = lambda state: self.generating or state.has(f"Finish {region.name}", self.player)
         return event
 
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
