@@ -52,18 +52,8 @@ class Rayman2World(World):
         # Initialize variables
         self.levelSwaps = {}
         self.pairings = {}
-        self.placedTransitions = {}
+        self.thatOneSideTempleExitId = None
         self.generating = False
-
-    def is_exit_reachable(self, exit: str, state: CollectionState) -> bool:
-        """Returns whether the given connection is accessible."""
-        if exit in self.placedTransitions:
-            # The transition we are looking for got turned into this one, so
-            # we need to check if you can reach the end of the level it turned into!
-            target = self.placedTransitions[exit]
-            first = target.split(" -> ", 1)[0]
-            return state.can_reach_location(f"Finish {first}", self.player)
-        return False
 
     def applyAccessRequirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
@@ -73,7 +63,7 @@ class Rayman2World(World):
             case Tech.ELIXIR_AND_PURPLE_SWING:
                 accessible.access_rule = lambda state: self.generating or (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                accessible.acccess_rule = lambda state: self.generating or self.is_exit_reachable("plum_10 -> plum_00", state)
+                accessible.acccess_rule = lambda state: self.generating or (self.thatOneSideTempleExitId is not None and state.has(self.thatOneSideTempleExitId, self.player))
             case Tech.NONE:
                 return
             case _:
@@ -204,7 +194,7 @@ class Rayman2World(World):
 
         # Whether this exit can be reached depends on finishing the previous region!
         if lastRegion.name != "Menu":
-            exit.access_rule = lambda state: self.generating or state.can_reach_location(f"Finish {lastRegion.name}",  self.player)
+            exit.access_rule = lambda state: self.generating or state.has(f"Finish {lastRegion.name}",  self.player)
 
     def create_regions(self) -> None:
         # Start by creating the menu
@@ -219,7 +209,7 @@ class Rayman2World(World):
             else:
                 # If this is not the menu we require that you can finish the last level to unlock the next portal!
                 boundLastLevel = lastLevel
-                lastLevel = self.create_level(levelInfo, lastLevel, Connection.ENTRY_PORTAL, lambda state: state.can_reach_location(f"Finish {boundLastLevel.name}", self.player))
+                lastLevel = self.create_level(levelInfo, lastLevel, Connection.ENTRY_PORTAL, lambda state: state.has(f"Finish {boundLastLevel.name}", self.player))
          
         # Go through the extra levels and create them seperately
         for extraLevelInfo in extra_levels:
@@ -298,24 +288,16 @@ class Rayman2World(World):
             return
 
         def handlePlacement(_: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
-            refresh = False
-            for i in range(len(placed_exits)):
-                original = placed_exits[i]
-                placed = placed_targets[i]
-
-                # Ignore exits we already know about!
-                if original.name in self.placedTransitions:
-                    continue
-                
-                # Store this connection now
-                self.placedTransitions[original.name] = placed.name
-                print(f"Locked in mapping from {original} to {placed}")
-
-                # If the stone and fire side temple has become available we need to update
-                # the access rule of the lums.
-                if original.name == "plum_10 -> plum_00":
-                    refresh = True
-            return refresh
+            if self.thatOneSideTempleExitId is None:
+                for i in range(len(placed_exits)):
+                    # Detect when we set the transition that lets you leave the side temple
+                    # and determine which level needs to be completed to use that door. Then
+                    # we can safely set that you require Finish X to get those lums.
+                    if placed_exits[i].name == "plum_10 -> plum_00":
+                        first = placed_targets[i].split(" -> ", 1)[0]
+                        self.thatOneSideTempleExitId = f"Finish {first}"
+                        return True
+            return False
 
         self.generating = True
         placement = entrance_rando.randomize_entrances(
@@ -355,6 +337,8 @@ class Rayman2World(World):
 
     # Load level connections back from the slot
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
+        self.thatOneSideTempleExitId = slot_data["side_temple_id"]
+
         entrances = {
             entrance.name: entrance
             for region in self.get_regions()
@@ -380,6 +364,7 @@ class Rayman2World(World):
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "lumsanity": self.options.lumsanity.value,
+            "side_temple_id": self.thatOneSideTempleExitId,
         }
 
     # Write slot data to the spoiler file for extra info
