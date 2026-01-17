@@ -105,7 +105,7 @@ class Rayman2World(World):
             self.multiworld.regions.append(region)
 
             # Determine the amount of public checks in this level
-            checks = subLevelInfo.checks.total()
+            checks = subLevelInfo.checks.total(self.options.lumsanity.value)
 
             # Connect this to either the previous region or the menu, only include the level info's
             # rules on the initial entrance into this level!
@@ -354,25 +354,17 @@ class Rayman2World(World):
 
         # Go through all decided levels and set access requirements on the exits properly to
         # require finishing the level the exit is in.
-        entrances_by_name = {
-            entrance.name: entrance
-            for region in self.get_regions()
-            for entrance in region.entrances
-        }
+        for region in self.get_regions():
+            for source_exit in region.entrances:
+                # Ignore the menu as we don't need to limit its exits any further!
+                source_region = source_exit.parent_region
+                region_name = source_region.name
+                if region_name == "Menu":
+                    continue
 
-        for exit, entrance in self.pairings:
-            # The determine the original exit and then what it got shuffled into
-            source_exit = entrances_by_name[exit]
-            source_region = source_exit.parent_region
-
-            # Capture variables for lambda then update it
-            region_name = source_region.name
-            if region_name == "Menu":
-                continue
-
-            base_rule = source_exit.access_rule
-            source_exit.access_rule = lambda state, region_name=region_name,  base_rule=base_rule: base_rule(state) and state.has(f"Finish {region_name}", self.player)
-            print(f"Entering {source_exit.connected_region} requires finishing {region_name}")
+                # Capture variables for lambda then update it
+                base_rule = source_exit.access_rule
+                source_exit.access_rule = lambda state, region_name=region_name,  base_rule=base_rule: base_rule(state) and state.has(f"Finish {region_name}", self.player)
 
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
