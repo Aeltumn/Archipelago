@@ -93,7 +93,7 @@ human_readable_names: Dict[int, str] = {
     847: "Cage next to pirate",
     48: "Lum in cage next to pirate #1",
     49: "Lum in cage next to pirate #2",
-    50: "Lum in cage next to pirate #2",
+    50: "Lum in cage next to pirate #3",
     38: "Lum in first wind vortex",
     42: "Lum in second wind vortex",
     45: "Lum in third wind vortex",
@@ -875,7 +875,7 @@ human_readable_names: Dict[int, str] = {
     711: "Lum midair with purple lums #1",
     708: "Lum midair with purple lums #2",
     707: "Lum midair with purple lums #3",
-    712: "Lum midair with purple lums #4",
+    709: "Lum midair with purple lums #4",
     712: "Lum midair after purple lums #1",
     713: "Lum midair after purple lums #2",
     717: "Lum on spinning laser disc #1",
@@ -1600,8 +1600,7 @@ levels: list[LevelInfo] = [
             "rodeo_40": SubLevelInfo(
                 checks=Checks(
                     cages=[
-                        866,
-                        867
+                        866
                     ],
                     regularLums=[
                         226,
@@ -1619,10 +1618,7 @@ levels: list[LevelInfo] = [
                         229,
                         216,
                         217,
-                        218,
-                        236,
-                        237,
-                        238
+                        218
                     ],
                     special={
                         1101: "Knowledge of the Cave of Bad Dreams"
@@ -2362,7 +2358,7 @@ levels: list[LevelInfo] = [
                             711,
                             708,
                             707,
-                            712,
+                            709,
                             712,
                             713,
                             717,
