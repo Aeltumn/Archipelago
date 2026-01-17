@@ -1,5 +1,5 @@
 import random
-from typing import Callable, TextIO
+from typing import Any, Callable, TextIO
 
 from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Region, Location, Entrance
 import entrance_rando
@@ -15,7 +15,6 @@ class Rayman2Item(Item):
 
 class Rayman2Location(Location):
     game: str = "Rayman 2"
-
 
 class Rayman2Web(WebWorld):
     option_groups = create_option_groups()
@@ -45,20 +44,16 @@ class Rayman2World(World):
     options_dataclass = Rayman2Options
     options: Rayman2Options
 
+    ut_can_gen_without_yaml = True
+
     def __init__(self, multiworld, player):
         super(Rayman2World, self).__init__(multiworld, player)
 
         # Initialize variables
         self.levelSwaps = {}
-
-        # Store various variables to assist during entrance randomisation
-        self.nonFinalLevels = []
+        self.pairings = {}
         self.placedTransitions = {}
-        self.currentLevels = {}
-        self.extraTransitions = []
         self.generating = False
-        self.finalLevels = {}
-        self.firstRegionIds = {}
 
     def is_exit_reachable(self, exit: str, state: CollectionState) -> bool:
         """Returns whether the given connection is accessible."""
@@ -69,29 +64,16 @@ class Rayman2World(World):
             first = target.split(" -> ", 1)[0]
             return state.can_reach_location(f"Finish {first}", self.player)
         return False
-    
-    def is_level_complete(self, levelId: int, state: CollectionState) -> bool:
-        """Returns whether the level with the given id has been completed."""
-        if levelId < 1 or self.generating:
-            # While generating any level is accessible!
-            return True
 
-        # The level is reachable if the previous one has been finished!
-        return state.can_reach_location(f"Finish {self.finalLevels[levelId]}", self.player)
-
-    def applyAccessRequirement(self, accessible, tech: Tech, region):
+    def applyAccessRequirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
         match tech:
             case Tech.PURPLE_SWING | Tech.BAYOU_DAMAGE_BOOST | Tech.PURPLE_SWING_OR_BACKWARDS_JUMP | Tech.PURPLE_SWING_OR_GLM:
-                accessible.access_rule = lambda state: state.can_reach_region(region, self.player) and \
-                                        state.has("Silver Lum", self.player)
+                accessible.access_rule = lambda state: self.generating or state.has("Silver Lum", self.player)
             case Tech.ELIXIR_AND_PURPLE_SWING:
-                accessible.access_rule = lambda state: state.can_reach_region(region, self.player) and \
-                                        state.has("Silver Lum", self.player) and \
-                                        state.has("Elixir of Life", self.player)
+                accessible.access_rule = lambda state: self.generating or (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                accessible.acccess_rule = lambda state: state.can_reach_region(region, self.player) and \
-                    self.is_exit_reachable("plum_10 -> plum_00", state)
+                accessible.acccess_rule = lambda state: self.generating or self.is_exit_reachable("plum_10 -> plum_00", state)
             case Tech.NONE:
                 return
             case _:
@@ -100,27 +82,28 @@ class Rayman2World(World):
     def create_level(
             self, 
             levelInfo: LevelInfo, 
-            source: Region, 
-            levelId: int | None,
+            lastLevel: Region, 
             entryType: Connection = Connection.ENTRY_PORTAL,
             extraRule: Callable[[CollectionState], bool] = None,
-    ):
+    ) -> Region:
         """Creates a new level from a level info that can be entered from source."""
         if len(levelInfo.sublevels) == 0:
-            return
+            return lastLevel
 
-        lastRegion: Region = source
-        lastInfo: SubLevelInfo = None
+        first = True
+        lastRegion: Region = lastLevel
         for subLevelName, subLevelInfo in levelInfo.sublevels.items():
             # Create this level and connect it
             region = Region(subLevelName, self.player, self.multiworld)
             self.multiworld.regions.append(region)
 
-            # Connect this to either the previous region or the menu
-            if lastRegion == source:
-                self.connect_level_entrance(source, region, levelInfo, levelId, entryType, extraRule)
+            # Connect this to either the previous region or the menu, only include the level info's
+            # rules on the initial entrance into this level!
+            if first:
+                self.connect_level_entrance(lastRegion, region, levelInfo, entryType, extraRule)
             else:
-                self.connect_internal(region, lastRegion, lastInfo, levelId)
+                self.connect_internal(lastRegion, region)
+            first = False
 
             # Connect every level to the menu so Archipelago doesn't get confused about that we're
             # always allowed to exit the levels at any time!
@@ -128,43 +111,34 @@ class Rayman2World(World):
 
             # Create an event for finishing this sub-region
             self.create_level_finish_event(region, subLevelInfo)
-            
-            # Add the previous level to the non-final list
-            self.nonFinalLevels.append(lastRegion.name)
-
-            # Store which level id each region is a part of
-            if levelId is not None and lastRegion == source:
-                self.firstRegionIds[subLevelName] = levelId
 
             # Update variables for next loop
             lastRegion = region
-            lastInfo = subLevelInfo
+        return lastRegion
             
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
         """Creates an event for finishing this level."""
         name = f"Finish {region.name}"
-        event_location = Rayman2Location(self.player, name, None, region)
+        event_location = Location(self.player, name, None, region)
         event_location.show_in_spoiler = True
         if levelInfo is not None:
-            self.applyAccessRequirement(event_location, levelInfo.exitRequirement, region.name)
-        event_item = Rayman2Item(name, ItemClassification.progression, None, self.player)
+            self.applyAccessRequirement(event_location, levelInfo.exitRequirement)
+        event_item = Item(name, ItemClassification.progression, None, self.player)
         event_location.place_locked_item(event_item)
         region.locations.append(event_location)
-        print(f"Created finish event {name}")
         return event_location
 
     def connect_level_entrance(
             self, 
-            source: Region, 
+            lastLevel: Region, 
             region: Region, 
-            levelInfo: LevelInfo, 
-            levelId: int | None, 
-            type: Connection = Connection.ENTRY_PORTAL,    
+            levelInfo: LevelInfo,
+            type: Connection = Connection.ENTRY_PORTAL,
             extraRule: Callable[[CollectionState], bool] = None,
         ):
         """Connects the menu to this region."""
-        connection = f"{source.name} -> {region.name}"
-        exit = source.create_exit(connection)
+        connection = f"{lastLevel.name} -> {region.name}"
+        exit = lastLevel.create_exit(connection)
 
         # If this is the final level it cannot be randomised!
         if region.name == "Rhop_10" or not self.options.room_randomisation.value:
@@ -195,33 +169,30 @@ class Rayman2World(World):
                 case 5:
                     lumRequirement = self.options.walk_of_power_required.value
 
-            exit.access_rule = lambda state: (state.prog_items[self.player]["1000th Lum"] + 
+            exit.access_rule = lambda state: self.generating or ((state.prog_items[self.player]["1000th Lum"] + 
                                               state.prog_items[self.player]["Lum"] + 
                                               (5 * state.prog_items[self.player]["Super Lum"])
-                                            ) >= lumRequirement
+                                            ) >= lumRequirement)
         elif levelInfo.requireAllMasks:
             # If this is a mask requiring level we add that as a requirement!
-            exit.access_rule = lambda state: state.has("Water Mask", self.player) and \
+            exit.access_rule = lambda state: self.generating or (state.has("Water Mask", self.player) and \
                                         state.has("Earth Mask", self.player) and \
                                         state.has("Fire Mask", self.player) and \
-                                        state.has("Air Mask", self.player)
+                                        state.has("Air Mask", self.player))
             
-        # If there's a previous menu exit we require that you can access it to access this menu.
-        if levelId is not None:
-            base = exit.access_rule
-            exit.access_rule = lambda state: self.is_level_complete(levelId - 1, state) and base(state)
-        else:
-            self.extraTransitions.append(connection)
-
         # Add the extra rule for this entrance
         if extraRule is not None:
             base = exit.access_rule
             exit.access_rule = lambda state: extraRule(state) and base(state)
 
-    def connect_internal(self, region: Region, previousRegion: Region, previousRegionInfo: SubLevelInfo, levelId: int | None):
+    def connect_internal(
+            self,
+            lastRegion: Region,
+            region: Region
+        ):
         """Connects the given region to the previous one."""
-        connection = f"{previousRegion.name} -> {region.name}"
-        exit = previousRegion.create_exit(connection)
+        connection = f"{lastRegion.name} -> {region.name}"
+        exit = lastRegion.create_exit(connection)
         exit.randomization_group = Connection.INTERNAL
 
         # Create an entrance only if room randomisation is enabled
@@ -231,13 +202,9 @@ class Rayman2World(World):
         else:
             exit.connect(region)
 
-        # Whether this exit can be reached depends on the previous region!
-        if previousRegionInfo is not None:
-            self.applyAccessRequirement(exit, previousRegionInfo.exitRequirement, previousRegion.name)
-
-        # If this is not a main level store that this transition is extra!
-        if levelId is None:
-            self.extraTransitions.append(connection)
+        # Whether this exit can be reached depends on finishing the previous region!
+        if lastRegion.name != "Menu":
+            exit.access_rule = lambda state: state.can_reach_location(f"Finish {lastRegion.name}",  self.player)
 
     def create_regions(self) -> None:
         # Start by creating the menu
@@ -245,14 +212,18 @@ class Rayman2World(World):
         self.multiworld.regions.append(menu)
 
         # Go through all levels to create regions and items
-        levelId = 1
+        lastLevel = menu
         for levelInfo in levels:
-            self.create_level(levelInfo, menu, levelId)
-            levelId += 1
+            if lastLevel.name == "Menu":
+                lastLevel = self.create_level(levelInfo, lastLevel)
+            else:
+                # If this is not the menu we require that you can finish the last level to unlock the next portal!
+                boundLastLevel = lastLevel
+                lastLevel = self.create_level(levelInfo, lastLevel, Connection.ENTRY_PORTAL, lambda state: state.can_reach_location(f"Finish {boundLastLevel.name}", self.player))
          
         # Go through the extra levels and create them seperately
         for extraLevelInfo in extra_levels:
-            source: Region = None
+            lastLevel: Region = None
             extraRule: Callable[[CollectionState], bool] = None
             entryType: Connection = Connection.ENTRY_PORTAL
 
@@ -261,22 +232,26 @@ class Rayman2World(World):
             # access any of these until their corresponding source level is reached.
             match extraLevelInfo.displayName:
                 case "The Fairly Glade #2 - Revisit":
-                    source = self.get_region("cask_10")
+                    lastLevel = self.get_region("cask_10")
                     entryType = Connection.INTERNAL
                 case "The Sanctuary of Stone and Fire - Side Temple":
-                    source = self.get_region("plum_00")
+                    lastLevel = self.get_region("plum_00")
                     entryType = Connection.INTERNAL
                 case "The Cave of Bad Dreams":
-                    source = self.get_region("Ski_10")
-                    extraRule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
+                    lastLevel = self.get_region("Ski_10")
+                    extraRule = lambda state: self.generating or state.has("Knowledge of the Cave of Bad Dreams", self.player)
                 case "The Walk of Life":
-                    source = self.get_region("chase_10")
+                    lastLevel = self.get_region("chase_10")
                 case "The Walk of Power":
-                    source = self.get_region("earth_10")
+                    lastLevel = self.get_region("earth_10")
+                case "The Crow's Nest":
+                    # The Crow's Nest is the only level to connect only to
+                    # the Hall of Doors (aside from the first)!
+                    lastLevel = menu
                 case _:
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
-            self.create_level(extraLevelInfo, source, None, entryType, extraRule)
+            self.create_level(extraLevelInfo, lastLevel, entryType, extraRule)
 
         # Go through all location and create them
         for data in location_table:
@@ -289,7 +264,7 @@ class Rayman2World(World):
             location.progression_type = data.progressionType
             
             # Add an access rule based on the tech type and this region being accessible!
-            self.applyAccessRequirement(location, data.tech, data.region)
+            self.applyAccessRequirement(location, data.tech)
             
             # Add this location to this region
             region.locations.append(location)
@@ -314,10 +289,14 @@ class Rayman2World(World):
                             state.prog_items[self.player]["Super Lum"] >= 58 and
                             state.prog_items[self.player]["Cage"] >= 80
                     )
-                    
 
     # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
+        # If we're in UT we don't re-randomize!
+        is_ut = getattr(self.multiworld, "generation_is_fake", False)
+        if is_ut:
+            return
+
         def handlePlacement(_: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
             refresh = False
             for i in range(len(placed_exits)):
@@ -336,38 +315,6 @@ class Rayman2World(World):
                 # the access rule of the lums.
                 if original.name == "plum_10 -> plum_00":
                     refresh = True
-
-                # If it's an extra transition we ignore it for the level endings!
-                if original in self.extraTransitions:
-                    continue
-
-                # Try to determine the chain to see if we've finished a level
-                # back to the hall of doors.
-                source = original.name.split(" -> ", 1)[0]
-                intended = original.name.split(" -> ", 1)[1]
-                target = placed.name.split(" -> ", 1)[1]
-
-                # Determine the level id of this level
-                levelId = None
-                for lastLevelName in list(self.currentLevels.keys()):
-                    if source == lastLevelName:
-                        levelId = self.currentLevels[lastLevelName]
-                for levelName in self.firstRegionIds.keys():
-                    if intended == levelName:
-                        levelId = self.firstRegionIds[levelName]
-                if levelId is None:
-                    continue
-                
-                # Store that this level belongs to this chain
-                self.currentLevels[target] = levelId
-                print(f"Level {target} is a part of {levelId}")
-
-                # Store if this is a final level that it's needed to complete this level chain!
-                if target not in self.nonFinalLevels:
-                    print(f"Level {target} is a final level which is required to complete {levelId}")
-                    self.finalLevels[levelId] = target
-
-
             return refresh
 
         self.generating = True
@@ -381,6 +328,7 @@ class Rayman2World(World):
             on_connect=handlePlacement,
         )
         self.generating = False
+        self.pairings = placement.pairings
         
         # Go through the decided entrances and determine for each base game
         # sub level what level should we actually send them to.
@@ -405,23 +353,34 @@ class Rayman2World(World):
             itempool.append(self.create_item(item.displayName, item.classification))
         self.multiworld.itempool += itempool
 
+    # Load level connections back from the slot
+    def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
+        entrances = {
+            entrance.name: entrance
+            for region in self.get_regions()
+            for entrance in region.entrances
+        }
+        for source_exit, target_entrance in slot_data["pairings"]:
+            entrances[source_exit].connected_region = entrances[target_entrance].parent_region
+
     # Include information the game needs in the slot data
-    def fill_slot_data(self):        
-        slot_data = {}
-        slot_data["level_swaps"] = self.levelSwaps
-        slot_data["lum_gates"] = [
-            self.options.first_gate_required.value,
-            self.options.second_gate_required.value,
-            self.options.third_gate_required.value,
-            self.options.fourth_gate_required.value,
-            self.options.walk_of_life_required.value,
-            self.options.walk_of_power_required.value
-        ]
-        slot_data["death_link"] = self.options.death_link.value
-        slot_data["end_goal"] = self.options.end_goal.value
-        slot_data["room_randomisation"] = self.options.room_randomisation.value
-        slot_data["lumsanity"] = self.options.lumsanity.value
-        return slot_data
+    def fill_slot_data(self):
+        return {
+            "level_swaps": self.levelSwaps,
+            "pairings": self.pairings,
+            "lum_gates": [
+                self.options.first_gate_required.value,
+                self.options.second_gate_required.value,
+                self.options.third_gate_required.value,
+                self.options.fourth_gate_required.value,
+                self.options.walk_of_life_required.value,
+                self.options.walk_of_power_required.value
+            ],
+            "death_link": self.options.death_link.value,
+            "end_goal": self.options.end_goal.value,
+            "room_randomisation": self.options.room_randomisation.value,
+            "lumsanity": self.options.lumsanity.value,
+        }
 
     # Write slot data to the spoiler file for extra info
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
