@@ -60,11 +60,11 @@ def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.useful, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.filler, LocationProgressType.DEFAULT, tech)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():
-        create(subLevelName, levelName, specialItem, name, ItemClassification.progression, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, LocationProgressType.PRIORITY, tech)
 
 # Go through all levels to create regions and items
 allLevels: list[LevelInfo] = []
