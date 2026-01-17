@@ -1231,6 +1231,13 @@ extra_levels: list[LevelInfo] = [
         },
         lumGate=5,
     ),
+    LevelInfo(
+        "The Crow's Nest",
+        {
+            "Rhop_10": SubLevelInfo()
+        },
+        requireAllMasks=True
+    ),
 ]
 
 levels: list[LevelInfo] = [
@@ -2538,12 +2545,5 @@ levels: list[LevelInfo] = [
                 )
             )
         },
-    ),
-    LevelInfo(
-        "The Crow's Nest",
-        {
-            "Rhop_10": SubLevelInfo()
-        },
-        requireAllMasks=True
     )
 ]
