@@ -66,7 +66,7 @@ class Rayman2World(World):
         # Initialize variables
         self.levelSwaps = {}
         self.pairings = {}
-        self.thatOneSideTempleExitId = None
+        self.thatOneSideTempleExitId = "Finish plum_10"
         self.generating = False
 
     def applyAccessRequirement(self, accessible, tech: Tech):
@@ -77,7 +77,7 @@ class Rayman2World(World):
             case Tech.ELIXIR_AND_PURPLE_SWING:
                 accessible.access_rule = lambda state: self.generating or (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                accessible.access_rule = lambda state: self.generating or (self.thatOneSideTempleExitId is not None and state.has(self.thatOneSideTempleExitId, self.player))
+                accessible.access_rule = lambda state: self.generating or state.has(self.thatOneSideTempleExitId, self.player)
             case Tech.NONE:
                 return
             case _:
@@ -113,10 +113,6 @@ class Rayman2World(World):
                 self.connect_level_entrance(lastRegion, region, levelInfo, isLast, checks, entryType, extraRule, isAtStartOfLevel)
             else:
                 self.connect_internal(lastRegion, region, isLast, checks)
-
-            # Connect every level to the menu so Archipelago doesn't get confused about that we're
-            # always allowed to exit the levels at any time!
-            region.connect(self.get_region("Menu")).randomization_group = Connection.NOT_RANDOM
 
             # Create an event for finishing this sub-region
             self.create_level_finish_event(region, subLevelInfo)
@@ -194,7 +190,8 @@ class Rayman2World(World):
                                               state.prog_items[self.player]["Lum"] + 
                                               (5 * state.prog_items[self.player]["Super Lum"])
                                             ) >= lumRequirement) and base(state)
-        elif levelInfo.requireAllMasks:
+        
+        if levelInfo.requireAllMasks:
             # If this is a mask requiring level we add that as a requirement!
             base = exit.access_rule
             exit.access_rule = lambda state, base=base: self.generating or (state.has("Water Mask", self.player) and \
@@ -203,7 +200,7 @@ class Rayman2World(World):
                                         state.has("Air Mask", self.player)) and \
                                         base(state)
             
-        # Add the extra rule for this entrance
+        # Add the extra rule for this entrance if one is given.
         if extraRule is not None:
             base = exit.access_rule
             exit.access_rule = lambda state, base=base, extraRule=extraRule: extraRule(state) and base(state)
@@ -218,7 +215,6 @@ class Rayman2World(World):
         """Connects the given region to the previous one."""
         connection = f"{lastRegion.name} -> {region.name}"
         exit = lastRegion.create_exit(connection)
-        exit.randomization_group = Connection.INTERNAL
 
         # Create an entrance only if room randomisation is enabled
         if self.options.room_randomisation.value:
@@ -227,10 +223,13 @@ class Rayman2World(World):
             entrance.isFinalLevel = isLast
             entrance.connect(region)
             entrance.randomization_group = Connection.INTERNAL
+            exit.randomization_group = Connection.INTERNAL
         else:
-            exit.connect(region).randomization_group = Connection.NOT_RANDOM
+            exit.connect(region)
+            exit.randomization_group = Connection.NOT_RANDOM
 
     def create_regions(self) -> None:
+        """Creates all regions available in the game."""
         # Start by creating the menu
         menu = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu)
@@ -309,30 +308,29 @@ class Rayman2World(World):
                             state.prog_items[self.player]["Cage"] >= 80
                     )
 
-    # Run room randomization when we need to connect everything up
     def connect_entrances(self) -> None:
+        """Connect entrances of any disconnected regions in room randomisation mode."""
         # If we're in UT we don't re-randomize!
         is_ut = getattr(self.multiworld, "generation_is_fake", False)
         if not is_ut:
             def handlePlacement(state: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
                 # Update the state with the latest selection, store it into the placement state object
-                lastPlacement = placed_targets[len(placed_targets) - 1]
+                lastIndex = len(placed_targets) - 1
+                lastPlacement = placed_targets[lastIndex]
                 placedChecks = getattr(state, 'placedChecks', 0)
                 placedChecks += lastPlacement.openChecks
                 setattr(state, 'placedChecks', placedChecks)
 
-                # Determine if we connected the side temple
-                if self.thatOneSideTempleExitId is None:
-                    for i in range(len(placed_exits)):
-                        # Detect when we set the transition that lets you leave the side temple
-                        # and determine which level needs to be completed to use that door. Then
-                        # we can safely set that you require Finish X to get those lums.
-                        if placed_exits[i].name == "plum_10 -> plum_00":
-                            first = placed_targets[i].split(" -> ", 1)[0]
-                            self.thatOneSideTempleExitId = f"Finish {first}"
-                            return True
+                # Detect when we set the transition that lets you leave the side temple
+                # and determine which level needs to be completed to use that door. Then
+                # we can safely set that you require Finish X to get those lums.
+                if placed_exits[lastIndex].name == "plum_10 -> plum_00":
+                    first = placed_targets[lastIndex].split(" -> ", 1)[0]
+                    self.thatOneSideTempleExitId = f"Finish {first}"
+                    return True
                 return False
-
+            
+            # Perform general entrance randomisation to build the map
             self.generating = True
             placement = entrance_rando.randomize_entrances(
                 self,
@@ -346,14 +344,14 @@ class Rayman2World(World):
             self.generating = False
             self.pairings = placement.pairings
 
+            # Parse the pairings into the format the game needs
             for exit, entrance in self.pairings:
                 # Entrance is the level to actually be played, where we want
                 # to send the player, exit is where they would normally go.
                 former = exit.split(" -> ", 1)[0]
                 latter = entrance.split(" -> ", 1)[1]
-                print(f"Pairing of {exit} to {entrance} ({former} leads to {latter})")
                 self.levelSwaps[former] = latter
-        
+
         # Go through all decided levels and set access requirements on the exits properly to
         # require finishing the level the exit is in.
         entrances_by_name = {
@@ -367,10 +365,6 @@ class Rayman2World(World):
             source_exit = entrances_by_name[exit]
             source_region = source_exit.parent_region
 
-            # Ignore non-randomised entrances!
-            if source_exit.randomization_group == Connection.NOT_RANDOM:
-                continue
-
             # Capture variables for lambda then update it
             region_name = source_region.name
             if region_name == "Menu":
@@ -378,15 +372,15 @@ class Rayman2World(World):
 
             base_rule = source_exit.access_rule
             source_exit.access_rule = lambda state, region_name=region_name,  base_rule=base_rule: base_rule(state) and state.has(f"Finish {region_name}", self.player)
-            print(f"You now have to Finish {region_name} to use {source_exit} which goes from {source_region} to {source_exit.connected_region}")
+            print(f"Entering {source_exit.connected_region} requires finishing {region_name}")
 
-    # Create basic items
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
+        """Creates a new Rayman 2 item using the item id table."""
         return Rayman2Item(item, classification, self.item_name_to_id[item], self.player)
 
-    # Fill the item pool based on the item table
     def create_items(self):
+        """Creates all items based on the item table."""
         itempool = []
         for item in item_table:
             # If not on lumsanity, don't shuffle in the lums!
@@ -395,8 +389,8 @@ class Rayman2World(World):
             itempool.append(self.create_item(item.displayName, item.classification))
         self.multiworld.itempool += itempool
 
-    # Load level connections back from the slot
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
+        """Hook method used by Universal Tracker to load data from slot data back into Python so entrance randomisation is consistent."""
         self.thatOneSideTempleExitId = slot_data["side_temple_id"]
 
         entrances = {
@@ -407,8 +401,8 @@ class Rayman2World(World):
         for source_exit, target_entrance in slot_data["pairings"]:
             entrances[source_exit].connected_region = entrances[target_entrance].parent_region
 
-    # Include information the game needs in the slot data
     def fill_slot_data(self):
+        """Includes all information needed by the game into the slot data."""
         return {
             "level_swaps": self.levelSwaps,
             "pairings": self.pairings,
@@ -427,7 +421,7 @@ class Rayman2World(World):
             "side_temple_id": self.thatOneSideTempleExitId,
         }
 
-    # Write slot data to the spoiler file for extra info
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
+        """Includes decided level swaps in the spoiler file for debugging."""
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
         spoiler_handle.write(f"Level Swaps: {self.levelSwaps}\n")

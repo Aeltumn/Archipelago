@@ -423,7 +423,7 @@ human_readable_names: Dict[int, str] = {
     280: "Lum next to platform sprout #1",
     284: "Lum next to platform sprout #2",
     282: "Lum on edge near gap",
-    277:" Lum above platform sprout",
+    277: "Lum above platform sprout",
     273: "Lum over gap #1",
     272: "Lum over gap #2",
     279: "Lum near pillar",
@@ -1245,6 +1245,7 @@ extra_levels: list[LevelInfo] = [
         {
             "Rhop_10": SubLevelInfo()
         },
+        lumGate=3,
         requireAllMasks=True
     ),
 ]
