@@ -16,6 +16,25 @@ class Rayman2Item(Item):
 class Rayman2Location(Location):
     game: str = "Rayman 2"
 
+class Rayman2Entrance(Entrance):
+    openChecks: int
+    isFinalLevel: bool
+
+    def is_valid_source_transition(self, other, dead_end: bool, er_state: entrance_rando.ERPlacementState):
+        """Adds additional restrictions to prevent invalid configurations."""
+        # If we haven't placed checks yet, don't allow any entrances that
+        # give access to zero checks!
+        placedChecks = getattr(er_state, 'placedChecks', 0)
+        if placedChecks == 0 and self.openChecks == 0:
+            return False
+        
+        # If we're more than 2 rooms away from the last final level, place one!
+        roomsSinceLastFinal = getattr(er_state, 'roomsSinceLastFinal', 0)
+        if roomsSinceLastFinal > 2 and not self.isFinalLevel:
+            return False
+
+        return super().is_valid_source_transition(other, dead_end, er_state)
+
 class Rayman2Web(WebWorld):
     option_groups = create_option_groups()
     tutorials = [Tutorial(
@@ -80,20 +99,24 @@ class Rayman2World(World):
         if len(levelInfo.sublevels) == 0:
             return lastLevel
 
-        first = True
+        index = 0
         lastRegion: Region = lastLevel
         for subLevelName, subLevelInfo in levelInfo.sublevels.items():
             # Create this level and connect it
+            index += 1
+            isLast = index == len(levelInfo.sublevels)
             region = Region(subLevelName, self.player, self.multiworld)
             self.multiworld.regions.append(region)
 
+            # Determine the amount of public checks in this level
+            checks = subLevelInfo.checks.total()
+
             # Connect this to either the previous region or the menu, only include the level info's
             # rules on the initial entrance into this level!
-            if first:
-                self.connect_level_entrance(lastRegion, region, levelInfo, entryType, extraRule)
+            if index <= 1:
+                self.connect_level_entrance(lastRegion, region, levelInfo, isLast, checks, entryType, extraRule)
             else:
-                self.connect_internal(lastRegion, region)
-            first = False
+                self.connect_internal(lastRegion, region, isLast, checks)
 
             # Connect every level to the menu so Archipelago doesn't get confused about that we're
             # always allowed to exit the levels at any time!
@@ -123,6 +146,8 @@ class Rayman2World(World):
             lastLevel: Region, 
             region: Region, 
             levelInfo: LevelInfo,
+            checks: int,
+            isLast: bool,
             type: Connection = Connection.ENTRY_PORTAL,
             extraRule: Callable[[CollectionState], bool] = None,
         ):
@@ -138,7 +163,10 @@ class Rayman2World(World):
             exit.randomization_group = type
 
             # Create an entrance randomization target for this region!
-            entrance = region.create_er_target(connection)
+            entrance = Rayman2Entrance(self.player, connection)
+            entrance.openChecks = checks
+            entrance.isFinalLevel = isLast
+            entrance.connect(region)
             entrance.randomization_group = type
 
         # Determine the lum requirement to reach this portal
@@ -178,7 +206,9 @@ class Rayman2World(World):
     def connect_internal(
             self,
             lastRegion: Region,
-            region: Region
+            region: Region,
+            checks: int,
+            isLast: bool,
         ):
         """Connects the given region to the previous one."""
         connection = f"{lastRegion.name} -> {region.name}"
@@ -187,7 +217,10 @@ class Rayman2World(World):
 
         # Create an entrance only if room randomisation is enabled
         if self.options.room_randomisation.value:
-            entrance = region.create_er_target(connection)
+            entrance = Rayman2Entrance(self.player, connection)
+            entrance.openChecks = checks
+            entrance.isFinalLevel = isLast
+            entrance.connect(region)
             entrance.randomization_group = Connection.INTERNAL
         else:
             exit.connect(region)
@@ -287,7 +320,22 @@ class Rayman2World(World):
         if is_ut:
             return
 
-        def handlePlacement(_: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
+        def handlePlacement(state: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
+            # Update the state with the latest selection, store it into the placement state object
+            lastPlacement = placed_targets[len(placed_targets) - 1]
+            placedChecks = getattr(state, 'placedChecks', 0)
+            roomsSinceLastFinal = getattr(state, 'roomsSinceLastFinal', 0)
+
+            placedChecks += lastPlacement.openChecks
+            if lastPlacement.isFinalLevel:
+                roomsSinceLastFinal = 1
+            else:
+                roomsSinceLastFinal += 1
+
+            setattr(state, 'placedChecks', placedChecks)
+            setattr(state, 'roomsSinceLastFinal', roomsSinceLastFinal)
+
+            # Determine if we connected the side temple
             if self.thatOneSideTempleExitId is None:
                 for i in range(len(placed_exits)):
                     # Detect when we set the transition that lets you leave the side temple
