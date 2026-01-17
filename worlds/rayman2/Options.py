@@ -28,9 +28,9 @@ class EndGoal(Choice):
             return "100%"
 
 class RoomRandomisation(Toggle):
-    """Whether to enable room randomisation."""
+    """[EXPERIMENTAL] - Whether to enable room randomisation. Currently implemented using generic entrance randomisation which often results in invalid configurations."""
     display_name = "Room Randomisation"
-    default = True
+    default = False
 
 class Lumsanity(Toggle):
     """Whether all individual yellow lums should be their own checks. If disabled, only super yellow lums are checks instead of all yellow lums."""
