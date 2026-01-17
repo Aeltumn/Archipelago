@@ -33,7 +33,7 @@ class Checks:
         count = 0
         if lumsanity:
             count += len(self.regularLums)
-            count += len(self.superLums)
+        count += len(self.superLums)
         count += len(self.cages)
         count += len(self.special)
         return count
