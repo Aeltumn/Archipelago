@@ -27,11 +27,6 @@ class Rayman2Entrance(Entrance):
         placedChecks = getattr(er_state, 'placedChecks', 0)
         if placedChecks == 0 and self.openChecks == 0:
             return False
-        
-        # If we're more than 2 rooms away from the last final level, place one!
-        roomsSinceLastFinal = getattr(er_state, 'roomsSinceLastFinal', 0)
-        if roomsSinceLastFinal > 2 and not self.isFinalLevel:
-            return False
 
         return super().is_valid_source_transition(other, dead_end, er_state)
 
@@ -87,11 +82,12 @@ class Rayman2World(World):
                 return
             case _:
                 raise KeyError(f"Invalid tech type {tech}")
-            
+
     def create_level(
             self, 
             levelInfo: LevelInfo, 
-            lastLevel: Region, 
+            lastLevel: Region,
+            isAtStartOfLevel: bool = False,
             entryType: Connection = Connection.ENTRY_PORTAL,
             extraRule: Callable[[CollectionState], bool] = None,
     ) -> Region:
@@ -114,7 +110,7 @@ class Rayman2World(World):
             # Connect this to either the previous region or the menu, only include the level info's
             # rules on the initial entrance into this level!
             if index <= 1:
-                self.connect_level_entrance(lastRegion, region, levelInfo, isLast, checks, entryType, extraRule)
+                self.connect_level_entrance(lastRegion, region, levelInfo, isLast, checks, entryType, extraRule, isAtStartOfLevel)
             else:
                 self.connect_internal(lastRegion, region, isLast, checks)
 
@@ -150,14 +146,20 @@ class Rayman2World(World):
             isLast: bool,
             type: Connection = Connection.ENTRY_PORTAL,
             extraRule: Callable[[CollectionState], bool] = None,
+            isAtStartOfLevel: bool = False,
         ):
         """Connects the menu to this region."""
         connection = f"{lastLevel.name} -> {region.name}"
         exit = lastLevel.create_exit(connection)
 
+        # Mark down which exits are at the start of a level and don't require completing the level they are on!
+        if isAtStartOfLevel:
+            setattr(exit, 'isAtStartOfLevel', True)
+
         # If this is the final level it cannot be randomised!
         if region.name == "Rhop_10" or not self.options.room_randomisation.value:
             exit.connect(region)
+            exit.randomization_group = Connection.NOT_RANDOM
         else:
             # Mark the exit as being in the right randomization groups
             exit.randomization_group = type
@@ -187,21 +189,24 @@ class Rayman2World(World):
                 case 5:
                     lumRequirement = self.options.walk_of_power_required.value
 
-            exit.access_rule = lambda state: self.generating or ((state.prog_items[self.player]["1000th Lum"] + 
+            base = exit.access_rule
+            exit.access_rule = lambda state, base=base: self.generating or ((state.prog_items[self.player]["1000th Lum"] + 
                                               state.prog_items[self.player]["Lum"] + 
                                               (5 * state.prog_items[self.player]["Super Lum"])
-                                            ) >= lumRequirement)
+                                            ) >= lumRequirement) and base(state)
         elif levelInfo.requireAllMasks:
             # If this is a mask requiring level we add that as a requirement!
-            exit.access_rule = lambda state: self.generating or (state.has("Water Mask", self.player) and \
+            base = exit.access_rule
+            exit.access_rule = lambda state, base=base: self.generating or (state.has("Water Mask", self.player) and \
                                         state.has("Earth Mask", self.player) and \
                                         state.has("Fire Mask", self.player) and \
-                                        state.has("Air Mask", self.player))
+                                        state.has("Air Mask", self.player)) and \
+                                        base(state)
             
         # Add the extra rule for this entrance
         if extraRule is not None:
             base = exit.access_rule
-            exit.access_rule = lambda state: extraRule(state) and base(state)
+            exit.access_rule = lambda state, base=base, extraRule=extraRule: extraRule(state) and base(state)
 
     def connect_internal(
             self,
@@ -223,11 +228,7 @@ class Rayman2World(World):
             entrance.connect(region)
             entrance.randomization_group = Connection.INTERNAL
         else:
-            exit.connect(region)
-
-        # Whether this exit can be reached depends on finishing the previous region!
-        if lastRegion.name != "Menu":
-            exit.access_rule = lambda state: self.generating or state.has(f"Finish {lastRegion.name}",  self.player)
+            exit.connect(region).randomization_group = Connection.NOT_RANDOM
 
     def create_regions(self) -> None:
         # Start by creating the menu
@@ -237,12 +238,7 @@ class Rayman2World(World):
         # Go through all levels to create regions and items
         lastLevel = menu
         for levelInfo in levels:
-            if lastLevel.name == "Menu":
-                lastLevel = self.create_level(levelInfo, lastLevel)
-            else:
-                # If this is not the menu we require that you can finish the last level to unlock the next portal!
-                boundLastLevel = lastLevel
-                lastLevel = self.create_level(levelInfo, lastLevel, Connection.ENTRY_PORTAL, lambda state: state.has(f"Finish {boundLastLevel.name}", self.player))
+            lastLevel = self.create_level(levelInfo, lastLevel)
          
         # Go through the extra levels and create them seperately
         for extraLevelInfo in extra_levels:
@@ -274,7 +270,7 @@ class Rayman2World(World):
                 case _:
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
-            self.create_level(extraLevelInfo, lastLevel, entryType, extraRule)
+            self.create_level(extraLevelInfo, lastLevel, True, entryType, extraRule)
 
         # Go through all location and create them
         for data in location_table:
@@ -317,56 +313,72 @@ class Rayman2World(World):
     def connect_entrances(self) -> None:
         # If we're in UT we don't re-randomize!
         is_ut = getattr(self.multiworld, "generation_is_fake", False)
-        if is_ut:
-            return
+        if not is_ut:
+            def handlePlacement(state: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
+                # Update the state with the latest selection, store it into the placement state object
+                lastPlacement = placed_targets[len(placed_targets) - 1]
+                placedChecks = getattr(state, 'placedChecks', 0)
+                placedChecks += lastPlacement.openChecks
+                setattr(state, 'placedChecks', placedChecks)
 
-        def handlePlacement(state: entrance_rando.ERPlacementState, placed_exits: list[Entrance], placed_targets: list[Entrance]) -> bool:
-            # Update the state with the latest selection, store it into the placement state object
-            lastPlacement = placed_targets[len(placed_targets) - 1]
-            placedChecks = getattr(state, 'placedChecks', 0)
-            roomsSinceLastFinal = getattr(state, 'roomsSinceLastFinal', 0)
+                # Determine if we connected the side temple
+                if self.thatOneSideTempleExitId is None:
+                    for i in range(len(placed_exits)):
+                        # Detect when we set the transition that lets you leave the side temple
+                        # and determine which level needs to be completed to use that door. Then
+                        # we can safely set that you require Finish X to get those lums.
+                        if placed_exits[i].name == "plum_10 -> plum_00":
+                            first = placed_targets[i].split(" -> ", 1)[0]
+                            self.thatOneSideTempleExitId = f"Finish {first}"
+                            return True
+                return False
 
-            placedChecks += lastPlacement.openChecks
-            if lastPlacement.isFinalLevel:
-                roomsSinceLastFinal = 1
-            else:
-                roomsSinceLastFinal += 1
+            self.generating = True
+            placement = entrance_rando.randomize_entrances(
+                self,
+                False, 
+                {
+                    Connection.ENTRY_PORTAL: [Connection.ENTRY_PORTAL],
+                    Connection.INTERNAL: [Connection.INTERNAL]
+                },
+                on_connect=handlePlacement,
+            )
+            self.generating = False
+            self.pairings = placement.pairings
 
-            setattr(state, 'placedChecks', placedChecks)
-            setattr(state, 'roomsSinceLastFinal', roomsSinceLastFinal)
-
-            # Determine if we connected the side temple
-            if self.thatOneSideTempleExitId is None:
-                for i in range(len(placed_exits)):
-                    # Detect when we set the transition that lets you leave the side temple
-                    # and determine which level needs to be completed to use that door. Then
-                    # we can safely set that you require Finish X to get those lums.
-                    if placed_exits[i].name == "plum_10 -> plum_00":
-                        first = placed_targets[i].split(" -> ", 1)[0]
-                        self.thatOneSideTempleExitId = f"Finish {first}"
-                        return True
-            return False
-
-        self.generating = True
-        placement = entrance_rando.randomize_entrances(
-            self,
-            False, 
-            {
-                Connection.ENTRY_PORTAL: [Connection.ENTRY_PORTAL],
-                Connection.INTERNAL: [Connection.INTERNAL]
-            },
-            on_connect=handlePlacement,
-        )
-        self.generating = False
-        self.pairings = placement.pairings
+            for exit, entrance in self.pairings:
+                # Entrance is the level to actually be played, where we want
+                # to send the player, exit is where they would normally go.
+                former = exit.split(" -> ", 1)[0]
+                latter = entrance.split(" -> ", 1)[1]
+                print(f"Pairing of {exit} to {entrance} ({former} leads to {latter})")
+                self.levelSwaps[former] = latter
         
-        # Go through the decided entrances and determine for each base game
-        # sub level what level should we actually send them to.
-        for exit, entrance in placement.pairings:
-            # Entrance is the level to actually be played, where we want
-            # to send the player, exit is where they would normally go.
-            print(f"Pairing of {exit} to {entrance}")
-            self.levelSwaps[exit] = entrance
+        # Go through all decided levels and set access requirements on the exits properly to
+        # require finishing the level the exit is in.
+        entrances_by_name = {
+            entrance.name: entrance
+            for region in self.get_regions()
+            for entrance in region.entrances
+        }
+
+        for exit, entrance in self.pairings:
+            # The determine the original exit and then what it got shuffled into
+            source_exit = entrances_by_name[exit]
+            source_region = source_exit.parent_region
+
+            # Ignore non-randomised entrances!
+            if source_exit.randomization_group == Connection.NOT_RANDOM:
+                continue
+
+            # Capture variables for lambda then update it
+            region_name = source_region.name
+            if region_name == "Menu":
+                continue
+
+            base_rule = source_exit.access_rule
+            source_exit.access_rule = lambda state, region_name=region_name,  base_rule=base_rule: base_rule(state) and state.has(f"Finish {region_name}", self.player)
+            print(f"You now have to Finish {region_name} to use {source_exit} which goes from {source_region} to {source_exit.connected_region}")
 
     # Create basic items
     def create_item(self, item: str,
