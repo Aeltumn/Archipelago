@@ -204,7 +204,7 @@ class Rayman2World(World):
 
         # Whether this exit can be reached depends on finishing the previous region!
         if lastRegion.name != "Menu":
-            exit.access_rule = lambda state: state.can_reach_location(f"Finish {lastRegion.name}",  self.player)
+            exit.access_rule = lambda state: self.generating or state.can_reach_location(f"Finish {lastRegion.name}",  self.player)
 
     def create_regions(self) -> None:
         # Start by creating the menu
