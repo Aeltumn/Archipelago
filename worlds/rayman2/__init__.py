@@ -82,7 +82,7 @@ class Rayman2World(World):
             case Tech.ELIXIR_AND_PURPLE_SWING:
                 accessible.access_rule = lambda state: self.generating or (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                accessible.acccess_rule = lambda state: self.generating or (self.thatOneSideTempleExitId is not None and state.has(self.thatOneSideTempleExitId, self.player))
+                accessible.access_rule = lambda state: self.generating or (self.thatOneSideTempleExitId is not None and state.has(self.thatOneSideTempleExitId, self.player))
             case Tech.NONE:
                 return
             case _:
