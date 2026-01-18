@@ -819,7 +819,7 @@ human_readable_names: Dict[int, str] = {
     608: "Lum in cage hanging from bridge #2",
     609: "Lum in cage hanging from bridge #3",
     603: "Lum on bridge #1",
-    504: "Lum on bridge #2",
+    604: "Lum on bridge #2",
     605: "Lum midair before exit",
     646: "Super lum behind slanted wall",
     #helic_20
@@ -2228,7 +2228,7 @@ levels: list[LevelInfo] = [
                         608,
                         609,
                         603,
-                        504,
+                        604,
                         605
                     ],
                     cages=[
