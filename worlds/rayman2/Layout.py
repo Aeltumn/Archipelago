@@ -48,7 +48,7 @@ class SubLevelInfo:
 class LevelInfo:
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
-    lumGate: int = None
+    lumGate: int | None = None
     requireAllMasks: bool = False
 
 human_readable_names: Dict[int, str] = {
