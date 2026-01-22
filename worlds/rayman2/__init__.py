@@ -146,7 +146,7 @@ class Rayman2World(World):
         portal = source.create_exit(name)
         portal.randomization_group = randomization_group
 
-        # Require the minimum aount of portals to be made previously so this one is reachable
+        # Require the minimum amount of portals to be made previously so this one is reachable
         if portals > 0:
             portal.access_rule = lambda state: self.generating or (state.prog_items[self.player]["Create Portal"] >= portals)
 
@@ -276,23 +276,23 @@ class Rayman2World(World):
          
         # Go through the extra levels and create them seperately
         for extraLevelInfo in extra_levels:
-            lastLevel: Region = None
+            last_level: Region = None
             extra_rule: Callable[[CollectionState], bool] = None
             entry_type: Connection = Connection.ENTRY_PORTAL
             match extraLevelInfo.displayName:
                 case "The Fairly Glade #2 - Revisit":
-                    lastLevel = self.get_region("cask_10")
+                    last_level = self.get_region("cask_10")
                     entry_type = Connection.INTERNAL
                 case "The Sanctuary of Stone and Fire - Side Temple":
-                    lastLevel = self.get_region("plum_00")
+                    last_level = self.get_region("plum_00")
                     entry_type = Connection.INTERNAL
                 case "The Cave of Bad Dreams":
-                    lastLevel = self.get_region("Ski_10")
+                    last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: self.generating or state.has("Knowledge of the Cave of Bad Dreams", self.player)
                 case "The Walk of Life":
-                    lastLevel = self.get_region("chase_10")
+                    last_level = self.get_region("chase_10")
                 case "The Walk of Power":
-                    lastLevel = self.get_region("earth_10")
+                    last_level = self.get_region("earth_10")
                 case _:
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
@@ -302,7 +302,7 @@ class Rayman2World(World):
                 continue
 
             # Create an entrance in the source level
-            level_exit = self.create_entrance_portal(lastLevel, f"Portal to {extraLevelInfo.displayName}", randomization_group=entry_type, lum_gate=extraLevelInfo.lumGate, require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
+            level_exit = self.create_entrance_portal(last_level, f"Portal to {firstRegion.name}", randomization_group=entry_type, lum_gate=extraLevelInfo.lumGate, require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
 
             # If room randomisation is off, connect the portal to this side-level!
             if not self.options.room_randomisation.value:
@@ -346,10 +346,11 @@ class Rayman2World(World):
                 # Update the state with the latest selection, store it into the placement state object
                 lastIndex = len(placed_targets) - 1
                 lastPlacement = placed_targets[lastIndex]
-                print(f"Placed {placed_exits[lastIndex]} to become {placed_targets[lastIndex]}")
                 placedChecks = getattr(state, 'placedChecks', 0)
                 placedChecks += lastPlacement.openChecks
                 setattr(state, 'placedChecks', placedChecks)
+
+                # print(f"Placed {placed_exits[lastIndex]} to become {placed_targets[lastIndex]}")
 
                 # Detect when we set the transition that lets you leave the side temple
                 # and determine which level needs to be completed to use that door. Then
@@ -375,12 +376,66 @@ class Rayman2World(World):
             self.pairings = placement.pairings
 
             # Parse the pairings into the format the game needs
-            # for exit, entrance in self.pairings:
-                # Entrance is the level to actually be played, where we want
-                # to send the player, exit is where they would normally go.
-                # former = exit.split(" -> ", 1)[0]
-                # latter = entrance.split(" -> ", 1)[1]
-                # self.levelSwaps[former] = latter
+            for exit, entrance in self.pairings:
+                if exit.startswith("Portal #"):
+                    # This is a connection from a mapmonde portal.
+                    match exit:
+                        case "Portal #1":
+                            first = "learn_10"
+                        case "Portal #2":
+                            first = "learn_30"
+                        case "Portal #3":
+                            first = "ski_10"
+                        case "Portal #4":
+                            first = "chase_10"
+                        case "Portal #5":
+                            first = "water_10"
+                        case "Portal #6":
+                            first = "rodeo_10"
+                        case "Portal #7":
+                            first = "glob_10"
+                        case "Portal #8":
+                            first = "whale_00"
+                        case "Portal #9":
+                            first = "plum_00"
+                        case "Portal #10":
+                            first = "bast_10"
+                        case "Portal #11":
+                            first = "nave_10"
+                        case "Portal #12":
+                            first = "seat_10"
+                        case "Portal #13":
+                            first = "earth_10"
+                        case "Portal #14":
+                            first = "helic_10"
+                        case "Portal #15":
+                            first = "morb_00"
+                        case "Portal #16":
+                            first = "learn_40"
+                        case "Portal #17":
+                            first = "boat01"
+                        case _:
+                            raise KeyError(f"Invalid name {exit}")
+                elif exit.startswith("Portal to "):
+                    # If it's a portal into a sub-region we map that region.
+                    first = exit[10:]
+                else:
+                    # Otherwise take the source level of the transition.
+                    first = exit.split(" -> ", 1)[1]
+
+                if entrance.startswith("Portal into "):
+                    second = entrance[12:]
+                else:
+                    second = entrance.split(" -> ", 1)[1]
+
+                # Learn 32 is our name for the EEC loading zone, not yet recognised by the mod so we
+                # just make it learn 31 for now.
+                if first == "Learn_32":
+                    first = "learn_31"
+                if second == "Learn_32":
+                    second = "learn_31"
+
+                self.levelSwaps[first] = second
 
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
