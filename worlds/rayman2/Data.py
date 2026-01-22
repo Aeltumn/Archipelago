@@ -60,7 +60,8 @@ def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.filler, LocationProgressType.DEFAULT, tech)
+        # Technically cages are not progression but we do need them for 100% so we have to track them!
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized, LocationProgressType.DEFAULT, tech)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():

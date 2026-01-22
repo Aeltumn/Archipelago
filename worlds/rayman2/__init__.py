@@ -178,8 +178,7 @@ class Rayman2World(World):
                     lumRequirement = self.options.walk_of_power_required.value
 
             base = portal.access_rule
-            portal.access_rule = lambda state, base=base: self.generating or ((state.prog_items[self.player]["1000th Lum"] + 
-                                              state.prog_items[self.player]["Lum"] + 
+            portal.access_rule = lambda state, base=base: self.generating or ((state.prog_items[self.player]["Lum"] +
                                               (5 * state.prog_items[self.player]["Super Lum"])
                                             ) >= lumRequirement) and base(state)
         
@@ -308,7 +307,7 @@ class Rayman2World(World):
                 if self.options.lumsanity.value:
                     self.multiworld.completion_condition[self.player] = lambda state: (
                         state.has("Finish Rhop_10", self.player) and
-                            (state.prog_items[self.player]["1000th Lum"] + state.prog_items[self.player]["Lum"] + (5 * state.prog_items[self.player]["Super Lum"])) >= 1000 and
+                            (state.prog_items[self.player]["Lum"] + (5 * state.prog_items[self.player]["Super Lum"])) >= 1000 and
                             state.prog_items[self.player]["Cage"] >= 80
                     )
                 else:
