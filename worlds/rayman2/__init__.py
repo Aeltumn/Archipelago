@@ -71,17 +71,8 @@ class Rayman2World(World):
 
     def applyAccessRequirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
-        match tech:
-            case Tech.PURPLE_SWING | Tech.BAYOU_DAMAGE_BOOST | Tech.PURPLE_SWING_OR_BACKWARDS_JUMP | Tech.PURPLE_SWING_OR_GLM:
-                accessible.access_rule = lambda state: self.generating or state.has("Silver Lum", self.player)
-            case Tech.ELIXIR_AND_PURPLE_SWING:
-                accessible.access_rule = lambda state: self.generating or (state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player))
-            case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                accessible.access_rule = lambda state: self.generating or state.has(self.thatOneSideTempleExitId, self.player)
-            case Tech.NONE:
-                return
-            case _:
-                raise KeyError(f"Invalid tech type {tech}")
+        if tech != Tech.NONE:
+            accessible.access_rule = lambda state: self.generating or self.has_tech(state, tech)
 
     def create_level(
             self, 
@@ -178,9 +169,7 @@ class Rayman2World(World):
                     lumRequirement = self.options.walk_of_power_required.value
 
             base = portal.access_rule
-            portal.access_rule = lambda state, base=base: self.generating or ((state.prog_items[self.player]["Lum"] +
-                                              (5 * state.prog_items[self.player]["Super Lum"])
-                                            ) >= lumRequirement) and base(state)
+            portal.access_rule = lambda state, base=base: self.generating or (self.get_lums(state) >= lumRequirement) and base(state)
         
         if require_all_masks:
             # If this is a mask requiring level we add that as a requirement!
@@ -222,6 +211,44 @@ class Rayman2World(World):
         else:
             exit.connect(region)
             exit.randomization_group = Connection.NOT_RANDOM
+
+    def has_tech(self, state: CollectionState, tech: Tech) -> bool:
+        """Returns whether the given state has the items to complete the given tech."""
+        match tech:
+            case Tech.PURPLE_SWING | Tech.BAYOU_DAMAGE_BOOST | Tech.PURPLE_SWING_OR_BACKWARDS_JUMP | Tech.PURPLE_SWING_OR_GLM:
+                return state.has("Silver Lum", self.player)
+            case Tech.ELIXIR_AND_PURPLE_SWING:
+                return state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player)
+            case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
+                return state.has(self.thatOneSideTempleExitId, self.player)
+            case Tech.NONE:
+                return True
+            case _:
+                raise KeyError(f"Invalid tech type {tech}")
+
+    def get_lums(self, state: CollectionState) -> int:
+        """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
+        if self.options.lumsanity.value:
+            return state.prog_items[self.player]["Lum"] + (5 * state.prog_items[self.player]["Super Lum"])
+        else:
+            # Start with all super lums you have
+            lumCount = (5 * state.prog_items[self.player]["Super Lum"])
+
+            # Crawl through all available levels
+            allLevels: list[LevelInfo] = []
+            allLevels += levels
+            allLevels += extra_levels
+            for levelInfo in allLevels:
+                for subLevelName, subLevelInfo in levelInfo.sublevels.items():
+                    # If this region is reachable count all lums in the region, also check
+                    # if they have the necessary tech to get the ones behind a requirement
+                    if state.can_reach_region(subLevelName, self.player):
+                        lumCount += len(subLevelInfo.checks.regularLums)
+
+                        for tech, checks in subLevelInfo.behindRequirements.items():
+                            if self.has_tech(state, tech):
+                                lumCount += len(checks.regularLums)
+            return lumCount
 
     def create_regions(self) -> None:
         """Creates all regions available in the game."""
@@ -304,19 +331,11 @@ class Rayman2World(World):
             case 2:
                 self.multiworld.completion_condition[self.player] = lambda state: state.has("Finish vulca_20", self.player)
             case 3:
-                if self.options.lumsanity.value:
-                    self.multiworld.completion_condition[self.player] = lambda state: (
+                self.multiworld.completion_condition[self.player] = lambda state: (
                         state.has("Finish Rhop_10", self.player) and
-                            (state.prog_items[self.player]["Lum"] + (5 * state.prog_items[self.player]["Super Lum"])) >= 1000 and
-                            state.prog_items[self.player]["Cage"] >= 80
-                    )
-                else:
-                    self.multiworld.completion_condition[self.player] = lambda state: (
-                        state.has("Finish Rhop_10", self.player) and
-                            # There's 58 super lums that can be collected!
-                            state.prog_items[self.player]["Super Lum"] >= 58 and
-                            state.prog_items[self.player]["Cage"] >= 80
-                    )
+                        self.get_lums(state) >= 1000 and
+                        state.prog_items[self.player]["Cage"] >= 80
+                )
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
