@@ -949,7 +949,7 @@ human_readable_names: Dict[int, str] = {
     1351: "Lum on slide #4",
     1353: "Lum on slide #5",
     1348: "Lum on slide #6",
-    1424: "Lum on slide #7",
+    1324: "Lum on slide #7",
     1317: "Lum on slide #8",
     1319: "Lum on slide #9",
     1321: "Lum on slide #10",
