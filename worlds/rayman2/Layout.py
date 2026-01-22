@@ -833,7 +833,7 @@ human_readable_names: Dict[int, str] = {
     642: "Lum in flight track #8",
     628: "Lum in flight track #9",
     910: "Cage leftmost in stop",
-    518: "Super lum in cage leftmost in stop",
+    618: "Super lum in cage leftmost in stop",
     909: "Cage rightmost in stop",
     613: "Super lum in cage rightmost in stop",
     630: "Lum in flight track #10",
@@ -2259,7 +2259,7 @@ levels: list[LevelInfo] = [
                         909
                     ],
                     superLums=[
-                        518,
+                        618,
                         613,
                         631,
                         636
