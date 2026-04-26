@@ -280,18 +280,13 @@ class GeneratorState:
                 sublist.append([subLevelId, segment])
                 self.remaining[roomType] = sublist
 
-    def add_to_level(self, level: GeneratorLevel, roomType: RoomType):
-        """Adds a room of the given [type] to [level]."""
-        options = self.remaining.get(roomType, [])
-        if len(options) == 0:
-            raise ValueError(f"Not enough type {roomType} rooms to extend level, how did we pick this?")
-        choice = random.choice(options)
-        subLevelId, levelInfo = choice
-
+    def add_to_level(self, level: GeneratorLevel, roomType: RoomType, choice: Tuple[str, SubLevelInfo]):
         # Remove this option for future level swaps
+        options = self.remaining.get(roomType, [])
         options.remove(choice)
 
         # Add the checks within this level to the current state
+        subLevelId, levelInfo = choice
         self.collected.include_level(subLevelId, levelInfo, level.isSideTemple)
 
         # Add it to the level's generated list
@@ -299,11 +294,30 @@ class GeneratorState:
         sublist.append([subLevelId, levelInfo])
         level.generated[roomType] = sublist
 
+    def select_for_level(self, level: GeneratorLevel, roomType: RoomType):
+        """Adds a room of the given [type] to [level]."""
+        options = self.remaining.get(roomType, [])
+        if len(options) == 0:
+            raise ValueError(f"Not enough type {roomType} rooms to extend level, how did we pick this?")
+        choice = random.choice(options)
+        self.add_to_level(level, roomType, choice)
+
     def attempt_generation_step(self) -> bool:
         """Attempts to place one more room."""
         # Start by determining which levels are accessible currently given the lums we have
         maxLums = self.collected.get_maximum_obtainable_lums()
         selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums and (it.zoneRequired is None or it.zoneRequired in self.collected.zones), self.levels.values()))
+
+        # Determine which levels of which types are currently being blocked
+        blockedLevels = list(filter(lambda it: it.lumsRequired <= maxLums and it.zoneRequired is not None and it.zoneRequired not in self.collected.zones, self.levels.values()))
+        blockedTypes = {}
+        for blockedLevel in blockedLevels:
+            roomType = None
+            for rt, options in self.remaining.items():
+                for levelId, _ in options:
+                    if levelId == blockedLevel.zoneRequired:
+                        roomType = rt
+            blockedTypes[roomType] = blockedTypes.get(roomType, 0) + 1
 
         # Determine all actions we can currently take which are all equally valid
         all_valid_options = []
@@ -319,7 +333,7 @@ class GeneratorState:
                 baseGameRooms = len(level.baseGame.get(roomType, []))
                 generatedRooms = len(level.generated.get(roomType, []))
                 if baseGameRooms > generatedRooms:
-                    all_valid_options.append(lambda level=level, roomType=roomType: self.add_to_level(level, roomType))
+                    all_valid_options.append([level, roomType])
 
         # If we have any standard rooms left to place we decide their locations
         remainingExtenders = self.remaining.get(RoomType.STANDARD, [])
@@ -328,7 +342,7 @@ class GeneratorState:
             # If there's revisits with zero levels inside we need to fill those first!
             for level in remainingUnselectedRevisits:
                 # Add a random standard room to this level
-                all_valid_options.append(lambda level=level: self.add_to_level(level, RoomType.STANDARD))
+                all_valid_options.append([level, RoomType.STANDARD])
         elif len(remainingExtenders) > 0 and len(all_valid_options) == 0:
             # We only add additional levels when we either don't need to worry about the future
             # or if we otherwise have nothing else we can select!
@@ -338,14 +352,43 @@ class GeneratorState:
                     continue
 
                 # Add a random standard room to this level
-                all_valid_options.append(lambda level=level: self.add_to_level(level, RoomType.STANDARD))
+                all_valid_options.append([level, RoomType.STANDARD])
 
         # If we're out of options we're done!
         if len(all_valid_options) == 0:
             return True
 
+        # If we have any blocked levels that are not yet accessible because we are missing some zone, we force
+        # that zone to be placed somewhere so it gets unblocked! Since we keep all options open and don't place
+        # in order this shouldn't result in the side-level access zones from being weirdly early or anything.
+        if len(blockedLevels) > 0:
+            # Check how many options we have left for each room type, if there's less than 3 remaining
+            # we start forcing the selections!
+            byRoomType = {}
+            for option in all_valid_options:
+                byRoomType[option[1]] = byRoomType.get(option[1], 0) + 1
+            lowest = 999
+            lowestType = RoomType.STANDARD
+            for roomType, count in byRoomType.items():
+                # Ignore room types that do not block anything!
+                if blockedTypes.get(roomType) is not None and count < lowest:
+                    lowest = count
+                    lowestType = roomType
+
+            if lowest < 3:
+                allLowestLevels = list(filter(lambda it: it[1] == lowestType, all_valid_options))
+                requiredZones = list(map(lambda it: it.zoneRequired, blockedLevels))
+                validOptions = list(filter(lambda it: it[0] in requiredZones, self.remaining.get(lowestType, [])))
+                if len(validOptions) == 0:
+                    raise ValueError(f"Not enough type {validOptions} rooms that open something up, why are we here?")
+                choice = random.choice(validOptions)
+                level, _ = random.choice(allLowestLevels)
+                self.add_to_level(level, lowestType, choice)
+                return False
+
         # Pick a random choice from the list and run it!
-        random.choice(all_valid_options)()
+        level, roomType = random.choice(all_valid_options)
+        self.select_for_level(level, roomType)
         return False
 
     def generate(self):
@@ -354,6 +397,10 @@ class GeneratorState:
         while True:
             if self.attempt_generation_step():
                 break
+
+        # Require that we placed every level!
+        for _, options in self.remaining.items():
+            assert len(options) == 0
 
         # Determine the output level chains for everything
         all_levels = []

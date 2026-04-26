@@ -307,9 +307,8 @@ class Rayman2World(World):
         # Go through all level chains and hook them up
         mapmonde = self.get_region("Menu")
         portal = 1
-        baseLevels = {}
         for chainId, chainLevels in self.levelChains.items():
-            print(f"Configuring chain {chainId} with {chainLevels}")
+            print(f"Created level chain {chainId}: {chainLevels}")
             index = 0
             lastRegion: Region | None = None
 
@@ -368,15 +367,29 @@ class Rayman2World(World):
                         firstRegion = self.levelChains[target][0]
                         firstRegionObj = self.get_region(firstRegion)
                         regionExit.connect(firstRegionObj)
-                        baseLevels[target] = region
 
                 # If this is the last of a revisit we need to hook it back up to where we came from
                 if isRevisit and index == len(chainLevels):
-                    baseLevel = baseLevels[chainId]
                     exits = list(region.get_exits())
                     for exit in exits:
                         if not exit.name.startswith("Portal to"):
-                            exit.connect(baseLevel)
+                            # Determine the base game level where this side-area normally ends!
+                            target = None
+                            match chainId:
+                                case "side_temple":
+                                    target = self.get_region("plum_00")
+                                case "fairy_glade_revisit":
+                                    target = self.get_region("cask_10")
+                                case "cave_of_bad_dreams":
+                                    target = self.get_region("Ski_10")
+                                case "walk_of_life":
+                                    target = self.get_region("chase_10")
+                                case "walk_of_power":
+                                    target = self.get_region("earth_10")
+                                case _:
+                                    raise KeyError(f"Invalid exit name for side-level chain: {chainId}")
+
+                            exit.connect(target)
                             break
 
                 # If this is the side temple chain, we link finishing this region to the Finish Side Temple event!
