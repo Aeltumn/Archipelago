@@ -44,12 +44,9 @@ class Rayman2World(World):
     options_dataclass = Rayman2Options
     options: Rayman2Options
 
-    ut_can_gen_without_yaml = True
-
     def __init__(self, multiworld, player):
         super(Rayman2World, self).__init__(multiworld, player)
-        self.levelSwaps = {}
-        self.pairings = {}
+        self.levelChains = {}
 
     def applyAccessRequirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
@@ -86,7 +83,7 @@ class Rayman2World(World):
                 firstRegion = region
             lastRegion = region
         return [firstRegion, lastRegion]
-    
+
     def create_mapmonde_portal_event(self, region: Region, portals: int) -> Location:
         """Creates an event for generating a portal in the Hall of Doors."""
         event = self.create_event(region, f"Create Portal #{portals + 1}", "Create Portal")
@@ -99,7 +96,7 @@ class Rayman2World(World):
         if levelInfo is not None:
             self.applyAccessRequirement(event, levelInfo.exitRequirement)
         return event
-    
+
     def create_event(self, region: Region, location_name: str, item_name: str = None) -> Location:
         """Creates a new generic event in the given region that requires finishing the given level."""
         if item_name is None:
@@ -110,7 +107,7 @@ class Rayman2World(World):
         event_location.place_locked_item(event_item)
         region.locations.append(event_location)
         return event_location
-    
+
     def create_entrance_portal(self, source: Region, name: str, portals: int = 0, lum_gate: int | None = None, require_all_masks: bool = False, extra_rule: Callable[[CollectionState], bool] = None) -> Entrance:
         """Creates a new portal on the source which requires unlocking portals and possibly lum gates or masks but can be accessed itself without any requirements."""
         portal = source.create_exit(name)
@@ -139,7 +136,7 @@ class Rayman2World(World):
 
             base = portal.access_rule
             portal.access_rule = lambda state, base=base: self.get_lums(state) >= lumRequirement and base(state)
-        
+
         if require_all_masks:
             # If this is a mask requiring level we add that as a requirement!
             base = portal.access_rule
@@ -148,7 +145,7 @@ class Rayman2World(World):
                                         state.has("Fire Mask", self.player) and \
                                         state.has("Air Mask", self.player)) and \
                                         base(state)
-            
+
         # Add the extra rule for this portal if one is given.
         if extra_rule is not None:
             base = portal.access_rule
@@ -228,16 +225,19 @@ class Rayman2World(World):
             # Connect the portal to the level if not randomising or for the first/last levels
             if not self.options.room_randomisation.value or levelInfo.displayName == "The Woods of Light" or levelInfo.displayName == "The Crow's Nest":
                 mapmonde_exit.connect(firstRegion)
-         
+
         # Go through the extra levels and create them separately
         for extraLevelInfo in extra_levels:
             last_level: Region = None
             extra_rule: Callable[[CollectionState], bool] = None
+            isRevisit = False
             match extraLevelInfo.displayName:
                 case "The Fairly Glade #2 - Revisit":
                     last_level = self.get_region("cask_10")
+                    isRevisit = True
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
+                    isRevisit = True
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
@@ -249,12 +249,16 @@ class Rayman2World(World):
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
             # Create this level itself
-            firstRegion, _ = self.create_level(extraLevelInfo.sublevels)
+            firstRegion, lastRegion = self.create_level(extraLevelInfo.sublevels)
             if firstRegion is None:
                 continue
 
             # Create an entrance in the source level
             level_exit = self.create_entrance_portal(last_level, f"Portal to {firstRegion.name}", lum_gate=extraLevelInfo.lumGate, require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
+
+            # Create an exit back to the source level from the side-level only for the revisits
+            if isRevisit:
+                self.connect_internal(lastRegion, last_level)
 
             # If room randomisation is off, connect the portal to this side-level!
             if not self.options.room_randomisation.value:
@@ -269,10 +273,10 @@ class Rayman2World(World):
             region = self.multiworld.get_region(data.region, self.player)
             location = Rayman2Location(self.player, data.displayName, data.id, region)
             location.progression_type = data.progressionType
-            
+
             # Add an access rule based on the tech type and this region being accessible!
             self.applyAccessRequirement(location, data.tech)
-            
+
             # Add this location to this region
             region.locations.append(location)
 
@@ -289,6 +293,97 @@ class Rayman2World(World):
                         state.prog_items[self.player]["Cage"] >= 80
                 )
 
+    def connect_randomised(self):
+        """Connects together regions based on the decisions made by the generator."""
+        # Create a mapping of all sub levels and their info
+        subLevelsById = {}
+        allLevels: list[LevelInfo] = []
+        allLevels += levels
+        allLevels += extra_levels
+        for levelInfo in allLevels:
+            for subLevelName, subLevelInfo in levelInfo.sublevels.items():
+                subLevelsById[subLevelName] = subLevelInfo
+
+        # Go through all level chains and hook them up
+        mapmonde = self.get_region("Menu")
+        portal = 1
+        baseLevels = {}
+        for chainId, chainLevels in self.levelChains.items():
+            print(f"Configuring chain {chainId} with {chainLevels}")
+            index = 0
+            lastRegion: Region | None = None
+
+            # If this is a revisit we have to connect up the room properly back to where
+            # it originated from.
+            isRevisit = chainId == "side_temple" or chainId == "fairy_glade_revisit"
+
+            for subLevelName in chainLevels:
+                index += 1
+
+                # Find the data for this level
+                subLevelInfo = subLevelsById[subLevelName]
+                if subLevelInfo is None:
+                    raise KeyError(f"Could not find sub level called {subLevelName}")
+
+                # Find the region for this level
+                region = self.get_region(subLevelName)
+
+                # If this is the first region we connect it to the map portal
+                if index == 1:
+                    portal += 1
+                    portalName = f"Portal #{portal}"
+                    mapmonde_exit = next((x for x in mapmonde.get_exits() if x.name == portalName and x.connected_region is None), None)
+                    if mapmonde_exit is not None:
+                        mapmonde_exit.connect(region)
+
+                # If this chain has a previous region it has an exit we have to connect to!
+                if lastRegion is not None:
+                    exits = list(lastRegion.get_exits())
+                    for exit in exits:
+                        if not exit.name.startswith("Portal to"):
+                            exit.connect(region)
+                            break
+                lastRegion = region
+
+                # If this region has a portal exit we link it up
+                regionExits = list(region.get_exits())
+                for regionExit in regionExits:
+                    if regionExit.name.startswith("Portal to"):
+                        target = None
+                        match regionExit.name:
+                            case "Portal to plum_20":
+                                target = "side_temple"
+                            case "Portal to Learn_32":
+                                target = "fairy_glade_revisit"
+                            case "Portal to vulca_10":
+                                target = "cave_of_bad_dreams"
+                            case "Portal to Ly_10":
+                                target = "walk_of_life"
+                            case "Portal to Ly_20":
+                                target = "walk_of_power"
+                            case _:
+                                raise KeyError(f"Invalid exit name for side-level: {regionExit.name}")
+
+                        # Connect this portal to the first level of the target chain
+                        firstRegion = self.levelChains[target][0]
+                        firstRegionObj = self.get_region(firstRegion)
+                        regionExit.connect(firstRegionObj)
+                        baseLevels[target] = region
+
+                # If this is the last of a revisit we need to hook it back up to where we came from
+                if isRevisit and index == len(chainLevels):
+                    baseLevel = baseLevels[chainId]
+                    exits = list(region.get_exits())
+                    for exit in exits:
+                        if not exit.name.startswith("Portal to"):
+                            exit.connect(baseLevel)
+                            break
+
+                # If this is the side temple chain, we link finishing this region to the Finish Side Temple event!
+                if chainId == "side_temple" and index == len(chainLevels):
+                    event = self.create_event(region, "Finish Side Temple")
+                    self.applyAccessRequirement(event, subLevelInfo.exitRequirement)
+
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
         # If we're in UT we don't re-randomize!
@@ -299,85 +394,15 @@ class Rayman2World(World):
         if not self.options.room_randomisation.value:
             return
 
-        # Determine all entrances to randomise
-        entrances = {
-            entrance.name: entrance
-            for region in self.get_regions()
-            for entrance in region.entrances
-        }
-
         # Run the custom generator
         generator = GeneratorState()
         generator.lumsanity = self.options.lumsanity.value
         generator.assemble_initial_levels(self.options)
-        generator.generate(entrances)
+        generator.generate()
 
-        # Hook up all the regions based on the generator
-        for source_exit, target_entrance in generator.pairings:
-            entrances[source_exit].connected_region = entrances[target_entrance].parent_region
-        self.pairings = generator.pairings
-
-        # Parse the pairings into the format the game needs
-        for exit, entrance in self.pairings:
-            if exit.startswith("Portal #"):
-                # This is a connection from a mapmonde portal.
-                match exit:
-                    case "Portal #1":
-                        first = "learn_10"
-                    case "Portal #2":
-                        first = "learn_30"
-                    case "Portal #3":
-                        first = "ski_10"
-                    case "Portal #4":
-                        first = "chase_10"
-                    case "Portal #5":
-                        first = "water_10"
-                    case "Portal #6":
-                        first = "rodeo_10"
-                    case "Portal #7":
-                        first = "glob_10"
-                    case "Portal #8":
-                        first = "whale_00"
-                    case "Portal #9":
-                        first = "plum_00"
-                    case "Portal #10":
-                        first = "bast_10"
-                    case "Portal #11":
-                        first = "nave_10"
-                    case "Portal #12":
-                        first = "seat_10"
-                    case "Portal #13":
-                        first = "earth_10"
-                    case "Portal #14":
-                        first = "helic_10"
-                    case "Portal #15":
-                        first = "morb_00"
-                    case "Portal #16":
-                        first = "learn_40"
-                    case "Portal #17":
-                        first = "boat01"
-                    case _:
-                        raise KeyError(f"Invalid name {exit}")
-            elif exit.startswith("Portal to "):
-                # If it's a portal into a sub-region we map that region.
-                first = exit[10:]
-            else:
-                # Otherwise take the source level of the transition.
-                first = exit.split(" -> ", 1)[1]
-
-            if entrance.startswith("Portal into "):
-                second = entrance[12:]
-            else:
-                second = entrance.split(" -> ", 1)[1]
-
-            # Learn 32 is our name for the EEC loading zone, not yet recognised by the mod so we
-            # just make it learn 31 for now.
-            if first == "Learn_32":
-                first = "learn_31"
-            if second == "Learn_32":
-                second = "learn_31"
-
-            self.levelSwaps[first] = second
+        # Connect up the map based on the generator's work
+        self.levelChains = generator.levelChains
+        self.connect_randomised()
 
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
@@ -396,19 +421,17 @@ class Rayman2World(World):
 
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
         """Hook method used by Universal Tracker to load data from slot data back into Python so entrance randomisation is consistent."""
-        entrances = {
-            entrance.name: entrance
-            for region in self.get_regions()
-            for entrance in region.entrances
-        }
-        for source_exit, target_entrance in slot_data["pairings"]:
-            entrances[source_exit].connected_region = entrances[target_entrance].parent_region
+        if not slot_data["room_randomisation"]:
+            return
+
+        # Re-run the connect method to reconnect the layout!
+        self.levelChains = slot_data["level_chains"]
+        self.connect_randomised()
 
     def fill_slot_data(self):
         """Includes all information needed by the game into the slot data."""
         return {
-            "level_swaps": self.levelSwaps,
-            "pairings": self.pairings,
+            "level_chains": self.levelChains,
             "lum_gates": [
                 self.options.first_gate_required.value,
                 self.options.second_gate_required.value,
@@ -425,5 +448,9 @@ class Rayman2World(World):
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
         """Includes decided level swaps in the spoiler file for debugging."""
+        if not self.options.room_randomisation:
+            return
+
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
-        spoiler_handle.write(f"Level Swaps: {self.levelSwaps}\n")
+        for id, chain in self.levelChains.items():
+            spoiler_handle.write(f"Level Chain #{id}: {chain}\n")

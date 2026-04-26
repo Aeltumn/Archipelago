@@ -52,15 +52,15 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
 def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
     # Create checks for all regular lums
     for lum in checks.regularLums:
-        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.DEFAULT, tech)
+        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
 
     # Create checks for all super lums
     for superLum in checks.superLums:
-        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.DEFAULT, tech)
+        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.DEFAULT, tech)
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():

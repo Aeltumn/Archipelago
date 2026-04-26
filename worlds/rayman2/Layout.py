@@ -47,6 +47,7 @@ class SubLevelInfo:
 
 @dataclass
 class LevelInfo:
+    chain: str
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     lumGate: int | None = None
@@ -1012,6 +1013,7 @@ human_readable_names: Dict[int, str] = {
 
 extra_levels: list[LevelInfo] = [
     LevelInfo(
+        "fairy_glade_revisit",
         "The Fairly Glade #2 - Revisit",
         {
             # The game does not distinguish this area but we do! We give it the custom ID of Learn_32.
@@ -1031,6 +1033,7 @@ extra_levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "walk_of_life",
         "The Walk of Life",
         {
             "Ly_10": SubLevelInfo(
@@ -1093,6 +1096,7 @@ extra_levels: list[LevelInfo] = [
         lumGate=4,
     ),
     LevelInfo(
+        "cave_of_bad_dreams",
         "The Cave of Bad Dreams",
         {
             "vulca_10": SubLevelInfo(
@@ -1155,6 +1159,7 @@ extra_levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "side_temple",
         "The Sanctuary of Stone and Fire - Side Temple",
         {
             "plum_20": SubLevelInfo(
@@ -1183,6 +1188,7 @@ extra_levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "walk_of_power",
         "The Walk of Power",
         {
             "Ly_20": SubLevelInfo(
@@ -1248,6 +1254,7 @@ extra_levels: list[LevelInfo] = [
 
 levels: list[LevelInfo] = [
     LevelInfo(
+        "woods_of_light",
         "The Woods of Light",
         {
             "learn_10": SubLevelInfo(
@@ -1268,6 +1275,7 @@ levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "fairy_glade",
         "The Fairy Glade",
         {
             "Learn_30": SubLevelInfo(
@@ -1365,6 +1373,7 @@ levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "marshes_of_awakening",
         "The Marshes of Awakening",
         {
             "Ski_10": SubLevelInfo(
@@ -1413,6 +1422,7 @@ levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "bayou",
         "The Bayou",
         {
             "chase_10": SubLevelInfo(
@@ -1513,6 +1523,7 @@ levels: list[LevelInfo] = [
         }
     ),
     LevelInfo(
+        "sanctuary_of_water_and_ice",
         "The Sanctuary of Water and Ice",
         {
             "water_10": SubLevelInfo(
@@ -1589,6 +1600,7 @@ levels: list[LevelInfo] = [
         lumGate=0,
     ),
     LevelInfo(
+        "menhir_hills",
         "The Menhir Hills",
         {
             "rodeo_10": SubLevelInfo(
@@ -1690,6 +1702,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "canopy",
         "The Canopy",
         {
             "glob_30": SubLevelInfo(
@@ -1778,6 +1791,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "whale_bay",
         "Whale Bay",
         {
             "whale_00": SubLevelInfo(
@@ -1852,6 +1866,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "sanctuary_of_stone_and_fire",
         "The Sanctuary of Stone and Fire",
         {
             "plum_00": SubLevelInfo(
@@ -1912,6 +1927,7 @@ levels: list[LevelInfo] = [
         lumGate=1,
     ),
     LevelInfo(
+        "echoing_caves",
         "The Echoing Caves",
         {
             "bast_10": SubLevelInfo(
@@ -1978,6 +1994,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "precipice",
         "The Precipice",
         {
             "nave_10": SubLevelInfo(
@@ -2064,6 +2081,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "top_of_the_world",
         "The Top of the World",
         {
             "Seat_10": SubLevelInfo(
@@ -2135,6 +2153,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "sanctuary_of_rock_and_lava",
         "The Sanctuary of Rock and Lava",
         {
             "earth_10": SubLevelInfo(
@@ -2222,6 +2241,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "beneath_the_sanctuary_of_rock_and_lava",
         "Beneath the Sanctuary of Rock and Lava",
         {
             "helic_10": SubLevelInfo(
@@ -2292,6 +2312,7 @@ levels: list[LevelInfo] = [
         lumGate=2,
     ),
     LevelInfo(
+        "tomb_of_the_ancients",
         "Tomb of the Ancients",
         {
             "morb_00": SubLevelInfo(
@@ -2364,6 +2385,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "iron_mountains",
         "The Iron Mountains",
         {
             "learn_40": SubLevelInfo(
@@ -2442,6 +2464,7 @@ levels: list[LevelInfo] = [
         lumGate=3,
     ),
     LevelInfo(
+        "prison_ship",
         "The Prison Ship",
         {
             "boat01": SubLevelInfo(
@@ -2559,6 +2582,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
+        "crows_nest",
         "The Crow's Nest",
         {
             "Rhop_10": SubLevelInfo()
