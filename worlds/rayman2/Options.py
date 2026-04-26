@@ -28,14 +28,14 @@ class EndGoal(Choice):
             return "100%"
 
 class RoomRandomisation(Toggle):
-    """[EXPERIMENTAL] - Whether to enable room randomisation. Currently implemented using generic entrance randomisation which often results in invalid configurations."""
+    """Whether to enable room randomization which will randomize the order of all levels."""
     display_name = "Room Randomisation"
-    default = False
+    default = True
 
 class Lumsanity(Toggle):
-    """Whether all individual yellow lums should be their own checks. If disabled, only super yellow lums are checks instead of all yellow lums."""
+    """Whether all individual yellow lums should be their own checks instead of only super lums. This will add 710 extra progression checks!"""
     display_name = "Shuffle All Yellow Lums"
-    default = True
+    default = False
 
 class FirstGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Water and Ice."""

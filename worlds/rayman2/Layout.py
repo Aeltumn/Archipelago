@@ -5,12 +5,6 @@ from enum import IntEnum
 # This file contains the full game layout, defining all levels, which sub-levels they have,
 # which ids everything uses, and all items contained within. This layout object is used by
 # init.py to generate the items, locations, and regions.
-class Connection(IntEnum):
-    """The types of connections between rooms."""
-    ENTRY_PORTAL = 0
-    INTERNAL = 1
-    NOT_RANDOM = 2
-
 class Tech(IntEnum):
     """The types of tech required to accomplish something."""
     NONE = 0
@@ -28,7 +22,14 @@ class Checks:
     cages: List[int] = field(default_factory=list)
     special: Dict[int, str] = field(default_factory=dict)
 
-    def total(self, lumsanity: bool) -> int:
+    def total_lums(self) -> int:
+        """Returns the total amount of lums gained from this segment."""
+        count = 0
+        count += len(self.regularLums)
+        count += len(self.superLums) * 5
+        return count
+
+    def get_total_checks(self, lumsanity: int) -> int:
         """Returns the total amount of checks in this segment."""
         count = 0
         if lumsanity:
