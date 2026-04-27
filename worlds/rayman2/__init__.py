@@ -102,7 +102,7 @@ class Rayman2World(World):
         if item_name is None:
             item_name = location_name
         event_location = Location(self.player, location_name, None, region)
-        event_location.show_in_spoiler = True
+        event_location.show_in_spoiler = False
         event_item = Item(item_name, ItemClassification.progression, None, self.player)
         event_location.place_locked_item(event_item)
         region.locations.append(event_location)
@@ -466,4 +466,4 @@ class Rayman2World(World):
 
         spoiler_handle.write(f"\nRayman 2 slot information:\n")
         for id, chain in self.levelChains.items():
-            spoiler_handle.write(f"Level Chain #{id}: {chain}\n")
+            spoiler_handle.write(f"Level Chain {id}: {chain}\n")
