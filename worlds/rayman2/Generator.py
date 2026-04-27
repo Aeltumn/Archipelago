@@ -1,11 +1,9 @@
-import copy
 import dataclasses
 import random
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Iterable, Tuple
+from typing import Tuple
 
-from BaseClasses import Region
 from .Layout import SubLevelInfo, Tech, Checks, levels, extra_levels
 from .Options import Rayman2Options
 
@@ -14,6 +12,9 @@ TOTAL_SUPER_LUMS = 58
 
 # The total amount of regular lum checks that exist and can be placed.
 TOTAL_REGULAR_LUMS = 710
+
+# The total amount of cages.
+TOTAL_CAGES = 80
 
 class GeneratorCollection:
     """A state of items collected from a generation."""
@@ -35,24 +36,51 @@ class GeneratorCollection:
         # anyway as we mostly do things random, we just deny impossible layouts.
         checksForLums = self.checks - 3
 
+        # Take away up to 80 checks which are used for the cages
         if checksForLums > 0:
-            superLums = checksForLums
-            if superLums > TOTAL_SUPER_LUMS:
-                superLums = TOTAL_SUPER_LUMS
-            lums += superLums * 5
-            checksForLums -= superLums
+            # A ninth of lums are assumed to be taken up by cages
+            cageChecks = checksForLums / 9
+            if cageChecks > TOTAL_CAGES:
+                cageChecks = TOTAL_CAGES
+            checksForLums -= cageChecks
 
-        # Outside of lumsanity you can obtain lums on your own!
         if not self.lumsanity:
+            # Outside of lumsanity you can obtain lums on your own!
             lums += self.lumSaneLums
 
-        # In lum sanity we also check where we can place the regular
-        # lum checks.
-        if self.lumsanity and checksForLums > 0:
-            regularLums = checksForLums
-            if regularLums > TOTAL_REGULAR_LUMS:
-                regularLums = TOTAL_REGULAR_LUMS
-            lums += regularLums
+            # Outside of lumsanity we use all checks for super lums!
+            if checksForLums > 0:
+                superLums = checksForLums
+                if superLums > TOTAL_SUPER_LUMS:
+                    superLums = TOTAL_SUPER_LUMS
+                lums += superLums * 5
+                checksForLums -= superLums
+        else:
+            # An eighth of lums are assumed to be super lums
+            earlySuperLums = 0
+            if checksForLums > 0:
+                superLums = checksForLums / 8
+                if superLums > TOTAL_SUPER_LUMS:
+                    superLums = TOTAL_SUPER_LUMS
+                lums += superLums * 5
+                earlySuperLums += superLums
+                checksForLums -= superLums
+
+            # In lumsanity we first use checks for lums, then super lums!
+            if checksForLums > 0:
+                regularLums = checksForLums
+                if regularLums > TOTAL_REGULAR_LUMS:
+                    regularLums = TOTAL_REGULAR_LUMS
+                lums += regularLums
+                checksForLums -= regularLums
+
+            if checksForLums > 0:
+                superLums = checksForLums
+                total = TOTAL_SUPER_LUMS - earlySuperLums
+                if superLums > total:
+                    superLums = total
+                lums += superLums * 5
+                checksForLums -= superLums
 
         return lums
 
@@ -170,6 +198,7 @@ class GeneratorState:
         self.collected.lumsanity = self.lumsanity
 
         lastLumRequirement = 0
+        regularLumRequirements = {}
         for levelInfo in levels:
             # The Woods of Light and Crow's Nest are not randomised so the randomiser always starts
             # with enough lums and you can end the game properly at the end.
@@ -216,6 +245,9 @@ class GeneratorState:
                 sublist.append([subLevelId, segment])
                 self.remaining[roomType] = sublist
 
+                # Store the lums required to get to a base level
+                regularLumRequirements[subLevelId] = lastLumRequirement
+
         for levelInfo in extra_levels:
             # Create a new level which defaults to having one starting and one ending level
             newLevel = GeneratorLevel(levelInfo.chain, 0, None, {})
@@ -246,6 +278,8 @@ class GeneratorState:
                         newLevel.lumsRequired = options.walk_of_life_required.value
                     case 5:
                         newLevel.lumsRequired = options.walk_of_power_required.value
+            else:
+                newLevel.lumsRequired = regularLumRequirements[newLevel.zoneRequired]
 
             # Add all the level segments in the original list to the remaining areas
             index = 0
@@ -293,6 +327,7 @@ class GeneratorState:
         sublist = level.generated.get(roomType, [])
         sublist.append([subLevelId, levelInfo])
         level.generated[roomType] = sublist
+        print(f"Placed down {subLevelId} in {level.name}")
 
     def select_for_level(self, level: GeneratorLevel, roomType: RoomType):
         """Adds a room of the given [type] to [level]."""
@@ -302,11 +337,13 @@ class GeneratorState:
         choice = random.choice(options)
         self.add_to_level(level, roomType, choice)
 
-    def attempt_generation_step(self) -> bool:
+    def attempt_generation_step(self, step) -> bool:
         """Attempts to place one more room."""
         # Start by determining which levels are accessible currently given the lums we have
         maxLums = self.collected.get_maximum_obtainable_lums()
+        print(f"Now you could have {maxLums} lums")
         selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums and (it.zoneRequired is None or it.zoneRequired in self.collected.zones), self.levels.values()))
+        nonSelectableLevels = list(filter(lambda it: it.lumsRequired > maxLums or (it.zoneRequired is not None and it.zoneRequired not in self.collected.zones), self.levels.values()))
 
         # Determine which levels of which types are currently being blocked
         blockedLevels = list(filter(lambda it: it.lumsRequired <= maxLums and it.zoneRequired is not None and it.zoneRequired not in self.collected.zones, self.levels.values()))
@@ -356,12 +393,18 @@ class GeneratorState:
 
         # If we're out of options we're done!
         if len(all_valid_options) == 0:
+            if len(nonSelectableLevels) > 0:
+                nextLumGate = 1000
+                for level in nonSelectableLevels:
+                    if level.lumsRequired < nextLumGate:
+                        nextLumGate = level.lumsRequired
+                raise KeyError(f"Lum gate {nextLumGate} is too high and makes it too hard to complete the generation!")
             return True
 
         # If we have any blocked levels that are not yet accessible because we are missing some zone, we force
         # that zone to be placed somewhere so it gets unblocked! Since we keep all options open and don't place
         # in order this shouldn't result in the side-level access zones from being weirdly early or anything.
-        if len(blockedLevels) > 0:
+        if len(blockedLevels) > 0 and step > 5:
             # Check how many options we have left for each room type, if there's less than 3 remaining
             # we start forcing the selections!
             byRoomType = {}
@@ -382,8 +425,8 @@ class GeneratorState:
                 if len(validOptions) == 0:
                     raise ValueError(f"Not enough type {validOptions} rooms that open something up, why are we here?")
                 choice = random.choice(validOptions)
-                level, _ = random.choice(allLowestLevels)
-                self.add_to_level(level, lowestType, choice)
+                level, levelRoomType = random.choice(allLowestLevels)
+                self.add_to_level(level, levelRoomType, choice)
                 return False
 
         # Pick a random choice from the list and run it!
@@ -394,9 +437,12 @@ class GeneratorState:
     def generate(self):
         """Generates the level layout state."""
         # Continuously perform generation steps until we run out of options!
+        step = 0
         while True:
-            if self.attempt_generation_step():
+            if self.attempt_generation_step(step):
                 break
+            else:
+                step = step + 1
 
         # Require that we placed every level!
         for _, options in self.remaining.items():
