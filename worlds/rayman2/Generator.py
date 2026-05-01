@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import random
 from dataclasses import dataclass
@@ -16,19 +17,19 @@ TOTAL_REGULAR_LUMS = 710
 # The total amount of cages.
 TOTAL_CAGES = 80
 
+@dataclass
 class GeneratorCollection:
     """A state of items collected from a generation."""
-    lumsanity: int
-    events: list[str] = []
-    zones: list[str] = []
+    events: list[str] = dataclasses.field(default_factory=list)
+    zones: list[str] = dataclasses.field(default_factory=list)
     lumSaneLums: int = 0
     # Woods of Light is always first and provides at least 7 checks which is enough for any tech items!
     checks: int = 7
-    waitingEvents: dict[Tech, list[str]] = {}
-    waitingChecks: dict[Tech, list[Checks]] = {}
+    waitingEvents: dict[Tech, list[str]] = dataclasses.field(default_factory=dict)
+    waitingChecks: dict[Tech, list[Checks]] = dataclasses.field(default_factory=dict)
     sideTempleFinishEvent: str | None = None
 
-    def get_maximum_obtainable_lums(self) -> int:
+    def get_maximum_obtainable_lums(self, lumsanity: int) -> int:
         """Returns the maximum amount of lums that can be obtained with how many checks are accessible"""
         lums = 0
 
@@ -46,7 +47,7 @@ class GeneratorCollection:
                 cageChecks = TOTAL_CAGES
             checksForLums -= cageChecks
 
-        if not self.lumsanity:
+        if not lumsanity:
             # Outside of lumsanity you can obtain lums on your own!
             lums += self.lumSaneLums
 
@@ -86,7 +87,7 @@ class GeneratorCollection:
 
         return lums
 
-    def add_items(self, checks: Checks, tech: Tech = Tech.NONE):
+    def add_items(self, checks: Checks, lumsanity: int, tech: Tech = Tech.NONE):
         """Adds the items from the given [checks] to this collection."""
         if not self.could_have_tech(tech):
             # If this tech is out of reach, then queue up the checks!
@@ -95,11 +96,11 @@ class GeneratorCollection:
             self.waitingChecks[tech] = sublist
             return
 
-        self.checks += checks.get_total_checks(self.lumsanity)
-        if not self.lumsanity:
+        self.checks += checks.get_total_checks(lumsanity)
+        if not lumsanity:
             self.lumSaneLums += len(checks.regularLums)
 
-    def add_event(self, event: str, tech: Tech = Tech.NONE):
+    def add_event(self, event: str, lumsanity: int, tech: Tech = Tech.NONE):
         """Adds an event to this state."""
         if not self.could_have_tech(tech):
             # If this tech is out of reach, then queue up the event!
@@ -110,18 +111,18 @@ class GeneratorCollection:
 
         self.events.append(event)
         if self.sideTempleFinishEvent is not None and event == self.sideTempleFinishEvent:
-            self.award_tech(Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT)
+            self.award_tech(Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT, lumsanity)
 
-    def award_tech(self, tech: Tech):
+    def award_tech(self, tech: Tech, lumsanity: int):
         """Handles [tech] becoming available."""
         checks = self.waitingChecks.get(tech, [])
         for check in checks:
-            self.add_items(check)
+            self.add_items(check, lumsanity)
         self.waitingChecks[tech] = []
 
         events = self.waitingEvents.get(tech, [])
         for event in events:
-            self.add_event(event)
+            self.add_event(event, lumsanity)
         self.waitingEvents[tech] = []
 
     def could_have_tech(self, tech: Tech) -> bool:
@@ -132,19 +133,19 @@ class GeneratorCollection:
             case _:
                 return True
 
-    def include_level(self, subLevelId: str, level: SubLevelInfo, isSideTemple: bool):
+    def include_level(self, subLevelId: str, level: SubLevelInfo, isSideTemple: bool, lumsanity: int):
         """Adds the results of completing [level] to this collection set."""
         # Add the checks for all items that are accessible in some way
-        self.add_items(level.checks)
+        self.add_items(level.checks, lumsanity)
         for tech, checks in level.behindRequirements.items():
-            self.add_items(checks, tech)
+            self.add_items(checks, lumsanity, tech)
 
         # If this is the side temple then this allows you to reach those specific checks!
         if isSideTemple:
             self.sideTempleFinishEvent = f"Finish {subLevelId}"
 
         # If we could have the tech to finish this level, we assume we can!
-        self.add_event(f"Finish {subLevelId}", level.exitRequirement)
+        self.add_event(f"Finish {subLevelId}", lumsanity, level.exitRequirement)
 
         # Mark down that this zone is now accessible!
         self.zones.append(subLevelId)
@@ -185,20 +186,19 @@ class GeneratorLevel:
         return len(self.baseGame.get(RoomType.ENTRANCE, [])) > 0
 
 
+@dataclass
 class GeneratorState:
     """Stores the overall state of the Rayman 2 generator."""
     lumsanity: int
-    levels: dict[str, GeneratorLevel] = {}
-    remaining: dict[RoomType, list[Tuple[str, SubLevelInfo]]] = {}
-    collected: GeneratorCollection = GeneratorCollection()
-    levelChains: dict[str, list[str]] = {}
-    hasPlacedAWalk: bool = False
+    levels: dict[str, GeneratorLevel] = dataclasses.field(default_factory=dict)
+    level_by_required: dict[str, GeneratorLevel] = dataclasses.field(default_factory=dict)
+    remaining: dict[RoomType, list[Tuple[str, SubLevelInfo]]] = dataclasses.field(default_factory=dict)
+    early_collected: GeneratorCollection = dataclasses.field(default_factory=GeneratorCollection)
+    collected: GeneratorCollection = dataclasses.field(default_factory=GeneratorCollection)
+    level_chains: dict[str, list[str]] = dataclasses.field(default_factory=dict)
 
     def assemble_initial_levels(self, options: Rayman2Options):
         """Assembles the initial level layout for the game."""
-        # Ensure lumsanity state is synced!
-        self.collected.lumsanity = self.lumsanity
-
         lastLumRequirement = 0
         regularLumRequirements = {}
         for levelInfo in levels:
@@ -273,6 +273,9 @@ class GeneratorState:
                 case _:
                     raise KeyError(f"Unknown extra level {levelInfo.displayName}")
 
+            # Mark down that we require this level
+            self.level_by_required[newLevel.zoneRequired] = newLevel
+
             # Mark whether this is a lum gate
             if levelInfo.lumGate is not None:
                 match levelInfo.lumGate:
@@ -299,12 +302,12 @@ class GeneratorState:
                     typeId = 0
                     newLevel.isRevisit = True
 
-                roomType = RoomType(typeId)
-                index += 1
-
                 # If this is the side temple, not that down!
                 if subLevelId == "plum_20":
                     newLevel.isSideTemple = True
+
+                roomType = RoomType(typeId)
+                index += 1
 
                 # Add the level segment to the level itself
                 sublist1 = newLevel.baseGame.get(roomType, [])
@@ -316,53 +319,128 @@ class GeneratorState:
                 sublist.append([subLevelId, segment])
                 self.remaining[roomType] = sublist
 
-    def add_to_level(self, level: GeneratorLevel, roomType: RoomType, choice: Tuple[str, SubLevelInfo]):
+    def determine_collected(self):
+        """Adds all items collected by currently generated levels."""
+        completedFully = False
+        while not completedFully:
+            # We set completed fully to true every turn
+            # and if we make it all the way through without
+            # any new discoveries we can stop.
+            completedFully = True
+            maxLums = self.collected.get_maximum_obtainable_lums(self.lumsanity)
+
+            for level in self.levels.values():
+                # Ignore levels we cannot yet access!
+                if level.zoneRequired is not None and level.zoneRequired not in self.collected.zones:
+                    continue
+
+                if level.lumsRequired > maxLums:
+                    continue
+
+                for _, rooms in level.generated.items():
+                    for xLevelId, xLevelInfo in rooms:
+                        # Ignore zones we already collected!
+                        if xLevelId in self.collected.zones:
+                            continue
+
+                        self.collected.include_level(xLevelId, xLevelInfo, level.isSideTemple, self.lumsanity)
+                        completedFully = False
+
+
+    def nest_reveal_early_obtained(self, levelId: str):
+        """Adds any collected items in pre-generated levels that have become accessible."""
+        if levelId in self.level_by_required:
+            revealed = self.level_by_required[levelId]
+            for _, rooms in revealed.generated.items():
+                for xLevelId, xLevelInfo in rooms:
+                    self.collected.include_level(xLevelId, xLevelInfo, revealed.isSideTemple, self.lumsanity)
+                    self.nest_reveal_early_obtained(xLevelId)
+
+    def add_to_level(self, level: GeneratorLevel, room_type: RoomType, choice: Tuple[str, SubLevelInfo], early: bool = False):
+        """Adds the given [choice] to [level] under [room_type]."""
         # Remove this option for future level swaps
-        options = self.remaining.get(roomType, [])
+        options = self.remaining.get(room_type, [])
         options.remove(choice)
 
-        # Add the checks within this level to the current state
+        # Add the checks within this level to the current state & early state
         subLevelId, levelInfo = choice
-        self.collected.include_level(subLevelId, levelInfo, level.isSideTemple)
+        if early:
+            collected = self.early_collected
+        else:
+            collected = self.collected
+
+        collected.include_level(subLevelId, levelInfo, level.isSideTemple, self.lumsanity)
 
         # Add it to the level's generated list
-        sublist = level.generated.get(roomType, [])
+        sublist = level.generated.get(room_type, [])
         sublist.append([subLevelId, levelInfo])
-        level.generated[roomType] = sublist
+        level.generated[room_type] = sublist
 
-    def select_for_level(self, level: GeneratorLevel, roomType: RoomType):
-        """Adds a room of the given [type] to [level]."""
-        options = self.remaining.get(roomType, [])
+        # Determine which levels this open up and claim the early collected list
+        if not early:
+            self.nest_reveal_early_obtained(subLevelId)
+
+    def select_for_level(self, level: GeneratorLevel, room_type: RoomType, options: list[Tuple[str, SubLevelInfo]], early: bool = False):
+        """Adds a room of the given [room_type] to [level]."""
         if len(options) == 0:
-            raise ValueError(f"Not enough type {roomType} rooms to extend level, how did we pick this?")
+            raise ValueError(f"Not enough type {room_type} rooms to extend level, how did we pick this?")
+        choice = random.choice(options)
+        self.add_to_level(level, room_type, choice, early)
 
-        # Prioritize placing either Bayou 1 or Sanctuary 1 so one of the two walks is accessible and
-        # can be unlocked early as it's a major injection of available checks.
-        prioritized_options = list(filter(lambda it: not self.hasPlacedAWalk and (it[0] == "chase_10" or it[0] == "earth_10"), options))
-        if len(prioritized_options) != 0:
-            choice = random.choice(prioritized_options)
-            self.hasPlacedAWalk = True
-        else:
-            choice = random.choice(options)
-        self.add_to_level(level, roomType, choice)
+    def select_any_remaining_for_level(self, level: GeneratorLevel, room_type: RoomType, early: bool = False):
+        """Adds a room from the remaining rooms of type [room_type] to [level]."""
+        self.select_for_level(level, room_type, self.remaining.get(room_type, []), early)
 
-    def attempt_generation_step(self, step) -> bool:
+    def attempt_zone_required_generation(self) -> bool:
+        """Attempts to place any restrictive room."""
+        # Determine all levels we can place something in currently
+        selectableLevels = list(filter(lambda it: it.zoneRequired is None or it.zoneRequired in self.early_collected.zones, self.levels.values()))
+
+        # Determine all zones that need to be placed to unblock remaining levels!
+        allRequiredZones = []
+        for level in self.levels.values():
+            if level.zoneRequired is not None and level.zoneRequired not in self.early_collected.zones:
+                allRequiredZones.append(level.zoneRequired)
+
+        # Determine all actions we can currently take which are all equally valid
+        all_valid_placements_by_room = {}
+        for level in selectableLevels:
+            for roomType in level.baseGame.keys():
+                # Determine if there's rooms missing that need filling!
+                baseGameRooms = len(level.baseGame.get(roomType, []))
+                generatedRooms = len(level.generated.get(roomType, []))
+                if roomType == RoomType.STANDARD or baseGameRooms > generatedRooms:
+                    sublist = all_valid_placements_by_room.get(roomType, [])
+                    all_valid_placements_by_room[roomType] = sublist
+                    sublist.append(level)
+
+        # For each room type determine which rooms we can still place
+        for roomType, remainingRooms in self.remaining.items():
+            # Get all levels we can place this room in
+            all_valid_placements = all_valid_placements_by_room.get(roomType, [])
+            if len(all_valid_placements) == 0:
+                continue
+            level = random.choice(all_valid_placements)
+
+            # Determine all rooms that we are waiting to place
+            selectableRooms = []
+            for roomId, roomInfo in remainingRooms:
+                if roomId in allRequiredZones:
+                    selectableRooms.append([roomId, roomInfo])
+
+            # If we can place a room, place it!
+            if len(selectableRooms) > 0:
+                self.select_for_level(level, roomType, selectableRooms, True)
+                return False
+
+        return True
+
+    def attempt_lum_gated_generation(self) -> bool:
         """Attempts to place one more room."""
         # Start by determining which levels are accessible currently given the lums we have
-        maxLums = self.collected.get_maximum_obtainable_lums()
-        selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums and (it.zoneRequired is None or it.zoneRequired in self.collected.zones), self.levels.values()))
-        nonSelectableLevels = list(filter(lambda it: it.lumsRequired > maxLums or (it.zoneRequired is not None and it.zoneRequired not in self.collected.zones), self.levels.values()))
-
-        # Determine which levels of which types are currently being blocked
-        blockedLevels = list(filter(lambda it: it.lumsRequired <= maxLums and it.zoneRequired is not None and it.zoneRequired not in self.collected.zones, self.levels.values()))
-        blockedTypes = {}
-        for blockedLevel in blockedLevels:
-            roomType = None
-            for rt, options in self.remaining.items():
-                for levelId, _ in options:
-                    if levelId == blockedLevel.zoneRequired:
-                        roomType = rt
-            blockedTypes[roomType] = blockedTypes.get(roomType, 0) + 1
+        maxLums = self.collected.get_maximum_obtainable_lums(self.lumsanity)
+        selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums, self.levels.values()))
+        nonSelectableLevels = list(filter(lambda it: it.lumsRequired > maxLums, self.levels.values()))
 
         # Determine all actions we can currently take which are all equally valid
         all_valid_options = []
@@ -409,48 +487,27 @@ class GeneratorState:
                 raise KeyError(f"Lum gate {nextLumGate} is too high and makes it too hard to complete the generation!")
             return True
 
-        # If we have any blocked levels that are not yet accessible because we are missing some zone, we force
-        # that zone to be placed somewhere so it gets unblocked! Since we keep all options open and don't place
-        # in order this shouldn't result in the side-level access zones from being weirdly early or anything.
-        if len(blockedLevels) > 0 and step > 5:
-            # Check how many options we have left for each room type, if there's less than 3 remaining
-            # we start forcing the selections!
-            byRoomType = {}
-            for option in all_valid_options:
-                byRoomType[option[1]] = byRoomType.get(option[1], 0) + 1
-            lowest = 999
-            lowestType = RoomType.STANDARD
-            for roomType, count in byRoomType.items():
-                # Ignore room types that do not block anything!
-                if blockedTypes.get(roomType) is not None and count < lowest:
-                    lowest = count
-                    lowestType = roomType
-
-            if lowest < 3:
-                allLowestLevels = list(filter(lambda it: it[1] == lowestType, all_valid_options))
-                requiredZones = list(map(lambda it: it.zoneRequired, blockedLevels))
-                validOptions = list(filter(lambda it: it[0] in requiredZones, self.remaining.get(lowestType, [])))
-                if len(validOptions) == 0:
-                    raise ValueError(f"Not enough type {validOptions} rooms that open something up, why are we here?")
-                choice = random.choice(validOptions)
-                level, levelRoomType = random.choice(allLowestLevels)
-                self.add_to_level(level, levelRoomType, choice)
-                return False
-
         # Pick a random choice from the list and run it!
         level, roomType = random.choice(all_valid_options)
-        self.select_for_level(level, roomType)
+        self.select_any_remaining_for_level(level, roomType)
         return False
 
     def generate(self):
         """Generates the level layout state."""
-        # Continuously perform generation steps until we run out of options!
-        step = 0
+        # We place twice, first we start by placing all restricted levels
+        # in places where they will definitely be accessible followed by placing
+        # all remaining levels wherever they fit to have enough lums.
         while True:
-            if self.attempt_generation_step(step):
+            if self.attempt_zone_required_generation():
                 break
-            else:
-                step = step + 1
+
+        # Determine the collected state based on what is already generated
+        self.determine_collected()
+
+        # Perform regular generation which only accounts for lums
+        while True:
+            if self.attempt_lum_gated_generation():
+                break
 
         # Require that we placed every level!
         for _, options in self.remaining.items():
@@ -463,4 +520,4 @@ class GeneratorState:
         for level in all_levels:
             generatedLevel = self.levels.get(level.chain, None)
             if generatedLevel is not None:
-                self.levelChains[level.chain] = generatedLevel.get_output()
+                self.level_chains[level.chain] = generatedLevel.get_output()
