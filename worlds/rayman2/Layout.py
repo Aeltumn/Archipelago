@@ -29,14 +29,6 @@ class SubLevelInfo:
     exitRequirement: Tech = Tech.NONE
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
 
-    def get_total_lumsane_lums(self) -> int:
-        # TODO Remove this!
-        total = 0
-        total += len(self.checks.regularLums)
-        for sub in self.behindRequirements.values():
-            total += len(sub.regularLums)
-        return total
-
 @dataclass
 class LevelInfo:
     chain: str | None

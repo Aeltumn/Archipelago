@@ -13,6 +13,9 @@ TOTAL_SUPER_LUMS = 58
 # The total amount of regular lum checks that exist and can be placed.
 TOTAL_REGULAR_LUMS = 710
 
+# The total amount of cages.
+TOTAL_CAGES = 80
+
 @dataclass
 class GeneratorCollection:
     """A state of items collected from a generation."""
@@ -34,6 +37,14 @@ class GeneratorCollection:
         # anyway as we mostly do things random, we just deny impossible layouts.
         checksForLums = self.checks - 3
 
+        # Take away up to 80 checks which are used for the cages
+        if checksForLums > 0:
+            # 1/8th of early lums are assumed to be taken up by cages
+            cageChecks = checksForLums / 8
+            if cageChecks > TOTAL_CAGES:
+                cageChecks = TOTAL_CAGES
+            checksForLums -= cageChecks
+
         if not lumsanity:
             # Outside lumsanity you can obtain lums on your own!
             lums += self.lumSaneLums
@@ -46,6 +57,16 @@ class GeneratorCollection:
                 lums += superLums * 5
                 checksForLums -= superLums
         else:
+            # A tenth of lums are assumed to be super lums
+            earlySuperLums = 0
+            if checksForLums > 0:
+                superLums = checksForLums / 10
+                if superLums > TOTAL_SUPER_LUMS:
+                    superLums = TOTAL_SUPER_LUMS
+                lums += superLums * 5
+                earlySuperLums += superLums
+                checksForLums -= superLums
+
             # In lumsanity we first use checks for lums, then super lums!
             if checksForLums > 0:
                 regularLums = checksForLums
@@ -56,8 +77,9 @@ class GeneratorCollection:
 
             if checksForLums > 0:
                 superLums = checksForLums
-                if superLums > TOTAL_SUPER_LUMS:
-                    superLums = TOTAL_SUPER_LUMS
+                total = TOTAL_SUPER_LUMS - earlySuperLums
+                if superLums > total:
+                    superLums = total
                 lums += superLums * 5
                 checksForLums -= superLums
 
@@ -73,10 +95,13 @@ class GeneratorCollection:
             return
 
         self.checks += len(checks.superLums)
+        self.checks += len(checks.cages)
+
+        regularLums = len(checks.regularLums)
         if not lumsanity:
-            self.lumSaneLums += len(checks.regularLums)
+            self.lumSaneLums += regularLums
         else:
-            self.checks += len(checks.regularLums)
+            self.checks += regularLums
 
     def add_event(self, event: str, lumsanity: int, tech: Tech = Tech.NONE):
         """Adds an event to this state."""
@@ -374,7 +399,8 @@ class GeneratorState:
         for roomId, roomInfo in self.remaining.get(RoomType.ENTRANCE, []):
             if roomId in allRequiredZones:
                 selectableRooms.append([roomId, roomInfo])
-        self.select_for_level(level, RoomType.ENTRANCE, selectableRooms, True)
+        if len(selectableRooms) > 0:
+            self.select_for_level(level, RoomType.ENTRANCE, selectableRooms, True)
 
     def attempt_zone_required_generation(self) -> bool:
         """Attempts to place any restrictive room."""
@@ -467,7 +493,7 @@ class GeneratorState:
             if len(nonSelectableLevels) > 0:
                 nextLumGate = 1000
                 for level in nonSelectableLevels:
-                    if level.lumsRequired < nextLumGate:
+                    if 0 < level.lumsRequired < nextLumGate:
                         nextLumGate = level.lumsRequired
                 raise KeyError(f"Lum gate {nextLumGate} is too high and makes it too hard to complete the generation!")
             return True
