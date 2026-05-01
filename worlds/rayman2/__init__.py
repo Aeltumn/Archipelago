@@ -403,13 +403,12 @@ class Rayman2World(World):
             return
 
         # Run the custom generator
-        generator = GeneratorState()
-        generator.lumsanity = self.options.lumsanity.value
+        generator = GeneratorState(self.options.lumsanity.value)
         generator.assemble_initial_levels(self.options)
         generator.generate()
 
         # Connect up the map based on the generator's work
-        self.levelChains = generator.levelChains
+        self.levelChains = generator.level_chains
         self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
         self.connect_randomised()
 
