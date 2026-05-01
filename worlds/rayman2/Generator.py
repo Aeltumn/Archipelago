@@ -41,7 +41,8 @@ class GeneratorCollection:
         # Take away up to 80 checks which are used for the cages
         if checksForLums > 0:
             # At best a fifth of early lums are assumed to be taken up by cages
-            # just to overcompensate
+            # just to overcompensate, if it's more than that we assume Archipelago
+            # can deal with it and compensate by swapping.
             cageChecks = checksForLums / 5
             if cageChecks > TOTAL_CAGES:
                 cageChecks = TOTAL_CAGES
@@ -59,16 +60,6 @@ class GeneratorCollection:
                 lums += superLums * 5
                 checksForLums -= superLums
         else:
-            # A tenth of lums are assumed to be super lums
-            earlySuperLums = 0
-            if checksForLums > 0:
-                superLums = checksForLums / 10
-                if superLums > TOTAL_SUPER_LUMS:
-                    superLums = TOTAL_SUPER_LUMS
-                lums += superLums * 5
-                earlySuperLums += superLums
-                checksForLums -= superLums
-
             # In lumsanity we first use checks for lums, then super lums!
             if checksForLums > 0:
                 regularLums = checksForLums
@@ -79,9 +70,8 @@ class GeneratorCollection:
 
             if checksForLums > 0:
                 superLums = checksForLums
-                total = TOTAL_SUPER_LUMS - earlySuperLums
-                if superLums > total:
-                    superLums = total
+                if superLums > TOTAL_SUPER_LUMS:
+                    superLums = TOTAL_SUPER_LUMS
                 lums += superLums * 5
                 checksForLums -= superLums
 
