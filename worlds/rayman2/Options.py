@@ -49,7 +49,7 @@ class SecondGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Stone & Fire."""
     display_name = "Second Lum Gate Requirement"
     range_start = 0
-    range_end = 450
+    range_end = 400
     default = 300
 
 
