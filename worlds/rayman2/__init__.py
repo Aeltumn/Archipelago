@@ -239,6 +239,9 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     isRevisit = True
+
+                    # You need to swing on the lum to get to the side temple!
+                    extra_rule = lambda state: state.has("Silver Lum", self.player)
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
