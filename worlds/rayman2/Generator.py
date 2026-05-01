@@ -38,8 +38,9 @@ class GeneratorCollection:
 
         # Take away up to 80 checks which are used for the cages
         if checksForLums > 0:
-            # A ninth of lums are assumed to be taken up by cages
-            cageChecks = checksForLums / 9
+            # At best a fifth of early lums are assumed to be taken up by cages
+            # just to overcompensate
+            cageChecks = checksForLums / 5
             if cageChecks > TOTAL_CAGES:
                 cageChecks = TOTAL_CAGES
             checksForLums -= cageChecks
@@ -56,10 +57,10 @@ class GeneratorCollection:
                 lums += superLums * 5
                 checksForLums -= superLums
         else:
-            # An eighth of lums are assumed to be super lums
+            # A tenth of lums are assumed to be super lums
             earlySuperLums = 0
             if checksForLums > 0:
-                superLums = checksForLums / 8
+                superLums = checksForLums / 10
                 if superLums > TOTAL_SUPER_LUMS:
                     superLums = TOTAL_SUPER_LUMS
                 lums += superLums * 5
@@ -191,6 +192,7 @@ class GeneratorState:
     collected: GeneratorCollection = GeneratorCollection()
     levelChains: dict[str, list[str]] = {}
     sideTemple: str | None = None
+    hasPlacedAWalk: bool = False
 
     def assemble_initial_levels(self, options: Rayman2Options):
         """Assembles the initial level layout for the game."""
@@ -334,7 +336,16 @@ class GeneratorState:
         options = self.remaining.get(roomType, [])
         if len(options) == 0:
             raise ValueError(f"Not enough type {roomType} rooms to extend level, how did we pick this?")
-        choice = random.choice(options)
+
+        # Prioritize placing either Bayou 1 or Sanctuary 1 so one of the two walks is accessible and
+        # can be unlocked early as it's a major injection of available checks.
+        prioritized_options = list(filter(lambda it: not self.hasPlacedAWalk and (it[0] == "chase_10" or it[0] == "earth_10"), options))
+        if len(prioritized_options) != 0:
+            choice = random.choice(prioritized_options)
+            self.hasPlacedAWalk = True
+            print(f"Selecting prioritized rom {choice}")
+        else:
+            choice = random.choice(options)
         self.add_to_level(level, roomType, choice)
 
     def attempt_generation_step(self, step) -> bool:
