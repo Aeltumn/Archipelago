@@ -1,4 +1,3 @@
-import collections
 import dataclasses
 import random
 from dataclasses import dataclass
@@ -25,7 +24,6 @@ class GeneratorCollection:
     waitingEvents: dict[Tech, list[str]] = dataclasses.field(default_factory=dict)
     waitingChecks: dict[Tech, list[Checks]] = dataclasses.field(default_factory=dict)
     sideTempleFinishEvent: str | None = None
-    cobdFinishEvent: str | None = None
 
     def get_maximum_obtainable_lums(self, lumsanity: int) -> int:
         """Returns the maximum amount of lums that can be obtained with how many checks are accessible"""
@@ -36,13 +34,11 @@ class GeneratorCollection:
         # anyway as we mostly do things random, we just deny impossible layouts.
         checksForLums = self.checks - 3
 
-        print(f"We have {checksForLums} lums and lumsanity? {lumsanity}, lum sane is {self.lumSaneLums}")
-
         if not lumsanity:
-            # Outside of lumsanity you can obtain lums on your own!
+            # Outside lumsanity you can obtain lums on your own!
             lums += self.lumSaneLums
 
-            # Outside of lumsanity we use all checks for super lums!
+            # Outside lumsanity we use all checks for super lums!
             if checksForLums > 0:
                 superLums = checksForLums
                 if superLums > TOTAL_SUPER_LUMS:
@@ -94,8 +90,6 @@ class GeneratorCollection:
         self.events.append(event)
         if self.sideTempleFinishEvent is not None and event == self.sideTempleFinishEvent:
             self.award_tech(Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT, lumsanity)
-        if self.cobdFinishEvent is not None and event == self.cobdFinishEvent:
-            self.award_tech(Tech.COMPLETED_COBD, lumsanity)
 
     def award_tech(self, tech: Tech, lumsanity: int):
         """Handles [tech] becoming available."""
@@ -115,7 +109,8 @@ class GeneratorCollection:
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
                 return self.sideTempleFinishEvent is not None and self.sideTempleFinishEvent in self.events
             case Tech.COMPLETED_COBD:
-                return self.cobdFinishEvent is not None and self.cobdFinishEvent in self.events
+                # Don't account for the finishing COBD check when generating!
+                return False
             case _:
                 return True
 
@@ -188,9 +183,8 @@ class GeneratorState:
         lastLumRequirement = 0
         regularLumRequirements = {}
         for levelInfo in levels:
-            # The Woods of Light and Crow's Nest are not randomised so the randomiser always starts
-            # with enough lums and you can end the game properly at the end.
-            if levelInfo.displayName == "The Woods of Light" or levelInfo.displayName == "The Crow's Nest":
+            # Ignore levels without a chain (first/last level)
+            if levelInfo.chain is None:
                 continue
 
             # Create a new level which defaults to having one starting and one ending level
@@ -349,8 +343,6 @@ class GeneratorState:
         sublist.append([subLevelId, levelInfo])
         level.generated[room_type] = sublist
 
-        print(f"Placed {subLevelId} in {level.name} now we have {collected.lumSaneLums} lumsane lums (early? {early})")
-
         # Determine which levels this open up and claim the early collected list
         if not early:
             self.redetermine_collected()
@@ -432,7 +424,6 @@ class GeneratorState:
         """Attempts to place one more room."""
         # Start by determining which levels are accessible currently given the lums we have
         maxLums = self.collected.get_maximum_obtainable_lums(self.lumsanity)
-        print(f"Normal step, we have {maxLums} lums")
         selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums and it.zoneRequired is None or it.zoneRequired in self.collected.zones, self.levels.values()))
         nonSelectableLevels = list(filter(lambda it: it.lumsRequired > maxLums or (it.zoneRequired is not None and it.zoneRequired not in self.collected.zones), self.levels.values()))
 
@@ -491,9 +482,6 @@ class GeneratorState:
         # We place twice, first we start by placing all restricted levels
         # in places where they will definitely be accessible followed by placing
         # all remaining levels wherever they fit to have enough lums.
-        print(f"Running random generation with seed: {self.random.randint(0, 99999999)}")
-
-        # Start by placing a walk always before the first regular lum gate!
         self.attempt_place_early_walk_generation()
         while True:
             if self.attempt_zone_required_generation():
@@ -501,7 +489,6 @@ class GeneratorState:
 
         # Determine the collected state based on what is already generated
         self.redetermine_collected()
-        print(f"Early collection left us with {self.collected.lumSaneLums} lumsane lums")
 
         # Perform regular generation which only accounts for lums
         while True:
@@ -529,9 +516,3 @@ class GeneratorState:
             # Determine the final created chain
             output = generatedLevel.get_output()
             self.level_chains[level.chain] = output
-
-            # Set the COBD finish event based on the final level placed in the COBD!
-            # We don't care about this check for a generator perspective (one check isn't
-            # important) but we want to make sure it's correctly hooked up for filling.
-            if level.chain == "cave_of_bad_dreams":
-                self.collected.cobdFinishEvent = f"Finish {output[-1]}"

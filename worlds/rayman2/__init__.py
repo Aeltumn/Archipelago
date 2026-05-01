@@ -47,8 +47,9 @@ class Rayman2World(World):
     def __init__(self, multiworld, player):
         super(Rayman2World, self).__init__(multiworld, player)
         self.levelChains = {}
+        self.portalEvents = {}
         self.sideTempleFinishEvent = "Finish plum_20"
-        self.cobdFinishEvent = "Finish vulca_20"
+        self.cobdFinishEvent = None
 
         # If not in lumsanity mode we have to determine the available lums
         # using accessible regions which means we have to check reachability
@@ -89,12 +90,6 @@ class Rayman2World(World):
             lastRegion = region
         return [firstRegion, lastRegion]
 
-    def create_mapmonde_portal_event(self, region: Region, portals: int) -> Location:
-        """Creates an event for generating a portal in the Hall of Doors."""
-        event = self.create_event(region, f"Create Portal #{portals + 1}", "Create Portal")
-        event.access_rule = lambda state: state.has(f"Finish {region.name}", self.player)
-        return event
-
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
         """Creates an event for finishing this level."""
         event = self.create_event(region, f"Finish {region.name}")
@@ -119,7 +114,7 @@ class Rayman2World(World):
 
         # Require the minimum amount of portals to be made previously so this one is reachable
         if portals > 0:
-            portal.access_rule = lambda state: state.prog_items[self.player]["Create Portal"] >= portals
+            portal.access_rule = lambda state: state.has(self.portalEvents.get(portals, "Finish Unknown Level"), self.player)
 
         # Determine the lum requirement to reach this portal
         if lum_gate is not None:
@@ -224,9 +219,6 @@ class Rayman2World(World):
             if firstRegion is None or lastRegion is None:
                 continue
 
-            # Finishing the last level of each standard world creates a hall of doors portal!
-            self.create_mapmonde_portal_event(lastRegion, portal)
-
             # Create a portal for each level on the hall of doors
             mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portal, levelInfo.lumGate, levelInfo.requireAllMasks)
             portal += 1
@@ -311,26 +303,10 @@ class Rayman2World(World):
             for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 subLevelsById[subLevelName] = subLevelInfo
 
-        # Print available checks per section
-        # TODO Remove this!
-        idx = 0
-        tl = 0
-        ci = 0
-        for _, chainLevels in self.levelChains.items():
-            ci += 1
-            for subLevelId in chainLevels:
-                info = subLevelsById[subLevelId]
-                t = info.get_total_lumsane_lums()
-                tl += t
-                idx += 1
-                print(f"Level #{idx} (Chain #{ci}) - {subLevelId} has {t} lumsane lums, total so far {tl}")
-
         # Go through all level chains and hook them up
         mapmonde = self.get_region("Menu")
         portal = 1
         for chainId, chainLevels in self.levelChains.items():
-            # TODO Remove this!
-            print(f"Level chain {chainId}: {chainLevels}")
             index = 0
             lastRegion: Region | None = None
 
@@ -417,8 +393,6 @@ class Rayman2World(World):
     def generate_early(self) -> None:
         """Ensures that key items are placed early so you cannot get stuck as many levels require it to complete."""
         self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
-        # self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
-        # self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
@@ -436,7 +410,30 @@ class Rayman2World(World):
             # Connect up the map based on the generator's work, ignoring the base level chains
             self.levelChains = generator.level_chains
             self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
-            self.cobdFinishEvent = generator.collected.cobdFinishEvent
+
+        # Determine the portal events based on the level chains
+        portalId = 0
+        all_levels = []
+        all_levels += levels
+        all_levels += extra_levels
+        for level in all_levels:
+            portalId += 1
+
+            if level.chain is None:
+                # Set a portal event on the non-randomised levels as well!
+                levelId = list(level.sublevels.keys())[0]
+                self.portalEvents[portalId] = f"Finish {levelId}"
+                continue
+
+            # Determine the contents of this chain
+            output = self.levelChains[level.chain]
+
+            # Store the finish events for the COBD or regular portals
+            # into data so we can check against them for portal unlocks
+            if level.chain == "cave_of_bad_dreams":
+                self.cobdFinishEvent = f"Finish {output[-1]}"
+            elif portalId <= 18:
+                self.portalEvents[portalId] = f"Finish {output[-1]}"
 
         self.connect_levels()
 
@@ -458,6 +455,7 @@ class Rayman2World(World):
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
         """Hook method used by Universal Tracker to load data from slot data back into Python so the game layout is consistent."""
         self.levelChains = slot_data["level_chains"]
+        self.portalEvents = slot_data["portal_finish_events"]
         self.sideTempleFinishEvent = slot_data["side_temple_finish_event"]
         self.cobdFinishEvent = slot_data["cobd_finish_event"]
         self.connect_levels()
@@ -482,6 +480,7 @@ class Rayman2World(World):
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "lumsanity": self.options.lumsanity.value,
+            "portal_finish_events": self.portalEvents,
             "side_temple_finish_event": self.sideTempleFinishEvent,
             "cobd_finish_event": self.cobdFinishEvent,
         }
