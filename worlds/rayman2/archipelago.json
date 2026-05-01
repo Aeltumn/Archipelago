@@ -1,6 +1,6 @@
 {
     "game": "Rayman 2",
     "authors": ["Aeltumn", "Star"],
-    "world_version": "0.0.7",
+    "world_version": "0.1.0",
     "minimum_ap_version": "0.6.4"
 }
