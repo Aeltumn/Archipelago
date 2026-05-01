@@ -14,6 +14,7 @@ class Tech(IntEnum):
     ELIXIR_AND_PURPLE_SWING = 4
     PURPLE_SWING_OR_GLM = 5
     HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT = 6
+    COMPLETED_COBD = 7
 
 @dataclass
 class Checks:
@@ -22,32 +23,23 @@ class Checks:
     cages: List[int] = field(default_factory=list)
     special: Dict[int, str] = field(default_factory=dict)
 
-    def total_lums(self) -> int:
-        """Returns the total amount of lums gained from this segment."""
-        count = 0
-        count += len(self.regularLums)
-        count += len(self.superLums) * 5
-        return count
-
-    def get_total_checks(self, lumsanity: int) -> int:
-        """Returns the total amount of checks in this segment."""
-        count = 0
-        if lumsanity:
-            count += len(self.regularLums)
-        count += len(self.superLums)
-        count += len(self.cages)
-        count += len(self.special)
-        return count
-
 @dataclass
 class SubLevelInfo:
     checks: Checks = field(default_factory=lambda: Checks())
     exitRequirement: Tech = Tech.NONE
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
 
+    def get_total_lumsane_lums(self) -> int:
+        # TODO Remove this!
+        total = 0
+        total += len(self.checks.regularLums)
+        for sub in self.behindRequirements.values():
+            total += len(sub.regularLums)
+        return total
+
 @dataclass
 class LevelInfo:
-    chain: str
+    chain: str | None
     displayName: str
     sublevels: Dict[str, SubLevelInfo]
     lumGate: int | None = None
@@ -1148,10 +1140,7 @@ extra_levels: list[LevelInfo] = [
                     Tech.PURPLE_SWING: Checks(
                         superLums=[ 
                             796
-                        ],
-                        special={
-                            1123: "Elixir of Life",
-                        }
+                        ]
                     ),
                 },
                 exitRequirement=Tech.PURPLE_SWING
@@ -1254,7 +1243,7 @@ extra_levels: list[LevelInfo] = [
 
 levels: list[LevelInfo] = [
     LevelInfo(
-        "woods_of_light",
+        None,
         "The Woods of Light",
         {
             "learn_10": SubLevelInfo(
@@ -1396,8 +1385,15 @@ levels: list[LevelInfo] = [
                         849,
                         850,
                         851
-                    ]
-                )
+                    ],
+                ),
+                behindRequirements={
+                    Tech.COMPLETED_COBD: Checks(
+                        special={
+                            1123: "Elixir of Life",
+                        }
+                    )
+                }
             ),
             "ski_60": SubLevelInfo(
                 checks=Checks(
@@ -2582,7 +2578,7 @@ levels: list[LevelInfo] = [
         },
     ),
     LevelInfo(
-        "crows_nest",
+        None,
         "The Crow's Nest",
         {
             "Rhop_10": SubLevelInfo()

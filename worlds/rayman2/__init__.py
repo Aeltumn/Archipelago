@@ -48,6 +48,7 @@ class Rayman2World(World):
         super(Rayman2World, self).__init__(multiworld, player)
         self.levelChains = {}
         self.sideTempleFinishEvent = "Finish plum_20"
+        self.cobdFinishEvent = "Finish vulca_20"
 
         # If not in lumsanity mode we have to determine the available lums
         # using accessible regions which means we have to check reachability
@@ -60,7 +61,7 @@ class Rayman2World(World):
         if tech != Tech.NONE:
             accessible.access_rule = lambda state: self.has_tech(state, tech)
 
-    def create_level(self, sublevels: dict[str, SubLevelInfo]) -> Tuple[Region | None, Region | None]:
+    def create_level(self, sublevels: dict[str, SubLevelInfo], levelChain: list[str]) -> Tuple[Region | None, Region | None]:
         """Creates a new level from a level info that can be entered from source."""
         if len(sublevels) == 0:
             return [None, None]
@@ -78,6 +79,9 @@ class Rayman2World(World):
 
             # Create an event for finishing this sub-region
             self.create_level_finish_event(region, subLevelInfo)
+
+            # Add this level to the chain for this level
+            levelChain.append(subLevelName)
 
             # Store the first and last regions
             if firstRegion is None:
@@ -161,10 +165,6 @@ class Rayman2World(World):
         exit = lastRegion.create_exit(connection)
         exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
 
-        # If not in room randomisation, connect this directly to the last zone
-        if not self.options.room_randomisation.value:
-            exit.connect(region)
-
     def has_tech(self, state: CollectionState, tech: Tech) -> bool:
         """Returns whether the given state has the items to complete the given tech."""
         match tech:
@@ -174,6 +174,8 @@ class Rayman2World(World):
                 return state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player)
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
                 return state.has(self.sideTempleFinishEvent, self.player)
+            case Tech.COMPLETED_COBD:
+                return state.has(self.cobdFinishEvent, self.player)
             case Tech.NONE:
                 return True
             case _:
@@ -191,16 +193,19 @@ class Rayman2World(World):
             allLevels: list[LevelInfo] = []
             allLevels += levels
             allLevels += extra_levels
+            zones = []
             for levelInfo in allLevels:
                 for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                     # If this region is reachable count all lums in the region, also check
                     # if they have the necessary tech to get the ones behind a requirement
                     if state.can_reach_region(subLevelName, self.player):
+                        zones.append(subLevelName)
                         lumCount += len(subLevelInfo.checks.regularLums)
 
                         for tech, checks in subLevelInfo.behindRequirements.items():
                             if self.has_tech(state, tech):
                                 lumCount += len(checks.regularLums)
+
             return lumCount
 
     def create_regions(self) -> None:
@@ -212,7 +217,10 @@ class Rayman2World(World):
         # Go through all levels to create regions and items
         portal = 0
         for levelInfo in levels:
-            firstRegion, lastRegion = self.create_level(levelInfo.sublevels)
+            levelChain = []
+            if levelInfo.chain is not None:
+                self.levelChains[levelInfo.chain] = levelChain
+            firstRegion, lastRegion = self.create_level(levelInfo.sublevels, levelChain)
             if firstRegion is None or lastRegion is None:
                 continue
 
@@ -223,8 +231,8 @@ class Rayman2World(World):
             mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portal, levelInfo.lumGate, levelInfo.requireAllMasks)
             portal += 1
 
-            # Connect the portal to the level if not randomising or for the first/last levels
-            if not self.options.room_randomisation.value or levelInfo.displayName == "The Woods of Light" or levelInfo.displayName == "The Crow's Nest":
+            # Connect the portal automatically to non-randomised levels (first/last)
+            if levelInfo.chain is None:
                 mapmonde_exit.connect(firstRegion)
 
         # Go through the extra levels and create them separately
@@ -250,20 +258,19 @@ class Rayman2World(World):
                     raise KeyError(f"Unknown extra level {extraLevelInfo.displayName}")
 
             # Create this level itself
-            firstRegion, lastRegion = self.create_level(extraLevelInfo.sublevels)
+            levelChain = []
+            if extraLevelInfo.chain is not None:
+                self.levelChains[extraLevelInfo.chain] = levelChain
+            firstRegion, lastRegion = self.create_level(extraLevelInfo.sublevels, levelChain)
             if firstRegion is None:
                 continue
 
             # Create an entrance in the source level
-            level_exit = self.create_entrance_portal(last_level, f"Portal to {firstRegion.name}", lum_gate=extraLevelInfo.lumGate, require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
+            self.create_entrance_portal(last_level, f"Portal to {firstRegion.name}", lum_gate=extraLevelInfo.lumGate, require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
 
             # Create an exit back to the source level from the side-level only for the revisits
             if isRevisit:
                 self.connect_internal(lastRegion, last_level)
-
-            # If room randomisation is off, connect the portal to this side-level!
-            if not self.options.room_randomisation.value:
-                level_exit.connect(firstRegion)
 
         # Go through all location and create them
         for data in location_table:
@@ -293,8 +300,8 @@ class Rayman2World(World):
                         state.prog_items[self.player]["Cage"] >= 80
                 )
 
-    def connect_randomised(self):
-        """Connects together regions based on the decisions made by the generator."""
+    def connect_levels(self):
+        """Connects together regions based on the level chains set."""
         # Create a mapping of all sub levels and their info
         subLevelsById = {}
         allLevels: list[LevelInfo] = []
@@ -304,11 +311,26 @@ class Rayman2World(World):
             for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                 subLevelsById[subLevelName] = subLevelInfo
 
+        # Print available checks per section
+        # TODO Remove this!
+        idx = 0
+        tl = 0
+        ci = 0
+        for _, chainLevels in self.levelChains.items():
+            ci += 1
+            for subLevelId in chainLevels:
+                info = subLevelsById[subLevelId]
+                t = info.get_total_lumsane_lums()
+                tl += t
+                idx += 1
+                print(f"Level #{idx} (Chain #{ci}) - {subLevelId} has {t} lumsane lums, total so far {tl}")
+
         # Go through all level chains and hook them up
         mapmonde = self.get_region("Menu")
         portal = 1
         for chainId, chainLevels in self.levelChains.items():
-            print(f"Created level chain {chainId}: {chainLevels}")
+            # TODO Remove this!
+            print(f"Level chain {chainId}: {chainLevels}")
             index = 0
             lastRegion: Region | None = None
 
@@ -395,8 +417,8 @@ class Rayman2World(World):
     def generate_early(self) -> None:
         """Ensures that key items are placed early so you cannot get stuck as many levels require it to complete."""
         self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
-        self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
-        self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
+        # self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
+        # self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
@@ -404,19 +426,19 @@ class Rayman2World(World):
         if getattr(self.multiworld, "generation_is_fake", False):
             return
 
-        # If we're not in room randomisation mode, don't do anything!
-        if not self.options.room_randomisation.value:
-            return
+        # If we're in room randomisation mode, generate the layout!
+        if self.options.room_randomisation.value:
+            # Run the custom generator
+            generator = GeneratorState(self.random, self.options.lumsanity.value)
+            generator.assemble_initial_levels(self.options)
+            generator.generate()
 
-        # Run the custom generator
-        generator = GeneratorState(self.options.lumsanity.value)
-        generator.assemble_initial_levels(self.options)
-        generator.generate()
+            # Connect up the map based on the generator's work, ignoring the base level chains
+            self.levelChains = generator.level_chains
+            self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
+            self.cobdFinishEvent = generator.collected.cobdFinishEvent
 
-        # Connect up the map based on the generator's work
-        self.levelChains = generator.level_chains
-        self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
-        self.connect_randomised()
+        self.connect_levels()
 
     def create_item(self, item: str,
                     classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
@@ -434,14 +456,15 @@ class Rayman2World(World):
         self.multiworld.itempool += itempool
 
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
-        """Hook method used by Universal Tracker to load data from slot data back into Python so entrance randomisation is consistent."""
-        if not slot_data["room_randomisation"]:
-            return
-
-        # Re-run the connect method to reconnect the layout!
+        """Hook method used by Universal Tracker to load data from slot data back into Python so the game layout is consistent."""
         self.levelChains = slot_data["level_chains"]
         self.sideTempleFinishEvent = slot_data["side_temple_finish_event"]
-        self.connect_randomised()
+        self.cobdFinishEvent = slot_data["cobd_finish_event"]
+        self.connect_levels()
+
+    def get_filler_item_name(self) -> str:
+        """If necessary as a fallback, any filler items should be lums."""
+        return "Lum"
 
     def fill_slot_data(self):
         """Includes all information needed by the game into the slot data."""
@@ -460,6 +483,7 @@ class Rayman2World(World):
             "room_randomisation": self.options.room_randomisation.value,
             "lumsanity": self.options.lumsanity.value,
             "side_temple_finish_event": self.sideTempleFinishEvent,
+            "cobd_finish_event": self.cobdFinishEvent,
         }
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
