@@ -272,7 +272,6 @@ class Rayman2World(World):
 
             region = self.multiworld.get_region(data.region, self.player)
             location = Rayman2Location(self.player, data.displayName, data.id, region)
-            location.progression_type = data.progressionType
 
             # Add an access rule based on the tech type and this region being accessible!
             self.applyAccessRequirement(location, data.tech)
@@ -396,6 +395,13 @@ class Rayman2World(World):
                 if chainId == "side_temple" and index == len(chainLevels):
                     event = self.create_event(region, "Finish Side Temple")
                     self.applyAccessRequirement(event, subLevelInfo.exitRequirement)
+
+    def generate_early(self) -> None:
+        # Hint to the generator to place all things that unstuck you early
+        # as it sometimes gets stuck otherwise.
+        self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
+        self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
+        self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""

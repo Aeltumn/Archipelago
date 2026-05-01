@@ -18,7 +18,6 @@ class LocationDefinition:
     itemName: str
     displayName: str
     id: int
-    progressionType: LocationProgressType
     tech: Tech
 
 
@@ -27,7 +26,7 @@ item_table: List[ItemDefinition] = []
 location_table: List[LocationDefinition] = []
 
 # Creates items and locations for every input
-def create(subLevelName, levelName, id, itemName, classification: ItemClassification, progression: LocationProgressType, tech: Tech):
+def create(subLevelName, levelName, id, itemName, classification: ItemClassification, tech: Tech):
     hint = human_readable_names[id]
     displayName = f"{levelName} - {hint}"
 
@@ -44,7 +43,6 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
             itemName=itemName,
             displayName=displayName,
             id=base_id + id,
-            progressionType=progression,
             tech=tech,
         )
     )
@@ -52,19 +50,19 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
 def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
     # Create checks for all regular lums
     for lum in checks.regularLums:
-        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_skip_balancing, tech)
 
     # Create checks for all super lums
     for superLum in checks.superLums:
-        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_skip_balancing, tech)
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_skip_balancing, tech)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():
-        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, LocationProgressType.PRIORITY, tech)
+        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, tech)
 
 # Go through all levels to create regions and items
 allLevels: list[LevelInfo] = []
