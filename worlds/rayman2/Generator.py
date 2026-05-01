@@ -26,6 +26,7 @@ class GeneratorCollection:
     checks: int = 7
     waitingEvents: dict[Tech, list[str]] = {}
     waitingChecks: dict[Tech, list[Checks]] = {}
+    sideTempleFinishEvent: str | None = None
 
     def get_maximum_obtainable_lums(self) -> int:
         """Returns the maximum amount of lums that can be obtained with how many checks are accessible"""
@@ -108,7 +109,7 @@ class GeneratorCollection:
             return
 
         self.events.append(event)
-        if event == "Finish Side Temple":
+        if self.sideTempleFinishEvent is not None and event == self.sideTempleFinishEvent:
             self.award_tech(Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT)
 
     def award_tech(self, tech: Tech):
@@ -127,7 +128,7 @@ class GeneratorCollection:
         """Returns whether this state could have acquired [tech] in some way."""
         match tech:
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                return "Finish Side Temple" in self.events
+                return self.sideTempleFinishEvent is not None and self.sideTempleFinishEvent in self.events
             case _:
                 return True
 
@@ -138,12 +139,12 @@ class GeneratorCollection:
         for tech, checks in level.behindRequirements.items():
             self.add_items(checks, tech)
 
-        # If we could have the tech to finish this level, we assume we can!
-        self.add_event(f"Finish {subLevelId}", level.exitRequirement)
-
         # If this is the side temple then this allows you to reach those specific checks!
         if isSideTemple:
-            self.add_event("Finish Side Temple", level.exitRequirement)
+            self.sideTempleFinishEvent = f"Finish {subLevelId}"
+
+        # If we could have the tech to finish this level, we assume we can!
+        self.add_event(f"Finish {subLevelId}", level.exitRequirement)
 
         # Mark down that this zone is now accessible!
         self.zones.append(subLevelId)
@@ -191,7 +192,6 @@ class GeneratorState:
     remaining: dict[RoomType, list[Tuple[str, SubLevelInfo]]] = {}
     collected: GeneratorCollection = GeneratorCollection()
     levelChains: dict[str, list[str]] = {}
-    sideTemple: str | None = None
     hasPlacedAWalk: bool = False
 
     def assemble_initial_levels(self, options: Rayman2Options):
@@ -329,7 +329,6 @@ class GeneratorState:
         sublist = level.generated.get(roomType, [])
         sublist.append([subLevelId, levelInfo])
         level.generated[roomType] = sublist
-        print(f"Placed down {subLevelId} in {level.name}")
 
     def select_for_level(self, level: GeneratorLevel, roomType: RoomType):
         """Adds a room of the given [type] to [level]."""
@@ -343,7 +342,6 @@ class GeneratorState:
         if len(prioritized_options) != 0:
             choice = random.choice(prioritized_options)
             self.hasPlacedAWalk = True
-            print(f"Selecting prioritized rom {choice}")
         else:
             choice = random.choice(options)
         self.add_to_level(level, roomType, choice)
@@ -352,7 +350,6 @@ class GeneratorState:
         """Attempts to place one more room."""
         # Start by determining which levels are accessible currently given the lums we have
         maxLums = self.collected.get_maximum_obtainable_lums()
-        print(f"Now you could have {maxLums} lums")
         selectableLevels = list(filter(lambda it: it.lumsRequired <= maxLums and (it.zoneRequired is None or it.zoneRequired in self.collected.zones), self.levels.values()))
         nonSelectableLevels = list(filter(lambda it: it.lumsRequired > maxLums or (it.zoneRequired is not None and it.zoneRequired not in self.collected.zones), self.levels.values()))
 

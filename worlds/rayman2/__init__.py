@@ -47,6 +47,13 @@ class Rayman2World(World):
     def __init__(self, multiworld, player):
         super(Rayman2World, self).__init__(multiworld, player)
         self.levelChains = {}
+        self.sideTempleFinishEvent = "Finish plum_20"
+
+        # If not in lumsanity mode we have to determine the available lums
+        # using accessible regions which means we have to check reachability
+        # in entrance requirements on lum gate portals. So we disable this setting!
+        # It'd be complicated to work around so we eat the performance cost for R2.
+        self.explicit_indirect_conditions = False
 
     def applyAccessRequirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
@@ -71,12 +78,6 @@ class Rayman2World(World):
 
             # Create an event for finishing this sub-region
             self.create_level_finish_event(region, subLevelInfo)
-
-            # If we're not in room randomisation mode we create an event for finishing the side temple
-            # immediately as we place the rooms!
-            if not self.options.room_randomisation and region.name == "plum_10":
-                event = self.create_event(region, "Finish Side Temple")
-                self.applyAccessRequirement(event, subLevelInfo.exitRequirement)
 
             # Store the first and last regions
             if firstRegion is None:
@@ -172,7 +173,7 @@ class Rayman2World(World):
             case Tech.ELIXIR_AND_PURPLE_SWING:
                 return state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player)
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                return state.has("Finish Side Temple", self.player)
+                return state.has(self.sideTempleFinishEvent, self.player)
             case Tech.NONE:
                 return True
             case _:
@@ -391,18 +392,6 @@ class Rayman2World(World):
                             exit.connect(target)
                             break
 
-                # If this is the side temple chain, we link finishing this region to the Finish Side Temple event!
-                if chainId == "side_temple" and index == len(chainLevels):
-                    event = self.create_event(region, "Finish Side Temple")
-                    self.applyAccessRequirement(event, subLevelInfo.exitRequirement)
-
-    def generate_early(self) -> None:
-        # Hint to the generator to place all things that unstuck you early
-        # as it sometimes gets stuck otherwise.
-        self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
-        self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
-        self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
-
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
         # If we're in UT we don't re-randomize!
@@ -421,6 +410,7 @@ class Rayman2World(World):
 
         # Connect up the map based on the generator's work
         self.levelChains = generator.levelChains
+        self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
         self.connect_randomised()
 
     def create_item(self, item: str,
@@ -445,6 +435,7 @@ class Rayman2World(World):
 
         # Re-run the connect method to reconnect the layout!
         self.levelChains = slot_data["level_chains"]
+        self.sideTempleFinishEvent = slot_data["side_temple_finish_event"]
         self.connect_randomised()
 
     def fill_slot_data(self):
@@ -463,6 +454,7 @@ class Rayman2World(World):
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "lumsanity": self.options.lumsanity.value,
+            "side_temple_finish_event": self.sideTempleFinishEvent,
         }
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
