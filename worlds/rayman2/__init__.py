@@ -392,6 +392,12 @@ class Rayman2World(World):
                             exit.connect(target)
                             break
 
+    def generate_early(self) -> None:
+        """Ensures that key items are placed early so you cannot get stuck as many levels require it to complete."""
+        self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
+        self.multiworld.local_early_items[self.player]["Knowledge of the Cave of Bad Dreams"] = 1
+        self.multiworld.local_early_items[self.player]["Elixir of Life"] = 1
+
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
         # If we're in UT we don't re-randomize!
