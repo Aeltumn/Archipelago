@@ -41,7 +41,7 @@ class FirstGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Water and Ice."""
     display_name = "First Lum Gate Requirement"
     range_start = 0
-    range_end = 250
+    range_end = 200
     default = 100
 
 
@@ -49,7 +49,7 @@ class SecondGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Stone & Fire."""
     display_name = "Second Lum Gate Requirement"
     range_start = 0
-    range_end = 500
+    range_end = 450
     default = 300
 
 
@@ -57,7 +57,7 @@ class ThirdGateRequirement(Range):
     """The amount of lums required to enter Beneath the Sanctuary of Rock & Lava."""
     display_name = "Third Lum Gate Requirement"
     range_start = 0
-    range_end = 700
+    range_end = 600
     default = 450
 
 
@@ -65,7 +65,7 @@ class FourthGateRequirement(Range):
     """The amount of lums required to enter the Iron Mountains."""
     display_name = "Fourth Lum Gate Requirement"
     range_start = 0
-    range_end = 850
+    range_end = 800
     default = 550
 
 
@@ -73,7 +73,7 @@ class WalkOfLifeRequirement(Range):
     """The amount of lums required to enter the Walk of Life."""
     display_name = "Walk of Life Lum Requirement"
     range_start = 0
-    range_end = 300
+    range_end = 750
     default = 60
 
 
@@ -81,7 +81,7 @@ class WalkOfPowerRequirement(Range):
     """The amount of lums required to enter the Walk of Power."""
     display_name = "Walk of Power Lum Requirement"
     range_start = 0
-    range_end = 900
+    range_end = 750
     default = 475
 
 
