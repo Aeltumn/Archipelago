@@ -220,7 +220,14 @@ class Rayman2World(World):
                 continue
 
             # Create a portal for each level on the hall of doors
-            mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portal, levelInfo.lumGate, levelInfo.requireAllMasks)
+            portalsRequired = portal
+
+            # Since the Crow's Nest portal appears after getting 4 masks you don't actually need
+            # to complete the iron mountains!
+            if levelInfo.requireAllMasks:
+                portalsRequired -= 1
+
+            mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portalsRequired, levelInfo.lumGate, levelInfo.requireAllMasks)
             portal += 1
 
             # Connect the portal automatically to non-randomised levels (first/last)

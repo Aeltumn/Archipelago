@@ -383,25 +383,6 @@ class GeneratorState:
         """Adds a room from the remaining rooms of type [room_type] to [level]."""
         self.select_for_level(level, room_type, self.remaining.get(room_type, []), early)
 
-    def attempt_place_early_walk_generation(self):
-        """Attempts to place the walk of life or power zone blocker in an immediately available level."""
-        selectableLevels = list(filter(lambda it: it.lumsRequired == 0 and it.zoneRequired is None or it.zoneRequired in self.early_collected.zones, self.levels.values()))
-        allRequiredZones = []
-        for level in self.levels.values():
-            if "walk" not in level.name:
-                continue
-
-            if level.zoneRequired is not None and level.zoneRequired not in self.early_collected.zones:
-                allRequiredZones.append(level.zoneRequired)
-        level = self.random.choice(selectableLevels)
-
-        selectableRooms = []
-        for roomId, roomInfo in self.remaining.get(RoomType.ENTRANCE, []):
-            if roomId in allRequiredZones:
-                selectableRooms.append([roomId, roomInfo])
-        if len(selectableRooms) > 0:
-            self.select_for_level(level, RoomType.ENTRANCE, selectableRooms, True)
-
     def attempt_zone_required_generation(self) -> bool:
         """Attempts to place any restrictive room."""
         # Determine all levels we can place something in currently
@@ -508,7 +489,6 @@ class GeneratorState:
         # We place twice, first we start by placing all restricted levels
         # in places where they will definitely be accessible followed by placing
         # all remaining levels wherever they fit to have enough lums.
-        self.attempt_place_early_walk_generation()
         while True:
             if self.attempt_zone_required_generation():
                 break
