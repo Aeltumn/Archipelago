@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from Options import Range, DeathLink, Choice, OptionGroup, T, Toggle
+from Options import Range, DeathLink, Choice, OptionGroup, Toggle
 from worlds.AutoWorld import PerGameCommonOptions
 
 
@@ -27,15 +27,30 @@ class EndGoal(Choice):
         else:
             return "100%"
 
+
 class RoomRandomisation(Toggle):
     """Whether to enable room randomization which will randomize the order of all levels."""
     display_name = "Room Randomisation"
     default = True
 
+
 class Lumsanity(Toggle):
     """Whether all individual yellow lums should be their own checks instead of only super lums. This will add 710 extra progression checks!"""
-    display_name = "Shuffle All Yellow Lums"
+    display_name = "Lumsanity"
     default = False
+
+
+class InstantPortalAccess(Toggle):
+    """Whether all portals should be accessible as soon as you obtain enough lums. Will speed up the game considerably."""
+    display_name = "Instant Portal Access"
+    default = False
+
+
+class FixedLevelLengths(Toggle):
+    """Whether to use fixed level lengths with room randomisation, which ensures every level has as many rooms as it does in the base game. This is more likely to cause generation failures with high lum gates as early levels in the base game don't have many rooms."""
+    display_name = "Fixed Level Lengths"
+    default = False
+
 
 class FirstGateRequirement(Range):
     """The amount of lums required to enter the Sanctuary of Water and Ice."""
@@ -93,6 +108,9 @@ class Rayman2Options(PerGameCommonOptions):
     room_randomisation: RoomRandomisation
     lumsanity: Lumsanity
 
+    instant_portal_access: InstantPortalAccess
+    fixed_level_lengths: FixedLevelLengths
+
     first_gate_required: FirstGateRequirement
     second_gate_required: SecondGateRequirement
     third_gate_required: ThirdGateRequirement
@@ -104,5 +122,6 @@ class Rayman2Options(PerGameCommonOptions):
 def create_option_groups() -> List[OptionGroup]:
     return [
         OptionGroup(name="Lum Requirement Options",
-                    options=[WalkOfLifeRequirement, FirstGateRequirement, SecondGateRequirement, WalkOfPowerRequirement, ThirdGateRequirement, FourthGateRequirement])
+                    options=[WalkOfLifeRequirement, FirstGateRequirement, SecondGateRequirement, WalkOfPowerRequirement,
+                             ThirdGateRequirement, FourthGateRequirement])
     ]
