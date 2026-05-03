@@ -47,7 +47,7 @@ class InstantPortalAccess(Toggle):
 
 
 class FixedLevelLengths(Toggle):
-    """Whether to use fixed level lengths with room randomisation, which ensures every level has as many rooms as it does in the base game. This is more likely to cause generation failures with high lum gates as early levels in the base game don't have many rooms."""
+    """Whether to use fixed level lengths with room randomisation, which ensures every level has as many rooms as it does in the base game."""
     display_name = "Fixed Level Lengths"
     default = False
 
