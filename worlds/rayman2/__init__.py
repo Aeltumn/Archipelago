@@ -211,6 +211,7 @@ class Rayman2World(World):
 
         # Go through all levels to create regions and items
         portal = 0
+        last_lum_gate = None
         for levelInfo in levels:
             levelChain = []
             if levelInfo.chain is not None:
@@ -227,7 +228,15 @@ class Rayman2World(World):
             if levelInfo.requireAllMasks:
                 portalsRequired -= 1
 
-            mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portalsRequired, levelInfo.lumGate, levelInfo.requireAllMasks)
+            # If portals are instantly accessible you only ever need 1 at most (Woods of Light)!
+            if portalsRequired > 1 and self.options.instant_portal_access.value:
+                portalsRequired = 1
+
+            # Update the lum gate based on the last we saw
+            if levelInfo.lumGate is not None:
+                last_lum_gate = levelInfo.lumGate
+
+            mapmonde_exit = self.create_entrance_portal(menu, f"Portal #{portal + 1}", portalsRequired, last_lum_gate, levelInfo.requireAllMasks)
             portal += 1
 
             # Connect the portal automatically to non-randomised levels (first/last)
@@ -413,7 +422,7 @@ class Rayman2World(World):
         # If we're in room randomisation mode, generate the layout!
         if self.options.room_randomisation.value:
             # Run the custom generator
-            generator = GeneratorState(self.random, self.options.lumsanity.value)
+            generator = GeneratorState(self.random, self.options.lumsanity.value, self.options.fixed_level_lengths.value)
             generator.assemble_initial_levels(self.options)
             generator.generate()
 
@@ -489,6 +498,7 @@ class Rayman2World(World):
             "death_link": self.options.death_link.value,
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
+            "accessible_portals": self.options.instant_portal_access.value,
             "lumsanity": self.options.lumsanity.value,
             "portal_finish_events": self.portalEvents,
             "side_temple_finish_event": self.sideTempleFinishEvent,
