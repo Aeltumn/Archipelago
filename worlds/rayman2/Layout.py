@@ -1346,10 +1346,16 @@ levels: list[LevelInfo] = [
                         40
                     ],
                     cages=[
-                        847,
-                        848
+                        847
                     ]
                 ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                        cages=[
+                            848
+                        ]
+                    )
+                }
             ),
         }
     ),
