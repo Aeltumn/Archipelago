@@ -1,3 +1,4 @@
+from random import Random
 from typing import Any, Callable, TextIO, Tuple
 
 from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Region, Location, Entrance
@@ -422,7 +423,10 @@ class Rayman2World(World):
         # If we're in room randomisation mode, generate the layout!
         if self.options.room_randomisation.value:
             # Run the custom generator
-            generator = GeneratorState(self.random, self.options.lumsanity.value, self.options.fixed_level_lengths.value)
+            random = Random(self.random.getrandbits(64))
+            if self.options.room_randomisation_seed.value != "":
+                random.seed(self.options.room_randomisation_seed.value)
+            generator = GeneratorState(random, self.options.lumsanity.value, self.options.fixed_level_lengths.value)
             generator.assemble_initial_levels(self.options)
             generator.generate()
 

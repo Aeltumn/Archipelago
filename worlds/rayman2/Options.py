@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from Options import Range, DeathLink, Choice, OptionGroup, Toggle
+from Options import FreeText, Range, DeathLink, Choice, OptionGroup, Toggle
 from worlds.AutoWorld import PerGameCommonOptions
 
 
@@ -50,6 +50,11 @@ class FixedLevelLengths(Toggle):
     """Whether to use fixed level lengths with room randomisation, which ensures every level has as many rooms as it does in the base game."""
     display_name = "Fixed Level Lengths"
     default = False
+
+
+class RoomRandomisationSeed(FreeText):
+    """A seed to use for room randomisation. If left blank the randomisation will be random. Can be used to use the same randomised layout in multiple games."""
+    display_name = "Randomisation Seed"
 
 
 class FirstGateRequirement(Range):
@@ -110,6 +115,8 @@ class Rayman2Options(PerGameCommonOptions):
 
     instant_portal_access: InstantPortalAccess
     fixed_level_lengths: FixedLevelLengths
+
+    room_randomisation_seed: RoomRandomisationSeed
 
     first_gate_required: FirstGateRequirement
     second_gate_required: SecondGateRequirement
