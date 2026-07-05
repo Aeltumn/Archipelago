@@ -500,6 +500,7 @@ class Rayman2World(World):
                 self.options.walk_of_power_required.value
             ],
             "death_link": self.options.death_link.value,
+            "death_link_amnesty": self.options.death_link_amnesty.value,
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "accessible_portals": self.options.instant_portal_access.value,
