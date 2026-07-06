@@ -80,8 +80,13 @@ class GlitchedBackwardsSlideJumps(Toggle):
     default = False
 
 class GlitchedEarlyEchoingCaves(Toggle):
-    """Includes checks behind the Early Echoing Caves skip within logic."""
+    """Includes the Early Echoing Caves skip as a valid way to reach other levels."""
     display_name = "Include Early Echoing Caves Skip"
+    default = False
+
+class GlitchedReverseEarlyEchoingCaves(Toggle):
+    """Includes the lum boost from The Fairy Glade Revisit area to get back to the main area as a valid way to reach other levels."""
+    display_name = "Include Reverse EEC"
     default = False
 
 class GlitchedKapouehSkip(Toggle):
@@ -110,13 +115,18 @@ class GlitchedTornadoSkip(Toggle):
     default = False
 
 class GlitchedCOBDSkip(Toggle):
-    """Includes checks behind obtaining the Elixir of Life within logic, which requires using COBD skip."""
+    """Includes checks behind obtaining the Elixir of Life within logic, which requires using COBD skip. Includes the cage after talking to Clark in The Menhir Hills 2."""
     display_name = "Include COBD Skip"
     default = False
 
 class GlitchedTechnicalTricks(Toggle):
-    """Includes checks behind technical tricks (GLM/NaN) within logic before getting a Silver Lum, this includes any trick that can be easily executed by following precise technical steps. This includes The Sanctuary of Stone and Fire 1 GLM, The Sanctuary of Stone and Fire 2 NaN Plum."""
+    """Includes checks behind technical tricks (GLM/NaN) within logic before getting a Silver Lum, this includes any trick that can be easily executed by following precise technical steps. This includes The Sanctuary of Stone and Fire 1 GLM including backwards completion of that level and The Sanctuary of Stone and Fire 2 NaN Plum."""
     display_name = "Include Technical Tricks"
+    default = False
+
+class GlitchedJanoSkip(Toggle):
+    """Includes checks behind using the various Jano Skips before getting a Silver Lum, this includes the Super Lum in the boss fight area."""
+    display_name = "Include Jano Tricks"
     default = False
 
 class FirstGateRequirement(Range):
@@ -180,6 +190,7 @@ class Rayman2Options(PerGameCommonOptions):
     glitched_ly_skip: GlitchedLySkip
     glitched_backwards_slide_jumps: GlitchedBackwardsSlideJumps
     glitched_early_echoing_caves: GlitchedEarlyEchoingCaves
+    glitched_reverse_early_echoing_caves: GlitchedReverseEarlyEchoingCaves
     glitched_kapoueh_skip: GlitchedKapouehSkip
     glitched_damage_boosts: GlitchedDamageBoosts
     glitched_plum_wall_climb: GlitchedPlumWallClimb
@@ -187,6 +198,7 @@ class Rayman2Options(PerGameCommonOptions):
     glitched_tornado_skip: GlitchedTornadoSkip
     glitched_cobd_skip: GlitchedCOBDSkip
     glitched_technical_tricks: GlitchedTechnicalTricks
+    glitched_jano_skip: GlitchedJanoSkip
 
     first_gate_required: FirstGateRequirement
     second_gate_required: SecondGateRequirement
@@ -199,9 +211,9 @@ class Rayman2Options(PerGameCommonOptions):
 def create_option_groups() -> List[OptionGroup]:
     return [
         OptionGroup(name="Glitched Logic Options",
-                    options=[GlitchedLySkip, GlitchedBackwardsSlideJumps, GlitchedEarlyEchoingCaves, GlitchedKapouehSkip,
+                    options=[GlitchedLySkip, GlitchedBackwardsSlideJumps, GlitchedEarlyEchoingCaves, GlitchedReverseEarlyEchoingCaves, GlitchedKapouehSkip,
                              GlitchedDamageBoosts, GlitchedPlumWallClimb, GlitchedAirswims, GlitchedTornadoSkip,
-                             GlitchedCOBDSkip, GlitchedTechnicalTricks]),
+                             GlitchedCOBDSkip, GlitchedTechnicalTricks, GlitchedJanoSkip]),
         OptionGroup(name="Lum Requirement Options",
                     options=[WalkOfLifeRequirement, FirstGateRequirement, SecondGateRequirement, WalkOfPowerRequirement,
                              ThirdGateRequirement, FourthGateRequirement])

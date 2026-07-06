@@ -9,12 +9,17 @@ class Tech(IntEnum):
     """The types of tech required to accomplish something."""
     NONE = 0
     PURPLE_SWING = 1
-    BAYOU_DAMAGE_BOOST = 2
-    PURPLE_SWING_OR_BACKWARDS_JUMP = 3
-    ELIXIR_AND_PURPLE_SWING = 4
-    PURPLE_SWING_OR_GLM = 5
+    DAMAGE_BOOST_OR_SWING = 2
+    BACKWARDS_SLIDE_JUMP_OR_SWING = 3
+    ELIXIR_AND_SWING_OR_COBD_SKIP = 4
+    TECHNICAL_OR_SWING = 5
     HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT = 6
     COMPLETED_COBD = 7
+    LY_SKIP_OR_SWING = 8
+    KAPOUEH_SKIP_OR_SWING = 9
+    AIRSWIMS_OR_SWING = 10
+    TORNADO_SKIP_OR_SWING = 11
+    JANO_SKIP_OOB_OR_SWING = 12
 
 @dataclass
 class Checks:
@@ -44,7 +49,7 @@ human_readable_names: Dict[int, str] = {
     1399: "Lum from cage above wooden grate",
     1396: "Lum above Murfy stone",
     1398: "Lum on grass next to waterfall",
-    1400: "Lum underneath waterfal",
+    1400: "Lum underneath waterfall",
     1397: "Lum between stone walls",
     841: "Cage with Teensies",
 
@@ -1003,7 +1008,7 @@ extra_levels: list[LevelInfo] = [
             # The game does not distinguish this area but we do! We give it the custom ID of Learn_32.
             "Learn_32": SubLevelInfo(
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech.KAPOUEH_SKIP_OR_SWING: Checks(
                         regularLums=[
                             9,
                             10
@@ -1129,13 +1134,13 @@ extra_levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech.JANO_SKIP_OOB_OR_SWING: Checks(
                         superLums=[ 
                             796
                         ]
                     ),
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech.JANO_SKIP_OOB_OR_SWING
             )
         }
     ),
@@ -1148,8 +1153,7 @@ extra_levels: list[LevelInfo] = [
                     cages=[
                         879,
                         880,
-                        881,
-                        882
+                        881
                     ],
                     regularLums=[
                         391,
@@ -1157,13 +1161,22 @@ extra_levels: list[LevelInfo] = [
                         393,
                         394,
                         395,
-                        396,
-                        397,
-                        398,
-                        399,
-                        400
+                        396
                     ]
                 ),
+                behindRequirements={
+                    Tech.PURPLE_SWING: Checks(
+                         cages=[
+                            882
+                        ],
+                        regularLums=[
+                            397,
+                            398,
+                            399,
+                            400
+                        ]
+                    )
+                },
                 exitRequirement=Tech.PURPLE_SWING,
             ),
         }
@@ -1315,14 +1328,14 @@ levels: list[LevelInfo] = [
                     },
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech.LY_SKIP_OR_SWING: Checks(
                         regularLums=[
                             32,
                             33
                         ]
                     ),
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech.LY_SKIP_OR_SWING
             ),
             "learn_60": SubLevelInfo(
                 checks=Checks(
@@ -1350,7 +1363,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech.TORNADO_SKIP_OR_SWING: Checks(
                         cages=[
                             848
                         ]
@@ -1440,7 +1453,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.BAYOU_DAMAGE_BOOST: Checks(
+                    Tech.DAMAGE_BOOST_OR_SWING: Checks(
                         cages=[
                             855,
                             858
@@ -1480,7 +1493,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.BAYOU_DAMAGE_BOOST
+                exitRequirement=Tech.DAMAGE_BOOST_OR_SWING
             ),
             "chase_22": SubLevelInfo(
                 checks=Checks(
@@ -1579,7 +1592,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING_OR_BACKWARDS_JUMP: Checks(
+                    Tech.BACKWARDS_SLIDE_JUMP_OR_SWING: Checks(
                         regularLums=[
                             200
                         ],
@@ -1588,7 +1601,7 @@ levels: list[LevelInfo] = [
                         }
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING_OR_BACKWARDS_JUMP
+                exitRequirement=Tech.BACKWARDS_SLIDE_JUMP_OR_SWING
             )
         },
         lumGate=0,
@@ -1650,7 +1663,7 @@ levels: list[LevelInfo] = [
                             868
                         ]
                     ),
-                    Tech.ELIXIR_AND_PURPLE_SWING: Checks(
+                    Tech.ELIXIR_AND_SWING_OR_COBD_SKIP: Checks(
                         regularLums=[
                             236,
                             237,
@@ -1661,7 +1674,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.ELIXIR_AND_PURPLE_SWING               
+                exitRequirement=Tech.ELIXIR_AND_SWING_OR_COBD_SKIP               
             ),
             "rodeo_60": SubLevelInfo(
                 checks=Checks(
@@ -1809,7 +1822,7 @@ levels: list[LevelInfo] = [
                         315
                     ]
                 ),
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech.AIRSWIMS_OR_SWING
             ),
             "whale_05": SubLevelInfo(
                 checks=Checks(
@@ -1868,7 +1881,11 @@ levels: list[LevelInfo] = [
                     Tech.PURPLE_SWING: Checks(
                         regularLums=[
                             353,
-                            356,
+                            356
+                        ]
+                    ),
+                    Tech.TECHNICAL_OR_SWING: Checks(
+                        regularLums=[
                             354,
                             357,
                             352,
@@ -1892,7 +1909,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING_OR_GLM
+                exitRequirement=Tech.TECHNICAL_OR_SWING
             ),
             "plum_10": SubLevelInfo(
                 checks=Checks(
@@ -1915,7 +1932,8 @@ levels: list[LevelInfo] = [
                     special={
                         1113: "Earth Mask"
                     }
-                )
+                ),
+                exitRequirement=Tech.TECHNICAL_OR_SWING
             ),
         },
         lumGate=1,
@@ -2357,7 +2375,6 @@ levels: list[LevelInfo] = [
                 ),
                 behindRequirements={
                     Tech.PURPLE_SWING: Checks(
-                        regularLums=[],
                         cages=[
                             913
                         ],
