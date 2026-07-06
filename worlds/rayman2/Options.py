@@ -187,18 +187,18 @@ class Rayman2Options(PerGameCommonOptions):
     fixed_level_lengths: FixedLevelLengths
     better_level_portals: BetterLevelPortals
 
-    glitched_ly_skip: GlitchedLySkip
-    glitched_backwards_slide_jumps: GlitchedBackwardsSlideJumps
     glitched_early_echoing_caves: GlitchedEarlyEchoingCaves
-    glitched_reverse_early_echoing_caves: GlitchedReverseEarlyEchoingCaves
-    glitched_kapoueh_skip: GlitchedKapouehSkip
-    glitched_damage_boosts: GlitchedDamageBoosts
-    glitched_plum_wall_climb: GlitchedPlumWallClimb
-    glitched_airswims: GlitchedAirswims
-    glitched_tornado_skip: GlitchedTornadoSkip
-    glitched_cobd_skip: GlitchedCOBDSkip
     glitched_technical_tricks: GlitchedTechnicalTricks
     glitched_jano_skip: GlitchedJanoSkip
+    glitched_tornado_skip: GlitchedTornadoSkip
+    glitched_plum_wall_climb: GlitchedPlumWallClimb
+    glitched_damage_boosts: GlitchedDamageBoosts
+    glitched_backwards_slide_jumps: GlitchedBackwardsSlideJumps
+    glitched_airswims: GlitchedAirswims
+    glitched_cobd_skip: GlitchedCOBDSkip
+    glitched_kapoueh_skip: GlitchedKapouehSkip
+    glitched_reverse_early_echoing_caves: GlitchedReverseEarlyEchoingCaves
+    glitched_ly_skip: GlitchedLySkip
 
     first_gate_required: FirstGateRequirement
     second_gate_required: SecondGateRequirement
