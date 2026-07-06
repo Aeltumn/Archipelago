@@ -513,7 +513,8 @@ class Rayman2World(World):
 
     def generate_early(self) -> None:
         """Ensures that key items are placed early so you cannot get stuck as many levels require it to complete."""
-        self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
+        if not self.options.challenge_mode.value:
+            self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""

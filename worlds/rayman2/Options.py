@@ -69,6 +69,11 @@ class DeathLinkAmnesty(Range):
     range_end = 30
     default = 1
 
+class ChallengeMode(Toggle):
+    """Removes the safety system that always places a Silver Lum in Sphere 1. This will make generations much more likely to fail (please inform your host!) but result in a more interesting route before obtaining the ability to use purple lums."""
+    display_name = "Harder Silver Lum Placement"
+    default = False
+
 class GlitchedLySkip(Toggle):
     """Includes checks behind Ly skip in The Fairy Glade 4 within logic before getting a Silver Lum."""
     display_name = "Include Ly Skip"
@@ -186,6 +191,8 @@ class Rayman2Options(PerGameCommonOptions):
     instant_portal_access: InstantPortalAccess
     fixed_level_lengths: FixedLevelLengths
     better_level_portals: BetterLevelPortals
+
+    challenge_mode: ChallengeMode
 
     glitched_early_echoing_caves: GlitchedEarlyEchoingCaves
     glitched_technical_tricks: GlitchedTechnicalTricks
