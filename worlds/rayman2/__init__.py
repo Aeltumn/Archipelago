@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from random import Random
 from typing import Any, Callable, TextIO, Tuple
 
@@ -16,6 +17,10 @@ class Rayman2Item(Item):
 class Rayman2Location(Location):
     game: str = "Rayman 2"
 
+@dataclass
+class Rayman2Lum:
+    region: Region
+    tech: Tech
 
 class Rayman2Web(WebWorld):
     option_groups = create_option_groups()
@@ -51,14 +56,48 @@ class Rayman2World(World):
         self.portalEvents = {}
         self.sideTempleFinishEvent = "Finish plum_20"
         self.cobdFinishEvent = None
+        self.bundle_lums = []
+        self.bundle_tech = []
+        self.bundle_regions = []
+        self.last_tally = 0
+        self.last_tech_bundle = []
+        self.last_region_bundle = []
 
         # If not in lumsanity mode we have to determine the available lums
         # using accessible regions which means we have to check reachability
         # in entrance requirements on lum gate portals. So we disable this setting!
         # It'd be complicated to work around so we eat the performance cost for R2.
         self.explicit_indirect_conditions = False
+    
+    def can_obtain_lums(self, state: CollectionState, count):
+        """Determines if [count] lums can be obtained using [state] based on the bundle lums list."""
+        all_tech = []
+        for tech in self.bundle_tech:
+            if self.has_tech(state, tech):
+                all_tech.append(tech)
 
-    def applyAccessRequirement(self, accessible, tech: Tech):
+        all_regions = []
+        for region in self.bundle_regions:
+            if region.can_reach(state):
+                all_regions.append(region)
+
+        # Early-exit if we already know the answer!
+        if all_tech == self.last_tech_bundle and all_regions == self.last_region_bundle:
+            return self.last_tally >= count
+
+        # Re-compute the tally
+        tally = 0
+        for lum in self.bundle_lums:
+            if lum.tech in all_tech and lum.region in all_regions:
+                tally += 1
+        
+        # Store the tally for next time
+        self.last_tally = tally
+        self.last_tech_bundle = all_tech
+        self.last_region_bundle = all_regions
+        return tally >= count
+
+    def apply_access_requirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
         if tech != Tech.NONE:
             accessible.access_rule = lambda state: self.has_tech(state, tech)
@@ -103,7 +142,7 @@ class Rayman2World(World):
         """Creates an event for finishing this level."""
         event = self.create_event(region, f"Finish {region.name}")
         if levelInfo is not None:
-            self.applyAccessRequirement(event, levelInfo.exitRequirement)
+            self.apply_access_requirement(event, levelInfo.exitRequirement)
         return event
 
     def create_event(self, region: Region, location_name: str, item_name: str = None) -> Location:
@@ -205,7 +244,9 @@ class Rayman2World(World):
     def get_lums(self, state: CollectionState) -> int:
         """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
         if self.options.lumsanity.value:
-            return state.prog_items[self.player]["Lum"] + (5 * state.prog_items[self.player]["Super Lum"])
+            bundleSize = self.options.lum_bundle_size.value
+            leftoverBundleSize = 710 % self.options.lum_bundle_size.value
+            return state.prog_items[self.player]["Lum"] + (bundleSize * state.prog_items[self.player]["Lum Bundle"]) + (leftoverBundleSize * state.prog_items[self.player]["Leftover Lum Bundle"]) + (5 * state.prog_items[self.player]["Super Lum"])
         else:
             # Start with all super lums you have
             lumCount = (5 * state.prog_items[self.player]["Super Lum"])
@@ -309,15 +350,29 @@ class Rayman2World(World):
 
         # Go through all location and create them
         for data in location_table:
+            region = self.multiworld.get_region(data.region, self.player)
+
             # If not on lumsanity, don't shuffle in the lums!
             if data.itemName == "Lum" and not self.options.lumsanity.value:
                 continue
 
-            region = self.multiworld.get_region(data.region, self.player)
+            # If we're in bundling mode, group up the lums!
+            if data.itemName == "Lum" and self.options.lum_bundle_size.value > 1:
+                # In lum bundle mode we store all unplaced lums in a collection and create
+                # items on the menu with combined requirements at the end.
+                self.bundle_lums.append(Rayman2Lum(region, data.tech))
+
+                # Track unique tech and regions to easily re-compute them
+                if data.tech not in self.bundle_tech:
+                    self.bundle_tech.append(data.tech)
+                if region not in self.bundle_regions:
+                    self.bundle_regions.append(region)
+                continue
+
             location = Rayman2Location(self.player, data.displayName, data.id, region)
 
             # Add an access rule based on the tech type and this region being accessible!
-            self.applyAccessRequirement(location, data.tech)
+            self.apply_access_requirement(location, data.tech)
 
             # Add this location to this region
             region.locations.append(location)
@@ -334,6 +389,23 @@ class Rayman2World(World):
                         self.get_lums(state) >= 1000 and
                         state.prog_items[self.player]["Cage"] >= 80
                 )
+        
+        # Create lum bundles
+        if self.options.lum_bundle_size.value > 1:
+            base_id = 1653615
+            bundleSize = self.options.lum_bundle_size.value
+            bundleCount = 710 // bundleSize
+            leftoverBundleSize = 710 % bundleSize
+            if bundleCount > 0:
+                for i in range(0, bundleCount):
+                    location = Rayman2Location(self.player, f"Lum Bundle #{i + 1}", base_id, menu)
+                    location.access_rule = lambda state: self.can_obtain_lums(state, bundleSize * (i + 1))
+                    menu.locations.append(location)
+                    base_id += 1
+            if leftoverBundleSize > 0:
+                location = Rayman2Location(self.player, "Leftover Lum Bundle", base_id, menu)
+                location.access_rule = lambda state: self.can_obtain_lums(state, 710)
+                menu.locations.append(location)
 
     def connect_levels(self):
         """Connects together regions based on the level chains set."""
@@ -419,7 +491,7 @@ class Rayman2World(World):
                 if isRevisit and index == len(chainLevels):
                     exits = list(region.get_exits())
                     for exit in exits:
-                        if not exit.name.startswith("Portal to"):
+                        if "->" in exit.name and not exit.name.startswith("Portal to"):
                             # Determine the base game level where this side-area normally ends!
                             target = None
                             match chainId:
@@ -499,9 +571,23 @@ class Rayman2World(World):
         itempool = []
         for item in item_table:
             # If not on lumsanity, don't shuffle in the lums!
-            if item.displayName == "Lum" and not self.options.lumsanity.value:
+            if item.displayName == "Lum" and (not self.options.lumsanity.value or self.options.lum_bundle_size.value > 1):
                 continue
+
             itempool.append(self.create_item(item.displayName, item.classification))
+
+        # Add lum bundle items with auto-generated ids
+        if self.options.lumsanity.value and self.options.lum_bundle_size.value > 1:
+            base_id = 1653615
+            bundleCount = 710 // self.options.lum_bundle_size.value
+            leftoverBundleSize = 710 % self.options.lum_bundle_size.value
+            if bundleCount > 0:
+                for i in range(0, bundleCount):
+                    itempool.append(Rayman2Item("Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing, base_id, self.player))
+                    base_id += 1
+            if leftoverBundleSize > 0:
+                itempool.append(Rayman2Item("Leftover Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing, base_id, self.player))
+        
         self.multiworld.itempool += itempool
 
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
@@ -536,6 +622,7 @@ class Rayman2World(World):
             "room_randomisation": self.options.room_randomisation.value,
             "accessible_portals": self.options.instant_portal_access.value,
             "lumsanity": self.options.lumsanity.value,
+            "lum_bundle_size": self.options.lum_bundle_size.value,
             "portal_finish_events": self.portalEvents,
             "side_temple_finish_event": self.sideTempleFinishEvent,
             "cobd_finish_event": self.cobdFinishEvent,
