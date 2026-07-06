@@ -89,6 +89,14 @@ class Rayman2World(World):
             if firstRegion is None:
                 firstRegion = region
             lastRegion = region
+
+            # Create hooks for EEC and reverse EEC
+            if subLevelName == "learn_31" and self.options.glitched_early_echoing_caves.value:
+                self.create_entrance_portal(region, "EEC")
+            
+            if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
+                self.create_entrance_portal(region, "Reverse EEC", extra_rule=lambda state: self.has_tech(state, Tech.PURPLE_SWING))
+
         return [firstRegion, lastRegion]
 
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
@@ -163,15 +171,32 @@ class Rayman2World(World):
 
     def has_tech(self, state: CollectionState, tech: Tech) -> bool:
         """Returns whether the given state has the items to complete the given tech."""
+        has_swing = state.has("Silver Lum", self.player)
         match tech:
-            case Tech.PURPLE_SWING | Tech.BAYOU_DAMAGE_BOOST | Tech.PURPLE_SWING_OR_BACKWARDS_JUMP | Tech.PURPLE_SWING_OR_GLM:
-                return state.has("Silver Lum", self.player)
-            case Tech.ELIXIR_AND_PURPLE_SWING:
-                return state.has("Silver Lum", self.player) and state.has("Elixir of Life", self.player)
+            case Tech.PURPLE_SWING:
+                return has_swing
+            case Tech.DAMAGE_BOOST_OR_SWING:
+                return self.options.glitched_damage_boosts.value or has_swing
+            case Tech.BACKWARDS_SLIDE_JUMP_OR_SWING:
+                return self.options.glitched_backwards_slide_jumps.value or has_swing
+            case Tech.ELIXIR_AND_SWING_OR_COBD_SKIP:
+                return has_swing and state.has("Elixir of Life", self.player)
+            case Tech.TECHNICAL_OR_SWING:
+                return self.options.glitched_technical_tricks.value or has_swing
             case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                return state.has(self.sideTempleFinishEvent, self.player)
+                return state.has(self.sideTempleFinishEvent, self.player) or (self.options.glitched_plum_wall_climb.value and self.has_tech(state, Tech.TECHNICAL_OR_SWING))
             case Tech.COMPLETED_COBD:
                 return state.has(self.cobdFinishEvent, self.player)
+            case Tech.LY_SKIP_OR_SWING:
+                return self.options.glitched_ly_skip.value or has_swing
+            case Tech.KAPOUEH_SKIP_OR_SWING:
+                return self.options.glitched_kapoueh_skip.value or has_swing
+            case Tech.AIRSWIMS_OR_SWING:
+                return self.options.glitched_airswims.value or has_swing
+            case Tech.TORNADO_SKIP_OR_SWING:
+                return self.options.glitched_tornado_skip.value or has_swing
+            case Tech.JANO_SKIP_OOB_OR_SWING:
+                return self.options.glitched_jano_skip.value or has_swing
             case Tech.NONE:
                 return True
             case _:
@@ -256,9 +281,7 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     isRevisit = True
-
-                    # You need to swing on the lum to get to the side temple!
-                    extra_rule = lambda state: state.has("Silver Lum", self.player)
+                    extra_rule = lambda state: self.has_tech(state, Tech.TECHNICAL_OR_SWING)
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
@@ -357,7 +380,7 @@ class Rayman2World(World):
                 if lastRegion is not None:
                     exits = list(lastRegion.get_exits())
                     for exit in exits:
-                        if not exit.name.startswith("Portal to"):
+                        if "->" in exit.name and not exit.name.startswith("Portal to"):
                             exit.connect(region)
                             break
                 lastRegion = region
@@ -385,6 +408,12 @@ class Rayman2World(World):
                         firstRegion = self.levelChains[target][0]
                         firstRegionObj = self.get_region(firstRegion)
                         regionExit.connect(firstRegionObj)
+
+                    # Hook up glitched logic EEC and Reverse EEC (we do it now as all regions are known to exist)
+                    if regionExit.name == "EEC":
+                        regionExit.connect(self.get_region("Learn_32"))
+                    if regionExit.name == "Reverse EEC":
+                        regionExit.connect(self.get_region("learn_31"))
 
                 # If this is the last of a revisit we need to hook it back up to where we came from
                 if isRevisit and index == len(chainLevels):
@@ -478,7 +507,8 @@ class Rayman2World(World):
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
         """Hook method used by Universal Tracker to load data from slot data back into Python so the game layout is consistent."""
         self.levelChains = slot_data["level_chains"]
-        self.portalEvents = slot_data["portal_finish_events"]
+        for (key, value) in slot_data["portal_finish_events"].items():
+            self.portalEvents[int(key)] = value
         self.sideTempleFinishEvent = slot_data["side_temple_finish_event"]
         self.cobdFinishEvent = slot_data["cobd_finish_event"]
         self.connect_levels()
@@ -501,6 +531,7 @@ class Rayman2World(World):
             ],
             "death_link": self.options.death_link.value,
             "death_link_amnesty": self.options.death_link_amnesty.value,
+            "better_level_portals": self.options.better_level_portals.value,
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "accessible_portals": self.options.instant_portal_access.value,
