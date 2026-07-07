@@ -391,7 +391,7 @@ class Rayman2World(World):
                 )
         
         # Create lum bundles
-        if self.options.lum_bundle_size.value > 1:
+        if self.options.lumsanity.value and self.options.lum_bundle_size.value > 1:
             base_id = 1653615
             bundleSize = self.options.lum_bundle_size.value
             bundleCount = 710 // bundleSize
