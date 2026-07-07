@@ -4,7 +4,7 @@ from typing import Any, Callable, TextIO, Tuple
 
 from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Region, Location, Entrance
 from worlds.AutoWorld import WebWorld, World
-from .Data import item_table, location_table
+from .Data import item_table, location_table, rayman_item_name_to_id, create_rayman_location_names
 from .Generator import GeneratorState
 from .Layout import SubLevelInfo, Tech, LevelInfo, levels, extra_levels
 from .Options import create_option_groups, Rayman2Options
@@ -44,8 +44,8 @@ class Rayman2World(World):
     web = Rayman2Web()
     topology_present = True
 
-    item_name_to_id = {item.displayName: item.id for item in item_table}
-    location_name_to_id = {loc.displayName: loc.id for loc in location_table}
+    item_name_to_id = rayman_item_name_to_id
+    location_name_to_id = create_rayman_location_names()
 
     options_dataclass = Rayman2Options
     options: Rayman2Options
@@ -398,12 +398,13 @@ class Rayman2World(World):
             leftoverBundleSize = 710 % bundleSize
             if bundleCount > 0:
                 for i in range(0, bundleCount):
-                    location = Rayman2Location(self.player, f"Lum Bundle #{i + 1}", base_id, menu)
+                    name = f"Lum Bundle #{i + 1}"
+                    location = Rayman2Location(self.player, name, self.location_name_to_id[name], menu)
                     location.access_rule = lambda state: self.can_obtain_lums(state, bundleSize * (i + 1))
                     menu.locations.append(location)
                     base_id += 1
             if leftoverBundleSize > 0:
-                location = Rayman2Location(self.player, "Leftover Lum Bundle", base_id, menu)
+                location = Rayman2Location(self.player, "Leftover Lum Bundle", self.location_name_to_id["Leftover Lum Bundle"], menu)
                 location.access_rule = lambda state: self.can_obtain_lums(state, 710)
                 menu.locations.append(location)
 
@@ -562,8 +563,7 @@ class Rayman2World(World):
 
         self.connect_levels()
 
-    def create_item(self, item: str,
-                    classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
+    def create_item(self, item: str, classification: ItemClassification = ItemClassification.progression) -> Rayman2Item:
         """Creates a new Rayman 2 item using the item id table."""
         return Rayman2Item(item, classification, self.item_name_to_id[item], self.player)
 
@@ -575,20 +575,22 @@ class Rayman2World(World):
             if item.displayName == "Lum" and (not self.options.lumsanity.value or self.options.lum_bundle_size.value > 1):
                 continue
 
-            itempool.append(self.create_item(item.displayName, item.classification))
+            # Only classify cages as progression in 100%!
+            if self.options.end_goal.value == 3:
+                itempool.append(self.create_item(item.displayName, item.classification))
+            else:
+                itempool.append(self.create_item(item.displayName, item.regularClassification))
 
         # Add lum bundle items with auto-generated ids
         if self.options.lumsanity.value and self.options.lum_bundle_size.value > 1:
-            base_id = 1653615
             bundleCount = 710 // self.options.lum_bundle_size.value
             leftoverBundleSize = 710 % self.options.lum_bundle_size.value
             if bundleCount > 0:
                 for i in range(0, bundleCount):
-                    itempool.append(Rayman2Item("Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing, base_id, self.player))
-                    base_id += 1
+                    itempool.append(self.create_item("Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing))
             if leftoverBundleSize > 0:
-                itempool.append(Rayman2Item("Leftover Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing, base_id, self.player))
-        
+                itempool.append(self.create_item("Leftover Lum Bundle", ItemClassification.progression_deprioritized_skip_balancing))
+                
         self.multiworld.itempool += itempool
 
     def interpret_slot_data(self, slot_data: dict[str, Any]) -> None:
