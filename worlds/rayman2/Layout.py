@@ -1456,7 +1456,8 @@ levels: list[LevelInfo] = [
                     Tech.DAMAGE_BOOST_OR_SWING: Checks(
                         cages=[
                             855,
-                            858
+                            858,
+                            857
                         ],
                         regularLums=[
                             104,
@@ -1479,14 +1480,7 @@ levels: list[LevelInfo] = [
                             116,
                             117,
                             112,
-                            113
-                        ]
-                    ),
-                    Tech.PURPLE_SWING: Checks(
-                        cages=[
-                            857
-                        ],
-                        regularLums=[
+                            113,
                             132,
                             133,
                             134
