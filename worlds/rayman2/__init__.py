@@ -6,7 +6,7 @@ from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Reg
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table, rayman_item_name_to_id, create_rayman_location_names
 from .Generator import GeneratorState
-from .Layout import SubLevelInfo, Tech, LevelInfo, levels, extra_levels
+from .Layout import SubLevelInfo, Tech, LevelInfo, TechType, levels, extra_levels
 from .Options import create_option_groups, Rayman2Options
 
 
@@ -101,7 +101,7 @@ class Rayman2World(World):
 
     def apply_access_requirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
-        if tech != Tech.NONE:
+        if len(tech.types) > 0:
             accessible.access_rule = lambda state: self.has_tech(state, tech)
 
     def create_level(self, sublevels: dict[str, SubLevelInfo], levelChain: list[str]) -> Tuple[
@@ -138,7 +138,7 @@ class Rayman2World(World):
 
             if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
                 self.create_entrance_portal(region, "Reverse EEC",
-                                            extra_rule=lambda state: self.has_tech(state, Tech.PURPLE_SWING))
+                                            extra_rule=lambda state: self.has_tech(state, Tech([TechType.PURPLE_SWING], "Fairy Glade Revisit Swing")))
 
         return [firstRegion, lastRegion]
 
@@ -215,40 +215,88 @@ class Rayman2World(World):
         exit = lastRegion.create_exit(connection)
         exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
 
-    def has_tech(self, state: CollectionState, tech: Tech) -> bool:
-        """Returns whether the given state has the items to complete the given tech."""
-        has_swing = state.has("Silver Lum", self.player)
+    def has_tech_type(self, state: CollectionState, purpleLumItem: str | None, tech: TechType) -> bool:
+        """Returns whether the given state has the given tech type."""
         match tech:
-            case Tech.PURPLE_SWING:
-                return has_swing
-            case Tech.DAMAGE_BOOST_OR_SWING:
-                return self.options.glitched_damage_boosts.value == 1 or has_swing
-            case Tech.BACKWARDS_SLIDE_JUMP_OR_SWING:
-                return self.options.glitched_backwards_slide_jumps.value == 1 or has_swing
-            case Tech.ELIXIR_AND_SWING_OR_COBD_SKIP:
-                return has_swing and state.has("Elixir of Life", self.player)
-            case Tech.TECHNICAL_OR_SWING:
-                return self.options.glitched_technical_tricks.value == 1 or has_swing
-            case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
+            case TechType.PURPLE_SWING:
+                if self.options.fragmented_silver_lums.value == 1:
+                    return state.has(purpleLumItem, self.player)
+                else:
+                    return state.has("Silver Lum", self.player)
+            case TechType.DAMAGE_BOOST:
+                return self.options.glitched_damage_boosts.value == 1
+            case TechType.BACKWARDS_SLIDE_JUMP:
+                return self.options.glitched_backwards_slide_jumps.value == 1
+            case TechType.ELIXIR:
+                return state.has("Elixir of Life", self.player)
+            case TechType.COBD_SKIP:
+                return self.options.glitched_cobd_skip.value == 1
+            case TechType.TECHNICAL:
+                return self.options.glitched_technical_tricks.value == 1
+            case TechType.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
                 return state.has(self.sideTempleFinishEvent, self.player) or (
-                            self.options.glitched_plum_wall_climb.value == 1 and self.has_tech(state,
-                                                                                               Tech.TECHNICAL_OR_SWING))
-            case Tech.COMPLETED_COBD:
+                            self.options.glitched_plum_wall_climb.value == 1 and self.has_tech_or(state, purpleLumItem, [TechType.TECHNICAL, TechType.PURPLE_SWING])
+                        )
+            case TechType.COMPLETED_COBD:
                 return state.has(self.cobdFinishEvent, self.player)
-            case Tech.LY_SKIP_OR_SWING:
-                return self.options.glitched_ly_skip.value == 1 or has_swing
-            case Tech.KAPOUEH_SKIP_OR_SWING:
-                return self.options.glitched_kapoueh_skip.value == 1 or has_swing
-            case Tech.AIRSWIMS_OR_SWING:
-                return self.options.glitched_airswims.value == 1 or has_swing
-            case Tech.TORNADO_SKIP_OR_SWING:
-                return self.options.glitched_tornado_skip.value == 1 or has_swing
-            case Tech.JANO_SKIP_OOB_OR_SWING:
-                return self.options.glitched_jano_skip.value == 1 or has_swing
-            case Tech.NONE:
-                return True
+            case TechType.LY_SKIP:
+                return self.options.glitched_ly_skip.value == 1
+            case TechType.KAPOUEH_SKIP:
+                return self.options.glitched_kapoueh_skip.value == 1
+            case TechType.AIRSIM:
+                return self.options.glitched_airswims.value == 1
+            case TechType.TORNADO_SKIP:
+                return self.options.glitched_tornado_skip.value == 1
+            case TechType.JANO_SKIP_OOB:
+                return self.options.glitched_jano_skip.value == 1
+            case TechType.HOVER:
+                return state.has("Hover", self.player)
+            case TechType.LEDGE_GRAB:
+                return state.has("Ledge Grab", self.player)
+            case TechType.SWIM:
+                return state.has("Swim", self.player)
+            case TechType.LAVA_HOVER:
+                # We could write this as {hover, lava_hover} but you need to hover to be able to start
+                # the lava hover so this is faster overall.
+                return state.has("Hover", self.player) and state.has("Lava Hover", self.player)
             case _:
                 raise KeyError(f"Invalid tech type {tech}")
+
+    def has_tech_and(self, state: CollectionState, purpleLumItem: str | None, types) -> bool:
+        """Returns whether the given state has any of the types in this list."""
+        if len(types) == 0:
+            return True
+        for type in types:
+            if type is list:
+                if not self.has_tech_or(state, purpleLumItem, type):
+                    return False
+            elif type is set:
+                if not self.has_tech_and(state, purpleLumItem, type):
+                    return False
+            else:
+                if not self.has_tech_type(state, purpleLumItem, type):
+                    return False
+        return True
+
+    def has_tech_or(self, state: CollectionState, purpleLumItem: str | None, types) -> bool:
+        """Returns whether the given state has any of the types in this list."""
+        if len(types) == 0:
+            return True
+        for type in types:
+            if type is list:
+                if self.has_tech_or(state, purpleLumItem, type):
+                    return True
+            elif type is set:
+                if self.has_tech_and(state, purpleLumItem, type):
+                    return True
+            else:
+                if self.has_tech_type(state, purpleLumItem, type):
+                    return True
+        return False
+
+    def has_tech(self, state: CollectionState, tech: Tech) -> bool:
+        """Returns whether the given state has the items to complete the given tech."""
+        return self.has_tech_or(state, tech.purpleLumItem, tech.types)
 
     def get_lums(self, state: CollectionState) -> int:
         """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
@@ -318,7 +366,7 @@ class Rayman2World(World):
                                                         levelInfo.requireAllMasks)
             portal += 1
 
-            # Connect the portal automatically to non-randomised levels (first/last)
+            # Connect the portal automatically to non-randomised levels (Crow's Nest)
             if levelInfo.chain is None:
                 mapmonde_exit.connect(firstRegion)
 
@@ -334,7 +382,7 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     isRevisit = True
-                    extra_rule = lambda state: self.has_tech(state, Tech.TECHNICAL_OR_SWING)
+                    extra_rule = lambda state: self.has_tech(state, Tech([TechType.TECHNICAL, TechType.PURPLE_SWING], "Stone and Fire 1 Swings"))
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
@@ -472,7 +520,7 @@ class Rayman2World(World):
 
         # Go through all level chains and hook them up
         mapmonde = self.get_region("Menu")
-        portal = 1
+        portal = 0
         for chainId, chainLevels in self.levelChains.items():
             index = 0
             lastRegion: Region | None = None
@@ -649,7 +697,7 @@ class Rayman2World(World):
 
             # Make an item filler based on the list of end goals it provided
             if self.options.end_goal.value in item.endGoals:
-                itempool.append(self.create_item(item.displayName, item.classification))
+                itempool.append(self.create_item(item.displayName, item.progressionClassification))
             else:
                 itempool.append(self.create_item(item.displayName, ItemClassification.filler))
 

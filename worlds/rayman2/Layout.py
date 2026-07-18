@@ -1,25 +1,68 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, TypeAlias
 from enum import IntEnum
 
 # This file contains the full game layout, defining all levels, which sub-levels they have,
 # which ids everything uses, and all items contained within. This layout object is used by
 # init.py to generate the items, locations, and regions.
-class Tech(IntEnum):
+class TechType(IntEnum):
     """The types of tech required to accomplish something."""
-    NONE = 0
     PURPLE_SWING = 1
-    DAMAGE_BOOST_OR_SWING = 2
-    BACKWARDS_SLIDE_JUMP_OR_SWING = 3
-    ELIXIR_AND_SWING_OR_COBD_SKIP = 4
-    TECHNICAL_OR_SWING = 5
+    DAMAGE_BOOST = 2
+    BACKWARDS_SLIDE_JUMP = 3
+    ELIXIR = 4
+    COBD_SKIP = 5
+    TECHNICAL = 6
     HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT = 6
     COMPLETED_COBD = 7
-    LY_SKIP_OR_SWING = 8
-    KAPOUEH_SKIP_OR_SWING = 9
-    AIRSWIMS_OR_SWING = 10
-    TORNADO_SKIP_OR_SWING = 11
-    JANO_SKIP_OOB_OR_SWING = 12
+    LY_SKIP = 8
+    KAPOUEH_SKIP = 9
+    AIRSIM = 10
+    TORNADO_SKIP = 11
+    JANO_SKIP_OOB = 12
+    HOVER = 13
+    LEDGE_GRAB = 14
+    SWIM = 15
+    LAVA_HOVER = 16
+
+# Create a custom alias for the tree of types.
+TechExpr: TypeAlias = (
+    TechType
+    | tuple["TechExpr", ...]
+    | frozenset["TechExpr"]
+)
+
+def requires_that_one_exit(type: TypeAlias):
+    """Determines if the type alias tree contains HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT."""
+    if type is list or type is set:
+        for t in type:
+            if requires_that_one_exit(t):
+                return True
+    else:
+        if type == TechType.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
+            return True
+    return False
+
+
+def freeze(expr):
+    """Convert lists->tuples and sets->frozensets recursively."""
+    if isinstance(expr, list):
+        return tuple(freeze(x) for x in expr)
+    if isinstance(expr, set):
+        return frozenset(freeze(x) for x in expr)
+    return expr
+
+@dataclass(frozen=True)
+class Tech:
+    """The tech required to accomplish something."""
+    types: TypeAlias = field(default_factory=lambda: [])
+    purpleLumItem: str | None = None
+
+    def __post_init__(self):
+        object.__setattr__(self, "types", freeze(self.types))
+
+    def requires_that_one_exit(self):
+        return requires_that_one_exit(self.types)
 
 @dataclass
 class Checks:
@@ -31,7 +74,7 @@ class Checks:
 @dataclass
 class SubLevelInfo:
     checks: Checks = field(default_factory=lambda: Checks())
-    exitRequirement: Tech = Tech.NONE
+    exitRequirement: Tech = field(default_factory=lambda: Tech())
     behindRequirements: Dict[Tech, Checks] = field(default_factory=dict)
 
 @dataclass
@@ -1033,7 +1076,7 @@ extra_levels: list[LevelInfo] = [
             # The game does not distinguish this area but we do! We give it the custom ID of Learn_32.
             "Learn_32": SubLevelInfo(
                 behindRequirements={
-                    Tech.KAPOUEH_SKIP_OR_SWING: Checks(
+                    Tech([TechType.KAPOUEH_SKIP, TechType.PURPLE_SWING], "Fairy Glade Revisit Swing"): Checks(
                         regularLums=[
                             9,
                             10
@@ -1121,7 +1164,7 @@ extra_levels: list[LevelInfo] = [
                     ]                    
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Cave of Bad Dreams 1 Swings"): Checks(
                         regularLums=[
                             752,
                             753,
@@ -1149,7 +1192,7 @@ extra_levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Cave of Bad Dreams 1 Swings")
             ),
             "vulca_20": SubLevelInfo(
                 checks=Checks(
@@ -1160,13 +1203,13 @@ extra_levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.JANO_SKIP_OOB_OR_SWING: Checks(
+                    Tech([TechType.JANO_SKIP_OOB, TechType.PURPLE_SWING], "Cave of Bad Dreams 2 Swings"): Checks(
                         superLums=[ 
                             796
                         ]
                     ),
                 },
-                exitRequirement=Tech.JANO_SKIP_OOB_OR_SWING
+                exitRequirement=Tech([TechType.JANO_SKIP_OOB, TechType.PURPLE_SWING], "Cave of Bad Dreams 2 Swings")
             )
         },
         portalId=966,
@@ -1192,7 +1235,7 @@ extra_levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Stone and Fire Side Temple Swing"): Checks(
                          cages=[
                             882
                         ],
@@ -1204,7 +1247,7 @@ extra_levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING,
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Stone and Fire Side Temple Swing"),
             ),
         }
     ),
@@ -1362,14 +1405,14 @@ levels: list[LevelInfo] = [
                     },
                 ),
                 behindRequirements={
-                    Tech.LY_SKIP_OR_SWING: Checks(
+                    Tech([TechType.LY_SKIP, TechType.PURPLE_SWING], "Fairy Glade 4 Swing"): Checks(
                         regularLums=[
                             32,
                             33
                         ]
                     ),
                 },
-                exitRequirement=Tech.LY_SKIP_OR_SWING
+                exitRequirement=Tech([TechType.LY_SKIP, TechType.PURPLE_SWING], "Fairy Glade 4 Swing")
             ),
             "learn_60": SubLevelInfo(
                 checks=Checks(
@@ -1397,12 +1440,13 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.TORNADO_SKIP_OR_SWING: Checks(
+                    Tech([TechType.TORNADO_SKIP, TechType.PURPLE_SWING], "Fairy Glade 5 Swing"): Checks(
                         cages=[
                             848
                         ]
                     )
-                }
+                },
+                exitRequirement=Tech([TechType.TORNADO_SKIP, TechType.PURPLE_SWING], "Fairy Glade 5 Swing")
             ),
         },
         portalId=961,
@@ -1434,7 +1478,7 @@ levels: list[LevelInfo] = [
                     ],
                 ),
                 behindRequirements={
-                    Tech.COMPLETED_COBD: Checks(
+                    Tech([TechType.COMPLETED_COBD]): Checks(
                         special={
                             1123: "Elixir of Life",
                         }
@@ -1489,7 +1533,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.DAMAGE_BOOST_OR_SWING: Checks(
+                    Tech([TechType.DAMAGE_BOOST, TechType.PURPLE_SWING], "Bayou 1 Swings"): Checks(
                         cages=[
                             855,
                             858,
@@ -1523,7 +1567,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.DAMAGE_BOOST_OR_SWING
+                exitRequirement=Tech([TechType.DAMAGE_BOOST, TechType.PURPLE_SWING], "Bayou 1 Swings")
             ),
             "chase_22": SubLevelInfo(
                 checks=Checks(
@@ -1538,7 +1582,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Bayou 2 Swing"): Checks(
                         regularLums=[
                             150,
                             136,
@@ -1555,7 +1599,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.PURPLE_SWING,
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Bayou 2 Swing"),
             )
         },
         portalId=967,
@@ -1623,7 +1667,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.BACKWARDS_SLIDE_JUMP_OR_SWING: Checks(
+                    Tech([TechType.BACKWARDS_SLIDE_JUMP, TechType.PURPLE_SWING], "Water and Ice 2 Swings"): Checks(
                         regularLums=[
                             200
                         ],
@@ -1632,7 +1676,7 @@ levels: list[LevelInfo] = [
                         }
                     )
                 },
-                exitRequirement=Tech.BACKWARDS_SLIDE_JUMP_OR_SWING
+                exitRequirement=Tech([TechType.BACKWARDS_SLIDE_JUMP, TechType.PURPLE_SWING], "Water and Ice 2 Swings")
             )
         },
         lumGate=0,
@@ -1684,7 +1728,7 @@ levels: list[LevelInfo] = [
                     }
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Menhir Hills 2 Swings"): Checks(
                         regularLums=[
                             227,
                             219,
@@ -1695,7 +1739,7 @@ levels: list[LevelInfo] = [
                             868
                         ]
                     ),
-                    Tech.ELIXIR_AND_SWING_OR_COBD_SKIP: Checks(
+                    Tech([TechType.COBD_SKIP, {TechType.ELIXIR, TechType.PURPLE_SWING}], "Menhir Hills 2 Swings"): Checks(
                         regularLums=[
                             236,
                             237,
@@ -1706,7 +1750,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech.ELIXIR_AND_SWING_OR_COBD_SKIP               
+                exitRequirement=Tech([TechType.COBD_SKIP, {TechType.ELIXIR, TechType.PURPLE_SWING}], "Menhir Hills 2 Swings")            
             ),
             "rodeo_60": SubLevelInfo(
                 checks=Checks(
@@ -1727,7 +1771,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Menhir Hills 3 Swing"): Checks(
                         regularLums=[
                             241,
                             242
@@ -1817,7 +1861,7 @@ levels: list[LevelInfo] = [
                     ],
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Canopy 3 Swing"): Checks(
                         regularLums=[
                             297,
                             298
@@ -1856,7 +1900,7 @@ levels: list[LevelInfo] = [
                         315
                     ]
                 ),
-                exitRequirement=Tech.AIRSWIMS_OR_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING, TechType.AIRSIM], "Whale Bay 1 Swing")
             ),
             "whale_05": SubLevelInfo(
                 checks=Checks(
@@ -1913,13 +1957,13 @@ levels: list[LevelInfo] = [
         {
             "plum_00": SubLevelInfo(
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Stone and Fire 1 Swings"): Checks(
                         regularLums=[
                             353,
                             356
                         ]
                     ),
-                    Tech.TECHNICAL_OR_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING, TechType.TECHNICAL], "Stone and Fire 1 Swings"): Checks(
                         regularLums=[
                             354,
                             357,
@@ -1937,14 +1981,14 @@ levels: list[LevelInfo] = [
                             884
                         ]
                     ),
-                    Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT: Checks(
+                    Tech([TechType.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT]): Checks(
                         regularLums=[
                             358,
                             351,
                         ]
                     )
                 },
-                exitRequirement=Tech.TECHNICAL_OR_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING, TechType.TECHNICAL], "Stone and Fire 1 Swings")
             ),
             "plum_10": SubLevelInfo(
                 checks=Checks(
@@ -1968,7 +2012,7 @@ levels: list[LevelInfo] = [
                         1113: "Earth Mask"
                     }
                 ),
-                exitRequirement=Tech.TECHNICAL_OR_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING, TechType.TECHNICAL], "Stone and Fire 2 Swings")
             ),
         },
         lumGate=1,
@@ -2053,7 +2097,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Precipice 1 Swings"): Checks(
                         regularLums=[
                             452,
                             454,
@@ -2072,7 +2116,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING,
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Precipice 1 Swings"),
             ),
             "nave_15": SubLevelInfo(
                 checks=Checks(
@@ -2209,7 +2253,7 @@ levels: list[LevelInfo] = [
         {
             "earth_10": SubLevelInfo(
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Rock and Lava 1 Swing"): Checks(
                         regularLums=[
                             555,
                             551,
@@ -2226,7 +2270,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Rock and Lava 1 Swing")
             ),
             "earth_20": SubLevelInfo(
                 checks=Checks(
@@ -2298,70 +2342,78 @@ levels: list[LevelInfo] = [
         {
             "helic_10": SubLevelInfo(
                 checks=Checks(
-                    regularLums=[
-                        610,
-                        611,
-                        612,
-                        643,
-                        644,
-                        645,
-                        606,
-                        601,
-                        602,
-                        607,
-                        608,
-                        609,
-                        603,
-                        604,
-                        605
-                    ],
-                    cages=[
-                        907,
-                        908
-                    ],
-                    superLums=[
-                        646
-                    ],
                     special={
                         1125: "Lava Hover"
                     }
-                )
+                ),
+                behindRequirements={
+                    Tech([TechType.LAVA_HOVER]): Checks(
+                        regularLums=[
+                            610,
+                            611,
+                            612,
+                            643,
+                            644,
+                            645,
+                            606,
+                            601,
+                            602,
+                            607,
+                            608,
+                            609,
+                            603,
+                            604,
+                            605
+                        ],
+                        cages=[
+                            907,
+                            908
+                        ],
+                        superLums=[
+                            646
+                        ]
+                    )
+                },
+                exitRequirement=Tech([TechType.LAVA_HOVER])
             ),
             "helic_20": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        623,
-                        624,
-                        641,
-                        625,
-                        627,
-                        629,
-                        626,
-                        642,
-                        628,
-                        630
-                    ],
-                    cages=[
-                        910,
-                        909
-                    ],
-                    superLums=[
-                        618,
-                        613,
-                        631,
-                        636
-                    ]
-                )
+                behindRequirements={
+                    Tech([TechType.LAVA_HOVER]): Checks(
+                        regularLums=[
+                            623,
+                            624,
+                            641,
+                            625,
+                            627,
+                            629,
+                            626,
+                            642,
+                            628,
+                            630
+                        ],
+                        cages=[
+                            910,
+                            909
+                        ],
+                        superLums=[
+                            618,
+                            613,
+                            631,
+                            636
+                        ]
+                    )
+                },
+                exitRequirement=Tech([TechType.LAVA_HOVER])
             ),
             "helic_30": SubLevelInfo(
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Beneath Rock and Lava 3 Swing"): Checks(
                         special={
                             1114: "Fire Mask"
                         }
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Beneath Rock and Lava 3 Swing")
             )
         },
         lumGate=2,
@@ -2418,7 +2470,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Tomb of the Ancients 2 Swings"): Checks(
                         cages=[
                             913
                         ],
@@ -2428,7 +2480,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Tomb of the Ancients 2 Swings")
             ),
             "morb_20": SubLevelInfo(
                 checks=Checks(
@@ -2446,7 +2498,7 @@ levels: list[LevelInfo] = [
         {
             "learn_40": SubLevelInfo(
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Iron Mountains 1 Swings"): Checks(
                         regularLums=[
                             711,
                             708,
@@ -2474,7 +2526,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Iron Mountains 1 Swings")
             ),
             "ile_10": SubLevelInfo(
                 checks=Checks(
@@ -2505,7 +2557,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech.PURPLE_SWING: Checks(
+                    Tech([TechType.PURPLE_SWING], "Iron Mountains 3 Swings"): Checks(
                         superLums=[
                             741
                         ],
@@ -2514,7 +2566,7 @@ levels: list[LevelInfo] = [
                         }
                     )
                 },
-                exitRequirement=Tech.PURPLE_SWING
+                exitRequirement=Tech([TechType.PURPLE_SWING], "Iron Mountains 3 Swings")
             )
         },
         lumGate=3,
