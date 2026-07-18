@@ -41,17 +41,22 @@ class LevelInfo:
     sublevels: Dict[str, SubLevelInfo]
     lumGate: int | None = None
     requireAllMasks: bool = False
+    portalId: int | None = None
 
-human_readable_names: Dict[int, str] = {
+rayman_location_hints: Dict[int, str] = {
     # Woods of Light
     # learn_10
+    1176: "Talking to Murfy #1",
+    1175: "Talking to Murfy #2",
     840: "Cage above wooden grate",
     1399: "Lum from cage above wooden grate",
     1396: "Lum above Murfy stone",
     1398: "Lum on grass next to waterfall",
     1400: "Lum underneath waterfall",
+    1092: "Talking to Baby Globoxes",
     1397: "Lum between stone walls",
     841: "Cage with Teensies",
+    960: "Completing the Woods of Light",
 
     # The Fairy Glade
     # Learn_30
@@ -106,6 +111,7 @@ human_readable_names: Dict[int, str] = {
     41: "Upper lum in small wind vortex",
     40: "Lum in final wind vortex",
     848: "Cage with Teensie",
+    961: "Completing the Fairy Glade",
 
     # The Marshes of Awakening
     # Ski_10
@@ -133,6 +139,7 @@ human_readable_names: Dict[int, str] = {
     51: "Super lum on fishing rod",
     96: "Super lum behind single bomb",
     853: "Cage with Teensie",
+    964: "Completing the Marshes of Awakening",
 
     # The Bayou
     # chase_10
@@ -194,6 +201,7 @@ human_readable_names: Dict[int, str] = {
     142: "Lum above trampoline #5",
     143: "Lum above trampoline #6",
     860: "Cage with Teensie",
+    967: "Completing the Bayou",
     
     # The Walk of Life
     # Ly_10
@@ -247,6 +255,7 @@ human_readable_names: Dict[int, str] = {
     1250: "Lum in time race #48",
     1248: "Lum in time race #49",
     1204: "Lum in time race #50",
+    969: "Completing the Walk of Life",
     
     # The Sanctuary of Water and Ice
     # water_10
@@ -296,6 +305,7 @@ human_readable_names: Dict[int, str] = {
     192: "Lum on final jump of slide #3",
     200: "Lum above waterfall",
     1112: "Water Mask of Polokus",
+    970: "Completing the Sanctuary of Water and Ice",
     
     # The Menhir Hills
     # rodeo_10
@@ -347,7 +357,8 @@ human_readable_names: Dict[int, str] = {
     248: "Lum on start of shell ride #3",
     247: "Lum on start of shell ride #4",
     249: "Lum on boardwalk during shell ride #1",
-    250: "Lum on boardwalk during shell ride #2",    
+    250: "Lum on boardwalk during shell ride #2",
+    972: "Completing the Menhir Hills",
 
     # The Cave of Bad Dreams
     # vulca_10
@@ -379,6 +390,7 @@ human_readable_names: Dict[int, str] = {
     791: "Super lum on slide #3",
     796: "Super lum on platform",
     1123: "Elixir of Life",
+    966: "Completing the Cave of Bad Dreams",
     
     # The Canopy
     # glob_30
@@ -435,6 +447,7 @@ human_readable_names: Dict[int, str] = {
     873: "Cage with teensies",
     299: "Lum in cage with teensies #1",
     300: "Lum in cage with teensies #2",
+    976: "Completing the Canopy",
     
     # Whale Bay
     # whale_00
@@ -478,6 +491,7 @@ human_readable_names: Dict[int, str] = {
     301: "Lum near gorilla pirate #2",
     305: "Lum near gorilla pirate #3",
     878: "Cage with teensies",
+    979: "Completing Whale Bay",
     
     # The Sanctuary of Stone and Fire
     # plum_00
@@ -524,6 +538,7 @@ human_readable_names: Dict[int, str] = {
     385: "Lum on Umber's head",
     389: "Lum hidden in sanctuary room",
     1113: "Earth Mask of Polokus",
+    981: "Completing the Sanctuary of Stone and Fire",
     
     # The Echoing Caves
     # bast_10
@@ -570,6 +585,7 @@ human_readable_names: Dict[int, str] = {
     445: "Lum above acid #12",
     450: "Lum between two wooden structures",
     891: "Cage with Teensie",
+    975: "Completing the Echoing Caves",
 
     # The Precipice
     # nave_10
@@ -625,6 +641,7 @@ human_readable_names: Dict[int, str] = {
     491: "Super lum in pirate fort #1",
     496: "Super lum in pirate fort #2",
     897: "Cage with Teensie",
+    985: "Completing the Precipice",
 
     # The Top of the World
     # Seat_10
@@ -682,6 +699,7 @@ human_readable_names: Dict[int, str] = {
     514: "Lum in cage behind crates #1",
     515: "Lum in cage behind crates #2",
     516: "Lum in cage behind crates #3",
+    988: "Completing the Top of the World",
     
     # The Sanctuary of Rock and Lava
     # earth_10
@@ -740,6 +758,7 @@ human_readable_names: Dict[int, str] = {
     599: "Lum behind right pillar",
     600: "Lum behind left pillar",
     906: "Cage with teensies",
+    990: "Completing the Sanctuary of Rock and Lava",
     
     # The Walk of Power
     # Ly_20
@@ -792,10 +811,12 @@ human_readable_names: Dict[int, str] = {
     1300: "Lum in time race #47",
     1283: "Lum in time race #48",
     1297: "Lum in time race #49",
-    1264: "Lum in time race #50", 
+    1264: "Lum in time race #50",
+    992: "Completing the Walk of Power",
 
     # Beneath the Sanctuary of Rock and Lava
     #helic_10
+    1125: "Talking to Ly",
     907: "Cage behind breakable wall",
     610: "Lum in cage behind breakable wall #1",
     611: "Lum in cage behind breakable wall #2",
@@ -833,6 +854,7 @@ human_readable_names: Dict[int, str] = {
     636: "Super lum in flight track #3",
     #helic_30
     1114: "Fire Mask of Polokus",
+    993: "Completing Beneath the Sanctuary of Rock and Lava",
     
     # Tomb of the Ancients
     # morb_00
@@ -871,6 +893,7 @@ human_readable_names: Dict[int, str] = {
     661: "Super lum in cage behind bandage door #2",    
     # morb_20
     916: "Cage with teensies",
+    1007: "Completing the Tomb of Ancients",
     
     # The Iron Mountains
     # learn_40
@@ -910,6 +933,7 @@ human_readable_names: Dict[int, str] = {
     746: "Super lum behind entrance",
     741: "Super Lum on top of pipe",
     1115: "Air Mask of Polokus",
+    1000: "Completing the Iron Mountains",
     
     # The Prison Ship
     # boat01
@@ -998,6 +1022,7 @@ human_readable_names: Dict[int, str] = {
     1309: "Lum on flight path #9",
     1310: "Lum on flight path #10",
     1311: "Super lum on flight path",
+    1002: "Completing the Prison Ship",
 }
 
 extra_levels: list[LevelInfo] = [
@@ -1083,6 +1108,7 @@ extra_levels: list[LevelInfo] = [
             )
         },
         lumGate=4,
+        portalId=969,
     ),
     LevelInfo(
         "cave_of_bad_dreams",
@@ -1142,7 +1168,8 @@ extra_levels: list[LevelInfo] = [
                 },
                 exitRequirement=Tech.JANO_SKIP_OOB_OR_SWING
             )
-        }
+        },
+        portalId=966,
     ),
     LevelInfo(
         "side_temple",
@@ -1243,12 +1270,13 @@ extra_levels: list[LevelInfo] = [
             )
         },
         lumGate=5,
+        portalId=992,
     ),
 ]
 
 levels: list[LevelInfo] = [
     LevelInfo(
-        None,
+        "woods_of_light",
         "The Woods of Light",
         {
             "learn_10": SubLevelInfo(
@@ -1263,10 +1291,16 @@ levels: list[LevelInfo] = [
                     cages=[
                         840,
                         841,
-                    ]
+                    ],
+                    special={
+                        1176: "Hover",
+                        1175: "Ledge Grab",
+                        1092: "Fragmented Silver Lum"
+                    }
                 ),
             )
-        }
+        },
+        portalId=960,
     ),
     LevelInfo(
         "fairy_glade",
@@ -1370,7 +1404,8 @@ levels: list[LevelInfo] = [
                     )
                 }
             ),
-        }
+        },
+        portalId=961,
     ),
     LevelInfo(
         "marshes_of_awakening",
@@ -1426,7 +1461,8 @@ levels: list[LevelInfo] = [
                     ]
                 ),
             ),
-        }
+        },
+        portalId=964,
     ),
     LevelInfo(
         "bayou",
@@ -1521,7 +1557,8 @@ levels: list[LevelInfo] = [
                 },
                 exitRequirement=Tech.PURPLE_SWING,
             )
-        }
+        },
+        portalId=967,
     ),
     LevelInfo(
         "sanctuary_of_water_and_ice",
@@ -1599,6 +1636,7 @@ levels: list[LevelInfo] = [
             )
         },
         lumGate=0,
+        portalId=970,
     ),
     LevelInfo(
         "menhir_hills",
@@ -1701,6 +1739,7 @@ levels: list[LevelInfo] = [
                 },
             )
         },
+        portalId=972,
     ),
     LevelInfo(
         "canopy",
@@ -1790,6 +1829,7 @@ levels: list[LevelInfo] = [
                 }
             )
         },
+        portalId=976,
     ),
     LevelInfo(
         "whale_bay",
@@ -1865,6 +1905,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=979,
     ),
     LevelInfo(
         "sanctuary_of_stone_and_fire",
@@ -1931,6 +1972,7 @@ levels: list[LevelInfo] = [
             ),
         },
         lumGate=1,
+        portalId=981,
     ),
     LevelInfo(
         "echoing_caves",
@@ -1998,6 +2040,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=975,
     ),
     LevelInfo(
         "precipice",
@@ -2085,6 +2128,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=985,
     ),
     LevelInfo(
         "top_of_the_world",
@@ -2157,6 +2201,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=988,
     ),
     LevelInfo(
         "sanctuary_of_rock_and_lava",
@@ -2245,6 +2290,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=990,
     ),
     LevelInfo(
         "beneath_the_sanctuary_of_rock_and_lava",
@@ -2275,7 +2321,10 @@ levels: list[LevelInfo] = [
                     ],
                     superLums=[
                         646
-                    ]
+                    ],
+                    special={
+                        1125: "Lava Hover"
+                    }
                 )
             ),
             "helic_20": SubLevelInfo(
@@ -2316,6 +2365,7 @@ levels: list[LevelInfo] = [
             )
         },
         lumGate=2,
+        portalId=993,
     ),
     LevelInfo(
         "tomb_of_the_ancients",
@@ -2388,6 +2438,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=1007,
     ),
     LevelInfo(
         "iron_mountains",
@@ -2467,6 +2518,7 @@ levels: list[LevelInfo] = [
             )
         },
         lumGate=3,
+        portalId=1000,
     ),
     LevelInfo(
         "prison_ship",
@@ -2585,6 +2637,7 @@ levels: list[LevelInfo] = [
                 )
             )
         },
+        portalId=1002,
     ),
     LevelInfo(
         None,
