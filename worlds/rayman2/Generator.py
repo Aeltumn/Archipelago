@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Tuple
 
-from .Layout import SubLevelInfo, Tech, Checks, levels, extra_levels
+from .Layout import SubLevelInfo, Tech, Checks, TechType, levels, extra_levels
 from .Options import Rayman2Options
 
 # The total amount of super lum checks that exist and can be placed.
@@ -24,8 +24,7 @@ class GeneratorCollection:
     lumSaneLums: int = 0
     # Woods of Light is always first and provides at least 7 checks which is enough for any tech items!
     checks: int = 7
-    waitingEvents: dict[Tech, list[str]] = dataclasses.field(default_factory=dict)
-    waitingChecks: dict[Tech, list[Checks]] = dataclasses.field(default_factory=dict)
+    waitingChecks: list[Checks] = dataclasses.field(default_factory=list)
     sideTempleFinishEvent: str | None = None
 
     def get_maximum_obtainable_lums(self, lumsanity: int) -> int:
@@ -85,13 +84,10 @@ class GeneratorCollection:
 
         return lums
 
-    def add_items(self, checks: Checks, lumsanity: int, tech: Tech = Tech.NONE):
+    def add_items(self, checks: Checks, lumsanity: int, requires_exit: bool = False):
         """Adds the items from the given [checks] to this collection."""
-        if not self.could_have_tech(tech):
-            # If this tech is out of reach, then queue up the checks!
-            sublist = self.waitingChecks.get(tech, [])
-            sublist.append(checks)
-            self.waitingChecks[tech] = sublist
+        if requires_exit and not self.has_side_temple():
+            self.waitingChecks.append(checks)
             return
 
         self.checks += len(checks.superLums)
@@ -103,55 +99,32 @@ class GeneratorCollection:
         else:
             self.checks += regularLums
 
-    def add_event(self, event: str, lumsanity: int, tech: Tech = Tech.NONE):
+    def add_event(self, event: str, lumsanity: int):
         """Adds an event to this state."""
-        if not self.could_have_tech(tech):
-            # If this tech is out of reach, then queue up the event!
-            sublist = self.waitingEvents.get(tech, [])
-            sublist.append(event)
-            self.waitingEvents[tech] = sublist
-            return
-
         self.events.append(event)
+
+        # Once the side temple is finished, award the waiting checks!
         if self.sideTempleFinishEvent is not None and event == self.sideTempleFinishEvent:
-            self.award_tech(Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT, lumsanity)
+            for check in self.waitingChecks:
+                self.add_items(check, lumsanity)
 
-    def award_tech(self, tech: Tech, lumsanity: int):
-        """Handles [tech] becoming available."""
-        checks = self.waitingChecks.get(tech, [])
-        for check in checks:
-            self.add_items(check, lumsanity)
-        self.waitingChecks[tech] = []
-
-        events = self.waitingEvents.get(tech, [])
-        for event in events:
-            self.add_event(event, lumsanity)
-        self.waitingEvents[tech] = []
-
-    def could_have_tech(self, tech: Tech) -> bool:
-        """Returns whether this state could have acquired [tech] in some way."""
-        match tech:
-            case Tech.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                return self.sideTempleFinishEvent is not None and self.sideTempleFinishEvent in self.events
-            case Tech.COMPLETED_COBD:
-                # Don't account for the finishing COBD check when generating!
-                return False
-            case _:
-                return True
+    def has_side_temple(self) -> bool:
+        """Returns whether the side temple can be reached."""
+        return self.sideTempleFinishEvent is not None and self.sideTempleFinishEvent in self.events
 
     def include_level(self, subLevelId: str, level: SubLevelInfo, isSideTemple: bool, lumsanity: int):
         """Adds the results of completing [level] to this collection set."""
         # Add the checks for all items that are accessible in some way
         self.add_items(level.checks, lumsanity)
         for tech, checks in level.behindRequirements.items():
-            self.add_items(checks, lumsanity, tech)
+            self.add_items(checks, lumsanity, tech.requires_that_one_exit())
 
         # If this is the side temple then this allows you to reach those specific checks!
         if isSideTemple:
             self.sideTempleFinishEvent = f"Finish {subLevelId}"
 
         # If we could have the tech to finish this level, we assume we can!
-        self.add_event(f"Finish {subLevelId}", lumsanity, level.exitRequirement)
+        self.add_event(f"Finish {subLevelId}", lumsanity)
 
         # Mark down that this zone is now accessible!
         self.zones.append(subLevelId)

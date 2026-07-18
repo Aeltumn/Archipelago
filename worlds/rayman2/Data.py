@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from BaseClasses import ItemClassification
-from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, rayman_2_location_hints
+from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, rayman_location_hints
 
 
 @dataclass
@@ -106,7 +106,7 @@ def create_rayman_location_names():
 
 # Creates items and locations for every input
 def create(subLevelName, levelName, id, itemName, progressionClassification: ItemClassification, endGoals: List[int], tech: Tech, fragmented: bool, chainCompletion: str | None = None):
-    hint = rayman_2_location_hints[id]
+    hint = rayman_location_hints[id]
     displayName = f"{levelName} - {hint}"
 
     item_table.append(
@@ -187,7 +187,7 @@ for levelInfo in allLevels:
             levelName = levelInfo.displayName
 
         # Create items out of any defined checks
-        createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech.NONE)
+        createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech())
         for tech, checks in subLevelInfo.behindRequirements.items():
             createForChecks(subLevelName, levelName, checks, tech)
 
@@ -195,6 +195,6 @@ for levelInfo in allLevels:
     if levelInfo.chain is not None and levelInfo.portalId is not None:
         if levelInfo.chain == "bayou":
             # The Bayou portal defaults to Swim not one of the fragmented silver lums.
-            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech.NONE, False, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech(), False, levelInfo.chain)
         else:
-            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech.NONE, True, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech(), True, levelInfo.chain)

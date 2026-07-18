@@ -18,7 +18,7 @@ class EndGoal(Choice):
     option_treasure = 2
     option_100 = 3
     option_any = 4
-    option_cages= 5
+    option_cages = 5
     default = 1
 
     @classmethod
