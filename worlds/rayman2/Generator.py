@@ -209,7 +209,7 @@ class GeneratorState:
         lastLumRequirement = 0
         regularLumRequirements = {}
         for levelInfo in levels:
-            # Ignore levels without a chain (first/last level)
+            # Ignore levels without a chain (Crow's Nest)
             if levelInfo.chain is None:
                 continue
 

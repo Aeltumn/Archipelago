@@ -7,24 +7,33 @@ from worlds.AutoWorld import PerGameCommonOptions
 class EndGoal(Choice):
     """The end goal required to beat the game.
 
-    Crow's Nest: Defeat Razorbeard in the Crow's Nest.
+    All Masks: Defeat Razorbeard in the Crow's Nest after gathering 4 masks.
     Treasure%: Take Jano's offer in the Cave of Bad Dreams.
     100%: Requires collecting all 1000 lums, 80 cages, and 4 masks, then defeating Razorbeard.
+    Any%: Defeat Razorbeard in the Crow's Nest by any means.
+    All Cages: Defeat Razorbeard in the Crow's Nest after gathering 4 masks and 80 cages.
     """
     display_name = "End Goal"
-    option_crows_nest = 1
+    option_all_masks = 1
     option_treasure = 2
     option_100 = 3
+    option_any = 4
+    option_cages= 5
     default = 1
 
     @classmethod
     def get_option_name(cls, value) -> str:
         if value == 1:
-            return "Crow's Nest"
+            return "All Masks"
         elif value == 2:
             return "Treasure%"
-        else:
+        elif value == 3:
             return "100%"
+        elif value == 4:
+            return "Any%"
+        elif value == 5:
+            return "All Cages"
+        return "Unknown"
 
 class RoomRandomisation(Toggle):
     """Whether to enable room randomization which will randomize the order of all levels."""
@@ -54,13 +63,18 @@ class FixedLevelLengths(Toggle):
     default = False
 
 class BetterLevelPortals(Toggle):
-    """Whether portals in the Hall of Doors should allow you to teleport to individual sub-levels instead of always going to the first sub-level. Makes it easier to revisit levels and get missed checks."""
+    """Whether portals in the Hall of Doors in room randomisation mode should allow you to teleport to individual sub-levels instead of always going to the first sub-level. Makes it easier to revisit levels and get missed checks."""
     display_name = "Better Level Portals"
     default = False
 
 class RoomRandomisationSeed(FreeText):
     """A seed to use for room randomisation. If left blank the randomisation will be random. Can be used to use the same randomised layout in multiple games."""
     display_name = "Randomisation Seed"
+
+class DamageLink(Toggle):
+    """Whether death links should trigger every time Rayman takes damage instead of only when he respawns."""
+    display_name = "Damage Link"
+    default = False
 
 class DeathLinkAmnesty(Range):
     """The amount of deaths required to send a single death link."""
@@ -69,9 +83,29 @@ class DeathLinkAmnesty(Range):
     range_end = 30
     default = 1
 
-class ChallengeMode(Toggle):
-    """Removes the safety system that always places a Silver Lum in Sphere 1. This will make generations much more likely to fail (please inform your host!) but result in a more interesting route before obtaining the ability to use purple lums."""
-    display_name = "Harder Silver Lum Placement"
+class FragmentedSilverLums(Toggle):
+    """Whether Silver Lums should be fragmented into 22 individual checks instead of 2. This changes every individual sub-level with swings into a separate check to be able to use the swings in that level."""
+    display_name = "Fragmented Silver Lums"
+    default = False
+
+class MovementHover(Toggle):
+    """Whether the ability for Rayman to hover should be randomized and require a check to use."""
+    display_name = "Randomize Hover"
+    default = False
+
+class MovementSwim(Toggle):
+    """Whether the ability for Rayman to swim should be randomized and require a check to use."""
+    display_name = "Randomize Swim"
+    default = False
+
+class MovementLedgeGrab(Toggle):
+    """Whether the ability for Rayman to grab ledges should be randomized and require a check to use."""
+    display_name = "Randomize Ledge Grab"
+    default = False
+
+class MovementLavaHover(Toggle):
+    """Whether the ability for Rayman to hover above lava in Beneath the Sanctuary of Rock and Lava should be randomized and require a check to use."""
+    display_name = "Randomize Lava Hover"
     default = False
 
 class GlitchedLySkip(Toggle):
@@ -182,17 +216,22 @@ class Rayman2Options(PerGameCommonOptions):
 
     death_link: DeathLink
     death_link_amnesty: DeathLinkAmnesty
+    damage_link: DamageLink
 
     room_randomisation: RoomRandomisation
     room_randomisation_seed: RoomRandomisationSeed
     lum_bundle_size: LumBundleSize
     lumsanity: Lumsanity
+    fragmented_silver_lums: FragmentedSilverLums
 
     instant_portal_access: InstantPortalAccess
     fixed_level_lengths: FixedLevelLengths
     better_level_portals: BetterLevelPortals
-
-    challenge_mode: ChallengeMode
+    
+    movement_hover: MovementHover
+    movement_ledge_grab: MovementLedgeGrab
+    movement_swim: MovementSwim
+    movement_lava_hover: MovementLavaHover
 
     glitched_early_echoing_caves: GlitchedEarlyEchoingCaves
     glitched_technical_tricks: GlitchedTechnicalTricks
@@ -217,6 +256,8 @@ class Rayman2Options(PerGameCommonOptions):
 
 def create_option_groups() -> List[OptionGroup]:
     return [
+        OptionGroup(name="Randomized Movement Ability Options",
+                    options=[MovementHover, MovementLedgeGrab, MovementSwim, MovementLavaHover]),
         OptionGroup(name="Glitched Logic Options",
                     options=[GlitchedLySkip, GlitchedBackwardsSlideJumps, GlitchedEarlyEchoingCaves, GlitchedReverseEarlyEchoingCaves, GlitchedKapouehSkip,
                              GlitchedDamageBoosts, GlitchedPlumWallClimb, GlitchedAirswims, GlitchedTornadoSkip,

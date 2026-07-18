@@ -2,14 +2,15 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from BaseClasses import ItemClassification
-from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, human_readable_names
+from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, rayman_2_location_hints
 
 
 @dataclass
 class ItemDefinition:
     displayName: str
-    classification: ItemClassification
-    regularClassification: ItemClassification
+    progressionClassification: ItemClassification
+    endGoals: List[int]
+    fragmented: bool
 
 
 
@@ -20,6 +21,8 @@ class LocationDefinition:
     displayName: str
     id: int
     tech: Tech
+    fragmented: bool
+    chainCompletion: str | None = None
 
 
 base_id = 1651615
@@ -36,7 +39,57 @@ rayman_item_name_to_id: Dict[str, int] = {
     "Knowledge of the Cave of Bad Dreams": 1651624,
     "Lum Bundle": 1651625,
     "Leftover Lum Bundle": 1651626,
+    "Hover": 1651627,
+    "Ledge Grab": 1651628,
+    "Swim": 1651629,
+    "Lava Hover": 1651630,
+    "Fairy Glade Revisit Swing": 1651631,
+    "Cave of Bad Dreams 1 Swings": 1651632,
+    "Cave of Bad Dreams 2 Swings": 1651633,
+    "Stone and Fire Side Temple Swing": 1651634,
+    "Fairy Glade 4 Swing": 1651635,
+    "Fairy Glade 5 Swing": 1651636,
+    "Bayou 1 Swings": 1651637,
+    "Bayou 2 Swing": 1651638,
+    "Water and Ice 2 Swings": 1651639,
+    "Menhir Hills 2 Swings": 1651640,
+    "Menhir Hills 3 Swing": 1651641,
+    "Canopy 3 Swing": 1651642,
+    "Whale Bay 1 Swing": 1651642,
+    "Stone and Fire 1 Swings": 1651643,
+    "Stone and Fire 2 Swings": 1651644,
+    "Precipice 1 Swings": 1651646,
+    "Rock and Lava 1 Swing": 1651647,
+    "Beneath Rock and Lava 3 Swing": 1651648,
+    "Tomb of the Ancients 2 Swings": 1651649,
+    "Iron Mountains 1 Swings": 1651650,
+    "Iron Mountains 3 Swings": 1651651,
+    "Powered Shots": 1651652,
 }
+fragmented_names = [
+    "Fairy Glade Revisit Swing",
+    "Cave of Bad Dreams 1 Swings",
+    "Cave of Bad Dreams 2 Swings",
+    "Stone and Fire Side Temple Swing",
+    "Fairy Glade 4 Swing",
+    "Fairy Glade 5 Swing",
+    "Bayou 1 Swings",
+    "Bayou 2 Swing",
+    "Water and Ice 2 Swings",
+    "Menhir Hills 2 Swings",
+    "Menhir Hills 3 Swing",
+    "Canopy 3 Swing",
+    "Whale Bay 1 Swing",
+    "Stone and Fire 1 Swings",
+    "Stone and Fire 2 Swings",
+    "Precipice 1 Swings",
+    "Rock and Lava 1 Swing",
+    "Beneath Rock and Lava 3 Swing",
+    "Tomb of the Ancients 2 Swings",
+    "Iron Mountains 1 Swings",
+    "Iron Mountains 3 Swings",
+    "Powered Shots",
+]
 item_table: List[ItemDefinition] = []
 location_table: List[LocationDefinition] = []
 
@@ -52,15 +105,16 @@ def create_rayman_location_names():
     return names
 
 # Creates items and locations for every input
-def create(subLevelName, levelName, id, itemName, classification: ItemClassification, regularClassification: ItemClassification, tech: Tech):
-    hint = human_readable_names[id]
+def create(subLevelName, levelName, id, itemName, progressionClassification: ItemClassification, endGoals: List[int], tech: Tech, fragmented: bool, chainCompletion: str | None = None):
+    hint = rayman_2_location_hints[id]
     displayName = f"{levelName} - {hint}"
 
     item_table.append(
         ItemDefinition(
             displayName=itemName,
-            classification=classification,
-            regularClassification=regularClassification,
+            progressionClassification=progressionClassification,
+            endGoals=endGoals,
+            fragmented=fragmented,
         )
     )
     location_table.append(
@@ -70,25 +124,50 @@ def create(subLevelName, levelName, id, itemName, classification: ItemClassifica
             displayName=displayName,
             id=base_id + id,
             tech=tech,
+            fragmented=fragmented,
+            chainCompletion=chainCompletion,
         )
     )
 
 def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
     # Create checks for all regular lums
     for lum in checks.regularLums:
-        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, ItemClassification.progression_deprioritized_skip_balancing, tech)
+        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech, False)
 
     # Create checks for all super lums
     for superLum in checks.superLums:
-        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, ItemClassification.progression_deprioritized_skip_balancing, tech)
+        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech, False)
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, ItemClassification.filler, tech)
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, [3, 5], tech, False)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():
-        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, ItemClassification.progression | ItemClassification.useful, tech)
+        if "Mask" in name:
+            endGoals = [1, 3, 5]
+        else:
+            endGoals = [1, 2, 3, 4, 5]
+
+        if name == "Fragmented Silver Lum":
+            name = fragmented_names.pop(0)
+            fragmented = True
+        else:
+            fragmented = False
+
+        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, endGoals, tech, fragmented)
+
+        # Silver Lums are also created as the same item but with the fragmented silver lums!
+        if name == "Silver Lum":
+            name = fragmented_names.pop(0)
+        item_table.append(
+            ItemDefinition(
+                displayName=name,
+                progressionClassification=ItemClassification.progression | ItemClassification.useful,
+                endGoals=endGoals,
+                fragmented=True,
+            )
+        )
 
 # Go through all levels to create regions and items
 allLevels: list[LevelInfo] = []
@@ -111,3 +190,11 @@ for levelInfo in allLevels:
         createForChecks(subLevelName, levelName, subLevelInfo.checks, Tech.NONE)
         for tech, checks in subLevelInfo.behindRequirements.items():
             createForChecks(subLevelName, levelName, checks, tech)
+
+    # Create the item for finishing this chain
+    if levelInfo.chain is not None and levelInfo.portalId is not None:
+        if levelInfo.chain == "bayou":
+            # The Bayou portal defaults to Swim not one of the fragmented silver lums.
+            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech.NONE, False, levelInfo.chain)
+        else:
+            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech.NONE, True, levelInfo.chain)
