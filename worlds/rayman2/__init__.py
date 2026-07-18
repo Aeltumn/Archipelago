@@ -192,7 +192,7 @@ class Rayman2World(World):
             base = portal.access_rule
             portal.access_rule = lambda state, base=base: self.get_lums(state) >= lumRequirement and base(state)
 
-        if require_all_masks:
+        if require_all_masks and self.options.end_goal != 4:
             # If this is a mask requiring level we add that as a requirement!
             base = portal.access_rule
             portal.access_rule = lambda state, base=base: (state.has("Water Mask", self.player) and \
@@ -382,10 +382,37 @@ class Rayman2World(World):
                     self.bundle_regions.append(region)
                 continue
 
+            # If we're not on fragmented mode we don't shuffle any locations marked
+            # as being for the fragmented silver lums
+            if not self.options.fragmented_silver_lums.value:
+                if data.fragmented:
+                    continue
+
+            # Don't shuffle movement options that are not set to be randomised
+            if not self.options.movement_hover:
+                if data.itemName == "Hover":
+                    continue
+            if not self.options.movement_swim:
+                if data.itemName == "Swim":
+                    continue
+            if not self.options.movement_ledge_grab:
+                if data.itemName == "Ledge Grab":
+                    continue
+            if not self.options.movement_lava_hover:
+                if data.itemName == "Lava Hover":
+                    continue
+
             location = Rayman2Location(self.player, data.displayName, data.id, region)
 
             # Add an access rule based on the tech type and this region being accessible!
             self.apply_access_requirement(location, data.tech)
+
+            # If these require chain completion, add a custom requirement!
+            if data.chainCompletion is not None:
+                base = location.access_rule
+                level_chain = data.chainCompletion
+                location.access_rule = lambda state, base=base, level_chain=level_chain: base(state) and state.has(f"Finish {self.levelChains.get(level_chain)[-1]}",
+                                                         self.player)
 
             # Add this location to this region
             region.locations.append(location)
@@ -402,6 +429,14 @@ class Rayman2World(World):
                 self.multiworld.completion_condition[self.player] = lambda state: (
                         state.has("Finish Rhop_10", self.player) and
                         self.get_lums(state) >= 1000 and
+                        state.prog_items[self.player]["Cage"] >= 80
+                )
+            case 4:
+                self.multiworld.completion_condition[self.player] = lambda state: state.has("Finish Rhop_10",
+                                                                                            self.player)
+            case 5:
+                self.multiworld.completion_condition[self.player] = lambda state: (
+                        state.has("Finish Rhop_10", self.player) and
                         state.prog_items[self.player]["Cage"] >= 80
                 )
 
@@ -529,11 +564,6 @@ class Rayman2World(World):
                             exit.connect(target)
                             break
 
-    def generate_early(self) -> None:
-        """Ensures that key items are placed early so you cannot get stuck as many levels require it to complete."""
-        if not self.options.challenge_mode.value:
-            self.multiworld.local_early_items[self.player]["Silver Lum"] = 1
-
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
         # If we're in UT we don't re-randomize!
@@ -594,11 +624,34 @@ class Rayman2World(World):
                     not self.options.lumsanity.value or self.options.lum_bundle_size.value > 1):
                 continue
 
-            # Only classify cages as progression in 100%!
-            if self.options.end_goal.value == 3:
+            # If we're on fragmented mode we don't shuffle the silver lums, and outside fragmented
+            # mode don't shuffle the fragmented items.
+            if self.options.fragmented_silver_lums.value:
+                if item.displayName == "Silver Lum":
+                    continue
+            else:
+                if item.fragmented:
+                    continue
+
+            # Don't shuffle movement options that are not set to be randomised
+            if not self.options.movement_hover:
+                if item.displayName == "Hover":
+                    continue
+            if not self.options.movement_swim:
+                if item.displayName == "Swim":
+                    continue
+            if not self.options.movement_ledge_grab:
+                if item.displayName == "Ledge Grab":
+                    continue
+            if not self.options.movement_lava_hover:
+                if item.displayName == "Lava Hover":
+                    continue
+
+            # Make an item filler based on the list of end goals it provided
+            if self.options.end_goal.value in item.endGoals:
                 itempool.append(self.create_item(item.displayName, item.classification))
             else:
-                itempool.append(self.create_item(item.displayName, item.regularClassification))
+                itempool.append(self.create_item(item.displayName, ItemClassification.filler))
 
         # Add lum bundle items with auto-generated ids
         if self.options.lumsanity.value and self.options.lum_bundle_size.value > 1:
@@ -639,6 +692,8 @@ class Rayman2World(World):
                 self.options.walk_of_life_required.value,
                 self.options.walk_of_power_required.value
             ],
+            "damage_link": self.options.damage_link.value,
+            "fragmented_lums": self.options.fragmented_silver_lums.value,
             "death_link": self.options.death_link.value,
             "death_link_amnesty": self.options.death_link_amnesty.value,
             "better_level_portals": self.options.better_level_portals.value,
