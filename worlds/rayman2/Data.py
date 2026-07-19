@@ -155,19 +155,18 @@ def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
         else:
             fragmented = False
 
-        create(subLevelName, levelName, specialItem, name, ItemClassification.progression | ItemClassification.useful, endGoals, tech, fragmented)
+        create(subLevelName, levelName, specialItem, name, ItemClassification.progression, endGoals, tech, fragmented)
 
         # Silver Lums are also created as the same item but with the fragmented silver lums!
         if name == "Silver Lum":
-            name = fragmented_names.pop(0)
-        item_table.append(
-            ItemDefinition(
-                displayName=name,
-                progressionClassification=ItemClassification.progression | ItemClassification.useful,
-                endGoals=endGoals,
-                fragmented=True,
+            item_table.append(
+                ItemDefinition(
+                    displayName=fragmented_names.pop(0),
+                    progressionClassification=ItemClassification.progression,
+                    endGoals=endGoals,
+                    fragmented=True,
+                )
             )
-        )
 
 # Go through all levels to create regions and items
 allLevels: list[LevelInfo] = []
@@ -195,6 +194,6 @@ for levelInfo in allLevels:
     if levelInfo.chain is not None and levelInfo.portalId is not None:
         if levelInfo.chain == "bayou":
             # The Bayou portal defaults to Swim not one of the fragmented silver lums.
-            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech(), False, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), False, levelInfo.chain)
         else:
-            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression | ItemClassification.useful, [1, 2, 3, 4, 5], Tech(), True, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), True, levelInfo.chain)
