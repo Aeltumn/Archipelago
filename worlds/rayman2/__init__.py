@@ -672,6 +672,12 @@ class Rayman2World(World):
                 self.options.walk_of_power_required.value
             ],
             "damage_link": self.options.damage_link.value,
+            "automatic_movement": (
+                self.options.movement_hover.value +
+                2 * self.options.movement_swim.value +
+                4 * self.options.movement_ledge_grab.value +
+                8 * self.options.movement_lava_hover.value
+            ),
             "fragmented_lums": self.options.fragmented_silver_lums.value,
             "death_link": self.options.death_link.value,
             "death_link_amnesty": self.options.death_link_amnesty.value,
