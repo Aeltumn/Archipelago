@@ -1312,18 +1312,16 @@ levels: list[LevelInfo] = [
                     }
                 ),
                 behindRequirements={
-                    Tech("HOVER && LEDGE_GRAB"): Checks(
-                        special={
-                            1092: "Fragmented Silver Lum"
-                        }
-                    ),
                     Tech("LEDGE_GRAB && HOVER"): Checks(
                         regularLums=[
                             1400
                         ],
                         cages=[
                             841,
-                        ]
+                        ],
+                        special={
+                            1092: "Fragmented Silver Lum"
+                        }
                     )
                 },
                 exitRequirement=Tech("LEDGE_GRAB && HOVER")
