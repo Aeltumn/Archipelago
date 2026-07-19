@@ -138,7 +138,6 @@ class Rayman2World(World):
             if firstRegion is None:
                 firstRegion = region
             lastRegion = region
-
         return [firstRegion, lastRegion]
 
     def create_level_finish_event(self, region: Region, levelInfo: SubLevelInfo) -> Location:
@@ -167,7 +166,7 @@ class Rayman2World(World):
 
         # Require the minimum amount of portals to be made previously so this one is reachable
         if portals > 0:
-            portal.access_rule = lambda state: state.has(self.portalEvents.get(portals, "Finish Unknown Level"),
+            portal.access_rule = lambda state, portals=portals: state.has(self.portalEvents.get(portals, "Finish Unknown Level"),
                                                          self.player)
 
         # Determine the lum requirement to reach this portal
@@ -189,7 +188,7 @@ class Rayman2World(World):
                     lumRequirement = self.options.walk_of_power_required.value
 
             base = portal.access_rule
-            portal.access_rule = lambda state, base=base: self.get_lums(state) >= lumRequirement and base(state)
+            portal.access_rule = lambda state, base=base, lumRequirement=lumRequirement: self.get_lums(state) >= lumRequirement and base(state)
 
         # If this is a mask requiring level we add that as a requirement!
         if require_all_masks and self.options.end_goal != 4:
@@ -460,7 +459,7 @@ class Rayman2World(World):
                 if lastRegion is not None:
                     connection = f"{lastRegion.name} -> {region.name}"
                     exit = lastRegion.create_exit(connection)
-                    exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
+                    exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}", self.player)
                     exit.connect(region)
 
                 # Create connections for EEC and reverse EEC
@@ -521,7 +520,7 @@ class Rayman2World(World):
             if isRevisit:
                 connection = f"{lastRegion.name} -> {last_level.name}"
                 exit = lastRegion.create_exit(connection)
-                exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
+                exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}", self.player)
                 exit.connect(last_level)
 
     def connect_entrances(self) -> None:
@@ -554,7 +553,7 @@ class Rayman2World(World):
 
             if level.chain is None:
                 # Set a portal event on the non-randomised levels as well!
-                levelId = list(level.sublevels.keys())[0]
+                levelId = list(level.sublevels.keys())[-1]
                 self.portalEvents[portalId] = f"Finish {levelId}"
                 continue
 
