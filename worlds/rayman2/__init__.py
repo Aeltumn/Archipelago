@@ -311,7 +311,7 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     isRevisit = True
-                    tech = Tech("TECHNICAL || PURPLE_SWING", "Stone and Fire 1 Swings")
+                    tech = Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings")
                     extra_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")

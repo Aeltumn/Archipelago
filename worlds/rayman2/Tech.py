@@ -131,7 +131,8 @@ class TechContext:
             case "DAMAGE_BOOST":
                 return self.options.glitched_damage_boosts.value == 1
             case "BACKWARDS_SLIDE_JUMP":
-                return self.options.glitched_backwards_slide_jumps.value == 1
+                # Backwards slide jumps requires hover to get into position!
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_backwards_slide_jumps.value == 1
             case "ELIXIR":
                 return self.state.has("Elixir of Life", self.player)
             case "COBD_SKIP":
@@ -175,7 +176,7 @@ class TechContext:
                     return self.state.has(self.purpleLumItem, self.player)
             case "HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT":
                 return self.state.has(self.sideTempleFinishEvent, self.player) or (
-                        self.options.glitched_plum_wall_climb.value == 1 and (self.has_tech_type("TECHNICAL") or self.has_tech_type("PURPLE_SWING"))
+                        self.options.glitched_plum_wall_climb.value == 1 and self.has_tech_type("HOVER") and (self.has_tech_type("TECHNICAL") or self.has_tech_type("PURPLE_SWING"))
                 )
         
         # Read all other types from the cache so we can re-use them!
