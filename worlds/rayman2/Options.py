@@ -94,7 +94,7 @@ class MovementHover(Toggle):
     default = False
 
 class MovementSwim(Toggle):
-    """Whether the ability for Rayman to swim should be randomized and require a check to use."""
+    """Whether the ability for Rayman to swim should be randomized and require a check to use. Rayman will be killed for touching water without receiving Swim, if this causes a softlock by e.g. entering Whale Bay 3, run `stuck` in the in-game console."""
     display_name = "Randomize Swim"
     default = False
 
@@ -159,7 +159,7 @@ class GlitchedCOBDSkip(Toggle):
     default = False
 
 class GlitchedTechnicalTricks(Toggle):
-    """Includes checks behind technical tricks (GLM/NaN) within logic before getting a Silver Lum, this includes any trick that can be easily executed by following precise technical steps. This includes The Sanctuary of Stone and Fire 1 GLM including backwards completion of that level and The Sanctuary of Stone and Fire 2 NaN Plum."""
+    """Includes checks behind technical tricks (GLM/NaN) within logic before getting a Silver Lum, this includes any trick that can be easily executed by following precise technical steps. This includes The Sanctuary of Stone and Fire 1 GLM including backwards completion of that level and The Sanctuary of Stone and Fire 2 NaN Plum. It also includes the precise jump to complete Whale Bay 1 at the end."""
     display_name = "Include Technical Tricks"
     default = False
 

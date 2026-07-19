@@ -1516,7 +1516,6 @@ levels: list[LevelInfo] = [
                 checks=Checks(
                     cages=[
                         854,
-                        856,
                     ],
                     regularLums=[
                         122,
@@ -1526,14 +1525,21 @@ levels: list[LevelInfo] = [
                         103,
                         120,
                         121,
-                        128,
-                        129,
-                        130,
-                        131,
                     ]
                 ),
                 behindRequirements={
-                    Tech("DAMAGE_BOOST || PURPLE_SWING", "Bayou 1 Swings"): Checks(
+                    Tech("HOVER"): Checks(
+                        cages=[
+                            856
+                        ],
+                        regularLums=[
+                            128,
+                            129,
+                            130,
+                            131,
+                        ]
+                    ),
+                    Tech("HOVER && (DAMAGE_BOOST || PURPLE_SWING)", "Bayou 1 Swings"): Checks(
                         cages=[
                             855,
                             858,
@@ -1567,7 +1573,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech("DAMAGE_BOOST || PURPLE_SWING", "Bayou 1 Swings")
+                exitRequirement=Tech("HOVER && (DAMAGE_BOOST || PURPLE_SWING)", "Bayou 1 Swings")
             ),
             "chase_22": SubLevelInfo(
                 checks=Checks(
@@ -1611,8 +1617,7 @@ levels: list[LevelInfo] = [
             "water_10": SubLevelInfo(
                 checks=Checks(
                     cages=[
-                        862,
-                        861
+                        862
                     ],
                     regularLums=[
                         156,
@@ -1623,34 +1628,44 @@ levels: list[LevelInfo] = [
                         168,
                         169,
                         170,
-                        171,
-                        178,
-                        177,
-                        151,
-                        152,
-                        153,
-                        154,
-                        155,
-                        159,
-                        160,
-                        180,
-                        182,
-                        183,
-                        181,
-                        184,
-                        186,
-                        187,
-                        185,
-                        188,
-                        189,
-                        179,
-                        190
-                    ],
-                    superLums=[
-                        172,
-                        161
+                        171
                     ]
-                )  
+                ),
+                behindRequirements={
+                    Tech("SWIM"): Checks(
+                        cages=[
+                            961
+                        ],
+                        regularLums=[
+                            178,
+                            177,
+                            151,
+                            152,
+                            153,
+                            154,
+                            155,
+                            159,
+                            160,
+                            180,
+                            182,
+                            183,
+                            181,
+                            184,
+                            186,
+                            187,
+                            185,
+                            188,
+                            189,
+                            179,
+                            190
+                        ],
+                        superLums=[
+                            172,
+                            161
+                        ]
+                    )
+                },
+                exitRequirement=Tech("SWIM")
             ),
             "water_20": SubLevelInfo(
                 checks=Checks(
@@ -1728,7 +1743,7 @@ levels: list[LevelInfo] = [
                     }
                 ),
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Menhir Hills 2 Swings"): Checks(
+                    Tech("HOVER && PURPLE_SWING", "Menhir Hills 2 Swings"): Checks(
                         regularLums=[
                             227,
                             219,
@@ -1771,7 +1786,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Menhir Hills 3 Swing"): Checks(
+                    Tech("LEDGE_GRAB && PURPLE_SWING", "Menhir Hills 3 Swing"): Checks(
                         regularLums=[
                             241,
                             242
@@ -1817,7 +1832,8 @@ levels: list[LevelInfo] = [
                         269,
                         270
                     ]                    
-                )
+                ),
+                exitRequirement=Tech("HOVER"),
             ),
             "glob_10": SubLevelInfo(
                 checks=Checks(
@@ -1882,7 +1898,6 @@ levels: list[LevelInfo] = [
             "whale_00": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
-                        339,
                         341,
                         327,
                         320,
@@ -1900,53 +1915,66 @@ levels: list[LevelInfo] = [
                         315
                     ]
                 ),
-                exitRequirement=Tech("AIRSWIM || PURPLE_SWING", "Whale Bay 1 Swing")
+                behindRequirements={
+                    Tech("LEDGE_GRAB && SWIM"): Checks(
+                        regularLums=[
+                            339,
+                        ]
+                    )
+                },
+                exitRequirement=Tech("(LEDGE_GRAB && AIRSWIM) || PURPLE_SWING || TECHNICAL", "Whale Bay 1 Swing")
             ),
             "whale_05": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        325,
-                        324
-                    ],
-                    cages=[
-                        876
-                    ],
-                    superLums=[
-                        333,
-                        328
-                    ]
-                )
+                behindRequirements={
+                    Tech("SWIM"): Checks(
+                        regularLums=[
+                            325,
+                            324
+                        ],
+                        cages=[
+                            876
+                        ],
+                        superLums=[
+                            333,
+                            328
+                        ]
+                    )
+                },
+                exitRequirement=Tech("SWIM")
             ),
             "whale_10": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        303,
-                        302,
-                        348,
-                        307,
-                        306,
-                        345,
-                        308,
-                        309,
-                        350,
-                        344,
-                        346,
-                        349,
-                        347,
-                        342,
-                        343,
-                        304,
-                        301,
-                        305
-                    ],
-                    cages=[
-                        877,
-                        878
-                    ],
-                    superLums=[
-                        310
-                    ]
-                )
+                behindRequirements={
+                    Tech("SWIM"): Checks(
+                        regularLums=[
+                            303,
+                            302,
+                            348,
+                            307,
+                            306,
+                            345,
+                            308,
+                            309,
+                            350,
+                            344,
+                            346,
+                            349,
+                            347,
+                            342,
+                            343,
+                            304,
+                            301,
+                            305
+                        ],
+                        cages=[
+                            877,
+                            878
+                        ],
+                        superLums=[
+                            310
+                        ]
+                    ),
+                },
+                exitRequirement=Tech("SWIM")
             )
         },
         portalId=979,
@@ -1957,13 +1985,13 @@ levels: list[LevelInfo] = [
         {
             "plum_00": SubLevelInfo(
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Stone and Fire 1 Swings"): Checks(
+                    Tech("HOVER && PURPLE_SWING", "Stone and Fire 1 Swings"): Checks(
                         regularLums=[
                             353,
                             356
                         ]
                     ),
-                    Tech("TECHNICAL || PURPLE_SWING", "Stone and Fire 1 Swings"): Checks(
+                    Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings"): Checks(
                         regularLums=[
                             354,
                             357,
@@ -1988,7 +2016,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("TECHNICAL || PURPLE_SWING", "Stone and Fire 1 Swings")
+                exitRequirement=Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings")
             ),
             "plum_10": SubLevelInfo(
                 checks=Checks(
@@ -1996,10 +2024,6 @@ levels: list[LevelInfo] = [
                         386,
                         390,
                         388,
-                        374,
-                        387,
-                        385,
-                        389
                     ],
                     superLums=[
                         380,
@@ -2010,13 +2034,21 @@ levels: list[LevelInfo] = [
                     ],
                 ),
                 behindRequirements={
-                    Tech("(TECHNICAL && (HOVER || THINK)) || PURPLE_SWING", "Stone and Fire 2 Swings"): Checks(
+                    Tech("LEDGE_GRAB && HOVER"): Checks(
+                          regularLums=[
+                                374,
+                                387,
+                                385,
+                                389
+                          ]
+                    ),
+                    Tech("(TECHNICAL && (HOVER || THINK)) || (LEDGE_GRAB && HOVER && PURPLE_SWING)", "Stone and Fire 2 Swings"): Checks(
                         special={
                             1113: "Earth Mask"
                         }
                     )
                 },
-                exitRequirement=Tech("(TECHNICAL && (HOVER || THINK)) || PURPLE_SWING", "Stone and Fire 2 Swings")
+                exitRequirement=Tech("(TECHNICAL && (HOVER || THINK)) || (LEDGE_GRAB && HOVER && PURPLE_SWING)", "Stone and Fire 2 Swings")
             ),
         },
         lumGate=1,
@@ -2059,7 +2091,10 @@ levels: list[LevelInfo] = [
                         434,
                         435
                     ]
-                )
+                ),
+                # Most people probably use hover to get the switch, but you can
+                # do the technical running through wall instead.
+                exitRequirement=Tech("TECHNICAL || HOVER"),
             ),
             "cask_30": SubLevelInfo(
                 checks=Checks(
@@ -2126,54 +2161,72 @@ levels: list[LevelInfo] = [
                 checks=Checks(
                     regularLums=[
                         465,
-                        466,
-                        468,
-                        470,
-                        471,
-                        472,
-                        469,
-                        462,
-                        473,
-                        474,
-                        463,
-                        467,
-                        475,
-                        461,
-                        464,
                     ],
-                    cages=[
-                        896,
-                        895,
-                    ]
-                )
+                ),
+                behindRequirements={
+                    # You don't need a ledge grab on the trampoline if you
+                    # damage boost on the cannon balls.
+                    Tech("DAMAGE_BOOST || LEDGE_GRAB"): Checks(
+                        regularLums=[
+                            466,
+                            468,
+                            470,
+                            471,
+                            472,
+                        ],
+                        cages=[
+                            896,
+                        ]
+                    ),
+                    Tech("LEDGE_GRAB"): Checks(
+                        regularLums=[
+                            469,
+                            462,
+                            473,
+                            474,
+                            463,
+                            467,
+                            475,
+                            461,
+                            464,
+                        ],
+                        cages=[
+                            895,
+                        ]
+                    )
+                },
+                exitRequirement=Tech("LEDGE_GRAB"),
             ),
             "nave_20": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        489,
-                        476,
-                        480,
-                        483,
-                        485,
-                        481,
-                        484,
-                        478,
-                        490,
-                        477,
-                        479,
-                        482,
-                        487,
-                        486,
-                        488,
-                    ],
-                    cages=[
-                        897,
-                    ],
-                    superLums=[
-                        491,
-                        496,
-                    ]
-                )
+                behindRequirements={
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            489,
+                            476,
+                            480,
+                            483,
+                            485,
+                            481,
+                            484,
+                            478,
+                            490,
+                            477,
+                            479,
+                            482,
+                            487,
+                            486,
+                            488,
+                        ],
+                        cages=[
+                            897,
+                        ],
+                        superLums=[
+                            491,
+                            496,
+                        ]
+                    )
+                },
+                exitRequirement=Tech("HOVER")
             )
         },
         portalId=985,
@@ -2228,7 +2281,6 @@ levels: list[LevelInfo] = [
                         502,
                         505,
                         504,
-                        503,
                         511,
                         512,
                         513,
@@ -2236,8 +2288,6 @@ levels: list[LevelInfo] = [
                         507,
                         508,
                         517,
-                        509,
-                        510,
                         514,
                         515,
                         516,
@@ -2246,7 +2296,16 @@ levels: list[LevelInfo] = [
                         899,
                         898,
                     ]
-                )
+                ),
+                behindRequirements={
+                    Tech("LEDGE_GRAB"): Checks(
+                        regularLums=[
+                            503,
+                            509,
+                            510,
+                        ]
+                    )
+                }
             )
         },
         portalId=988,
@@ -2257,7 +2316,7 @@ levels: list[LevelInfo] = [
         {
             "earth_10": SubLevelInfo(
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Rock and Lava 1 Swing"): Checks(
+                    Tech("HOVER && PURPLE_SWING", "Rock and Lava 1 Swing"): Checks(
                         regularLums=[
                             555,
                             551,
@@ -2274,7 +2333,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Rock and Lava 1 Swing")
+                exitRequirement=Tech("HOVER && PURPLE_SWING", "Rock and Lava 1 Swing")
             ),
             "earth_20": SubLevelInfo(
                 checks=Checks(
@@ -2282,60 +2341,74 @@ levels: list[LevelInfo] = [
                         561,
                         562,
                         563,
-                        575,
-                        576,
-                        577,
-                        564,
-                        565,
-                        566,
-                        567,
-                        568,
-                        569,
-                        570,
-                        571,
-                        572,
-                        574,
-                        579,
-                        578,
-                        580,
-                        573
-                    ],
-                    cages=[
-                        902,
-                        903
                     ]
-                )
+                ),
+                behindRequirements={
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            575,
+                            576,
+                            577,
+                            564,
+                            565,
+                            566,
+                            567,
+                            568,
+                            569,
+                            570,
+                            571,
+                            572,
+                            574,
+                            579,
+                            578,
+                            580,
+                            573
+                        ],
+                        cages=[
+                            902,
+                            903
+                        ]
+                    ),
+                },
+                exitRequirement=Tech("HOVER"),
             ),
             "earth_30": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
                         581,
-                        582,
-                        583,
-                        584,
-                        585,
-                        586,
-                        593,
-                        594,
-                        595,
-                        587,
-                        588,
-                        589,
-                        591,
-                        592,
-                        590,
-                        596,
-                        597,
-                        598,
-                        599,
-                        600
-                    ],
-                    cages=[
-                        904,
-                        905,
-                        906
                     ]
-                )
+                ),
+                behindRequirements={
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            582,
+                            583,
+                            584,
+                            585,
+                            586,
+                            593,
+                            594,
+                            595,
+                            587,
+                            588,
+                            589,
+                            591,
+                            592,
+                            590,
+                            596,
+                            597,
+                            598,
+                            599,
+                            600
+                        ],
+                        cages=[
+                            904,
+                            905,
+                            906
+                        ]
+                    ),
+                },
+                exitRequirement=Tech("HOVER"),
             )
         },
         portalId=990,
@@ -2439,42 +2512,49 @@ levels: list[LevelInfo] = [
                         696,
                         691,
                         692,
-                        693,
-                        1014
+                        693
                     ],
                     cages=[
                         911
                     ]
-                )
-            ),
-            "morb_10": SubLevelInfo(
-                checks=Checks(
-                    regularLums=[
-                        656,
-                        655,
-                        654,
-                        657,
-                        652,
-                        653,
-                        651,
-                        658,
-                        660,
-                        659
-                    ],
-                    cages=[
-                        914,
-                        912,
-                        915
-                    ],
-                    superLums=[
-                        686,
-                        681,
-                        661,
-                        666
-                    ]
                 ),
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Tomb of the Ancients 2 Swings"): Checks(
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            1014
+                        ]
+                    )
+                },
+                exitRequirement=Tech("HOVER"),
+            ),
+            "morb_10": SubLevelInfo(
+                behindRequirements={
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            656,
+                            655,
+                            654,
+                            657,
+                            652,
+                            653,
+                            651,
+                            658,
+                            660,
+                            659
+                        ],
+                        cages=[
+                            914,
+                            912,
+                            915
+                        ],
+                        superLums=[
+                            686,
+                            681,
+                            661,
+                            666
+                        ]
+                    ),
+                    Tech("HOVER && PURPLE_SWING", "Tomb of the Ancients 2 Swings"): Checks(
                         cages=[
                             913
                         ],
@@ -2484,7 +2564,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Tomb of the Ancients 2 Swings")
+                exitRequirement=Tech("HOVER && PURPLE_SWING", "Tomb of the Ancients 2 Swings")
             ),
             "morb_20": SubLevelInfo(
                 checks=Checks(
@@ -2515,22 +2595,34 @@ levels: list[LevelInfo] = [
                             715,
                             714,
                             719,
-                            718,
+                            718
+                        ]
+                    ),
+                    Tech("LEDGE_GRAB && PURPLE_SWING", "Iron Mountains 1 Swings"): Checks(
+                        regularLums=[
                             710,
                             701,
                             702,
-                            703,
+                            703
+                        ],
+                        cages=[
+                            917
+                        ]
+                    ),
+                    Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Iron Mountains 1 Swings"): Checks(
+                        regularLums=[
                             706,
                             705,
                             704
                         ],
                         cages=[
-                            917,
                             918
                         ]
                     )
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Iron Mountains 1 Swings")
+                # Technically Jesus Skip lets you exit without ledge grab but that's a waste of a whole
+                # setting so we just let people out-of-logic that.
+                exitRequirement=Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Iron Mountains 1 Swings")
             ),
             "ile_10": SubLevelInfo(
                 checks=Checks(
@@ -2564,13 +2656,15 @@ levels: list[LevelInfo] = [
                     Tech("PURPLE_SWING", "Iron Mountains 3 Swings"): Checks(
                         superLums=[
                             741
-                        ],
+                        ]
+                    ),
+                    Tech("(HOVER || LEDGE_GRAB) && PURPLE_SWING", "Iron Mountains 3 Swings"): Checks(
                         special={
                             1115: "Air Mask"
                         }
                     )
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Iron Mountains 3 Swings")
+                exitRequirement=Tech("(HOVER || LEDGE_GRAB) && PURPLE_SWING", "Iron Mountains 3 Swings")
             )
         },
         lumGate=3,
