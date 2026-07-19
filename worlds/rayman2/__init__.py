@@ -6,8 +6,9 @@ from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Reg
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table, rayman_item_name_to_id, create_rayman_location_names
 from .Generator import GeneratorState
-from .Layout import SubLevelInfo, Tech, LevelInfo, TechType, levels, extra_levels
+from .Layout import SubLevelInfo, Tech, LevelInfo, levels, extra_levels
 from .Options import create_option_groups, Rayman2Options
+from .Tech import TechContext
 
 
 class Rayman2Item(Item):
@@ -62,8 +63,10 @@ class Rayman2World(World):
         self.bundle_tech = []
         self.bundle_regions = []
         self.last_tally = 0
-        self.last_tech_bundle = []
+        self.last_item_bundle = []
+        self.last_tech_bundle = set()
         self.last_region_bundle = []
+        self.last_state = None
 
         # If not in lumsanity mode we have to determine the available lums
         # using accessible regions which means we have to check reachability
@@ -73,18 +76,25 @@ class Rayman2World(World):
 
     def can_obtain_lums(self, state: CollectionState, count):
         """Determines if [count] lums can be obtained using [state] based on the bundle lums list."""
-        all_tech = []
-        for tech in self.bundle_tech:
-            if self.has_tech(state, tech):
-                all_tech.append(tech)
-
-        # Update reachable regions
+        # Update reachable regions and determine currently available items
         if state.stale[self.player]:
             state.update_reachable_regions(self.player)
         reachable_regions = set(state.reachable_regions[self.player])
+        available_items = state.prog_items[self.player].copy()
 
-        # Early-exit if we already know the answer!
-        if all_tech == self.last_tech_bundle and reachable_regions == self.last_region_bundle:
+        # Early-exit if we already know the answer as we just checked for this state!
+        if available_items == self.last_item_bundle and reachable_regions == self.last_region_bundle:
+            return self.last_tally >= count
+
+        # Determine the tech available based on this state
+        context = TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent)
+        all_tech = set()
+        for tech in self.bundle_tech:
+            if context.has_tech(tech):
+                all_tech.add(tech)
+
+        # Early-exit if we already know the answer as we just checked for this tech!
+        if reachable_regions == self.last_region_bundle and all_tech == self.last_tech_bundle:
             return self.last_tally >= count
 
         # Re-compute the tally
@@ -96,13 +106,14 @@ class Rayman2World(World):
         # Store the tally for next time
         self.last_tally = tally
         self.last_tech_bundle = all_tech
+        self.last_item_bundle = available_items
         self.last_region_bundle = reachable_regions
         return tally >= count
 
     def apply_access_requirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
-        if len(tech.types) > 0:
-            accessible.access_rule = lambda state: self.has_tech(state, tech)
+        if not tech.always_true:
+            accessible.access_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
 
     def create_level(self, sublevels: dict[str, SubLevelInfo], levelChain: list[str]) -> Tuple[
         Region | None, Region | None]:
@@ -137,8 +148,8 @@ class Rayman2World(World):
                 self.create_entrance_portal(region, "EEC")
 
             if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
-                self.create_entrance_portal(region, "Reverse EEC",
-                                            extra_rule=lambda state: self.has_tech(state, Tech([TechType.PURPLE_SWING], "Fairy Glade Revisit Swing")))
+                tech = Tech("PURPLE_SWING", "Fairy Glade Revisit Swing")
+                self.create_entrance_portal(region, "Reverse EEC", extra_rule=lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech))
 
         return [firstRegion, lastRegion]
 
@@ -215,89 +226,6 @@ class Rayman2World(World):
         exit = lastRegion.create_exit(connection)
         exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
 
-    def has_tech_type(self, state: CollectionState, purpleLumItem: str | None, tech: TechType) -> bool:
-        """Returns whether the given state has the given tech type."""
-        match tech:
-            case TechType.PURPLE_SWING:
-                if self.options.fragmented_silver_lums.value == 1:
-                    return state.has(purpleLumItem, self.player)
-                else:
-                    return state.has("Silver Lum", self.player)
-            case TechType.DAMAGE_BOOST:
-                return self.options.glitched_damage_boosts.value == 1
-            case TechType.BACKWARDS_SLIDE_JUMP:
-                return self.options.glitched_backwards_slide_jumps.value == 1
-            case TechType.ELIXIR:
-                return state.has("Elixir of Life", self.player)
-            case TechType.COBD_SKIP:
-                return self.options.glitched_cobd_skip.value == 1
-            case TechType.TECHNICAL:
-                return self.options.glitched_technical_tricks.value == 1
-            case TechType.HAS_REENTERED_FROM_THAT_ONE_SPECIFIC_EXIT:
-                return state.has(self.sideTempleFinishEvent, self.player) or (
-                            self.options.glitched_plum_wall_climb.value == 1 and self.has_tech_or(state, purpleLumItem, [TechType.TECHNICAL, TechType.PURPLE_SWING])
-                        )
-            case TechType.COMPLETED_COBD:
-                return state.has(self.cobdFinishEvent, self.player)
-            case TechType.LY_SKIP:
-                return self.options.glitched_ly_skip.value == 1
-            case TechType.KAPOUEH_SKIP:
-                return self.options.glitched_kapoueh_skip.value == 1
-            case TechType.AIRSIM:
-                return self.options.glitched_airswims.value == 1
-            case TechType.TORNADO_SKIP:
-                return self.options.glitched_tornado_skip.value == 1
-            case TechType.JANO_SKIP_OOB:
-                return self.options.glitched_jano_skip.value == 1
-            case TechType.HOVER:
-                return state.has("Hover", self.player)
-            case TechType.LEDGE_GRAB:
-                return state.has("Ledge Grab", self.player)
-            case TechType.SWIM:
-                return state.has("Swim", self.player)
-            case TechType.LAVA_HOVER:
-                # We could write this as {hover, lava_hover} but you need to hover to be able to start
-                # the lava hover so this is faster overall.
-                return state.has("Hover", self.player) and state.has("Lava Hover", self.player)
-            case _:
-                raise KeyError(f"Invalid tech type {tech}")
-
-    def has_tech_and(self, state: CollectionState, purpleLumItem: str | None, types) -> bool:
-        """Returns whether the given state has any of the types in this list."""
-        if len(types) == 0:
-            return True
-        for type in types:
-            if type is list:
-                if not self.has_tech_or(state, purpleLumItem, type):
-                    return False
-            elif type is set:
-                if not self.has_tech_and(state, purpleLumItem, type):
-                    return False
-            else:
-                if not self.has_tech_type(state, purpleLumItem, type):
-                    return False
-        return True
-
-    def has_tech_or(self, state: CollectionState, purpleLumItem: str | None, types) -> bool:
-        """Returns whether the given state has any of the types in this list."""
-        if len(types) == 0:
-            return True
-        for type in types:
-            if type is list:
-                if self.has_tech_or(state, purpleLumItem, type):
-                    return True
-            elif type is set:
-                if self.has_tech_and(state, purpleLumItem, type):
-                    return True
-            else:
-                if self.has_tech_type(state, purpleLumItem, type):
-                    return True
-        return False
-
-    def has_tech(self, state: CollectionState, tech: Tech) -> bool:
-        """Returns whether the given state has the items to complete the given tech."""
-        return self.has_tech_or(state, tech.purpleLumItem, tech.types)
-
     def get_lums(self, state: CollectionState) -> int:
         """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
         if self.options.lumsanity.value:
@@ -315,6 +243,7 @@ class Rayman2World(World):
             allLevels += levels
             allLevels += extra_levels
             zones = []
+            context = TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent)
             for levelInfo in allLevels:
                 for subLevelName, subLevelInfo in levelInfo.sublevels.items():
                     # If this region is reachable count all lums in the region, also check
@@ -324,7 +253,7 @@ class Rayman2World(World):
                         lumCount += len(subLevelInfo.checks.regularLums)
 
                         for tech, checks in subLevelInfo.behindRequirements.items():
-                            if self.has_tech(state, tech):
+                            if context.has_tech(tech):
                                 lumCount += len(checks.regularLums)
 
             return lumCount
@@ -382,7 +311,8 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     isRevisit = True
-                    extra_rule = lambda state: self.has_tech(state, Tech([TechType.TECHNICAL, TechType.PURPLE_SWING], "Stone and Fire 1 Swings"))
+                    tech = Tech("TECHNICAL || PURPLE_SWING", "Stone and Fire 1 Swings")
+                    extra_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
@@ -453,7 +383,8 @@ class Rayman2World(World):
             location = Rayman2Location(self.player, data.displayName, data.id, region)
 
             # Add an access rule based on the tech type and this region being accessible!
-            self.apply_access_requirement(location, data.tech)
+            if not data.tech.always_true:
+                self.apply_access_requirement(location, data.tech)
 
             # If these require chain completion, add a custom requirement!
             if data.chainCompletion is not None:
