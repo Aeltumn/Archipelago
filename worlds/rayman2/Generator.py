@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Tuple
 
-from .Layout import SubLevelInfo, Tech, Checks, TechType, levels, extra_levels
+from .Layout import SubLevelInfo, Checks, levels, extra_levels
 from .Options import Rayman2Options
 
 # The total amount of super lum checks that exist and can be placed.
@@ -117,7 +117,7 @@ class GeneratorCollection:
         # Add the checks for all items that are accessible in some way
         self.add_items(level.checks, lumsanity)
         for tech, checks in level.behindRequirements.items():
-            self.add_items(checks, lumsanity, tech.requires_that_one_exit())
+            self.add_items(checks, lumsanity, tech.requires_that_one_exit)
 
         # If this is the side temple then this allows you to reach those specific checks!
         if isSideTemple:
