@@ -1050,47 +1050,54 @@ extra_levels: list[LevelInfo] = [
                         1212,
                         1209,
                         1214,
-                        1211,
-                        1215,
-                        1217,
-                        1216,
-                        1218,
-                        1219,
-                        1220,
-                        1221,
-                        1222,
-                        1223,
-                        1224,
-                        1225,
-                        1226,
-                        1227,
-                        1229,
-                        1230,
-                        1231,
-                        1233,
-                        1244,
-                        1246,
-                        1242,
-                        1232,
-                        1243,
-                        1238,
-                        1239,
-                        1240,
-                        1245,
-                        1247,
-                        1237,
-                        1234,
-                        1228,
-                        1207,
-                        1235,
-                        1241,
-                        1249,
-                        1213,
-                        1250,
-                        1248,
-                        1204
-                    ]
+                    ],
                 ),
+                behindRequirements={
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            1211,
+                            1215,
+                            1217,
+                            1216,
+                            1218,
+                            1219,
+                            1220,
+                            1221,
+                            1222,
+                            1223,
+                            1224,
+                            1225,
+                            1226,
+                            1227,
+                            1229,
+                            1230,
+                            1231,
+                            1233,
+                            1244,
+                            1246,
+                            1242,
+                            1232,
+                            1243,
+                            1238,
+                            1239,
+                            1240,
+                            1245,
+                            1247,
+                            1237,
+                            1234,
+                            1228,
+                            1207,
+                            1235,
+                            1241,
+                            1249,
+                            1213,
+                            1250,
+                            1248,
+                            1204
+                        ]
+                    )
+                },
+                exitRequirement=Tech("HOVER")
             )
         },
         lumGate=4,
@@ -1113,12 +1120,23 @@ extra_levels: list[LevelInfo] = [
                             753,
                             754,
                             755,
+                        ]
+                    ),
+                    Tech("HOVER && PURPLE_SWING", "Cave of Bad Dreams 1 Swings"): Checks(
+                        regularLums=[
                             756,
                             757,
                             758,
                             759,
                             760,
-                            761,
+                            761
+                        ],
+                        superLums=[
+                            762
+                        ]
+                    ),
+                    Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Cave of Bad Dreams 1 Swings"): Checks(
+                        regularLums=[
                             769,
                             768,
                             767,
@@ -1127,15 +1145,14 @@ extra_levels: list[LevelInfo] = [
                             772,
                             773,
                             774,
-                            775                            
+                            775
                         ],
                         superLums=[
-                            762,
                             776
                         ]
                     ),
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Cave of Bad Dreams 1 Swings")
+                exitRequirement=Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Cave of Bad Dreams 1 Swings")
             ),
             "vulca_20": SubLevelInfo(
                 checks=Checks(
@@ -1165,20 +1182,26 @@ extra_levels: list[LevelInfo] = [
                 checks=Checks(
                     cages=[
                         879,
-                        880,
-                        881
+                        880
                     ],
                     regularLums=[
                         391,
                         392,
                         393,
-                        394,
-                        395,
-                        396
                     ]
                 ),
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Stone and Fire Side Temple Swing"): Checks(
+                    Tech("HOVER && LEDGE_GRAB"): Checks(
+                        cages=[
+                            881
+                        ],
+                        regularLums=[
+                            394,
+                            395,
+                            396
+                        ]
+                    ),
+                    Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Stone and Fire Side Temple Swing"): Checks(
                          cages=[
                             882
                         ],
@@ -1190,7 +1213,7 @@ extra_levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Stone and Fire Side Temple Swing"),
+                exitRequirement=Tech("HOVER && LEDGE_GRAB && PURPLE_SWING", "Stone and Fire Side Temple Swing"),
             ),
         }
     ),
@@ -1231,28 +1254,35 @@ extra_levels: list[LevelInfo] = [
                         1260,
                         1261,
                         1287,
-                        1262,
-                        1263,
-                        1290,
-                        1291,
-                        1295,
-                        1267,
-                        1292,
-                        1270,
-                        1293,
-                        1265,
-                        1266,
-                        1294,
-                        1296,
-                        1299,
-                        1298,
-                        1268,
-                        1300,
-                        1283,
-                        1297,
-                        1264
                     ]
                 ),
+                behindRequirements={
+                    Tech("HOVER || LEDGE_GRAB"): Checks(
+                        regularLums=[
+                            1262,
+                            1263,
+                            1290,
+                            1291,
+                            1295,
+                            1267,
+                            1292,
+                            1270,
+                            1293,
+                            1265,
+                            1266,
+                            1294,
+                            1296,
+                            1299,
+                            1298,
+                            1268,
+                            1300,
+                            1283,
+                            1297,
+                            1264
+                        ]
+                    )
+                },
+                exitRequirement=Tech("HOVER || LEDGE_GRAB")
             )
         },
         lumGate=5,
@@ -1295,7 +1325,8 @@ levels: list[LevelInfo] = [
                             841,
                         ]
                     )
-                }
+                },
+                exitRequirement=Tech("(HOVER && LEDGE_GRAB) || SWIM")
             )
         },
         portalId=960,
@@ -1307,19 +1338,29 @@ levels: list[LevelInfo] = [
             "Learn_30": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
-                        6,
                         7,
                         8,
                         12,
                     ],
-                    superLums=[
-                        1,
-                    ],
                     cages=[
-                        842,
                         843,
                     ]
-                )
+                ),
+                behindRequirements={
+                    Tech("SWIM"): Checks(
+                        superLums=[
+                            1,
+                        ],
+                        cages=[
+                            842,
+                        ]
+                    ),
+                    Tech("AIRSWIM || HOVER"): Checks(
+                        regularLums=[
+                            6,
+                        ]
+                    )
+                }
             ),
             "learn_31": SubLevelInfo(
                 checks=Checks(
@@ -1372,36 +1413,40 @@ levels: list[LevelInfo] = [
             "learn_60": SubLevelInfo(
                 checks=Checks(
                     regularLums=[
-                        34,
-                        35,
                         36,
                         37,
                         48,
                         49,
                         50,
-                        38,
-                        42,
-                        45,
-                        44,
-                        43,
-                        39,
-                        46,
-                        47,
-                        41,
-                        40
                     ],
                     cages=[
                         847
                     ]
                 ),
                 behindRequirements={
-                    Tech("TORNADO_SKIP || PURPLE_SWING", "Fairy Glade 5 Swing"): Checks(
+                    Tech("HOVER"): Checks(
+                        regularLums=[
+                            34,
+                            35,
+                            38,
+                            42,
+                            45,
+                            44,
+                            43,
+                            39,
+                            46,
+                            47,
+                            41,
+                            40
+                        ]
+                    ),
+                    Tech("TORNADO_SKIP || (HOVER && PURPLE_SWING)", "Fairy Glade 5 Swing"): Checks(
                         cages=[
                             848
                         ]
                     )
                 },
-                exitRequirement=Tech("TORNADO_SKIP || PURPLE_SWING", "Fairy Glade 5 Swing")
+                exitRequirement=Tech("TORNADO_SKIP || (HOVER && PURPLE_SWING)", "Fairy Glade 5 Swing")
             ),
         },
         portalId=961,

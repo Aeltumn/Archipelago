@@ -141,25 +141,25 @@ class TechContext:
             case "COMPLETED_COBD":
                 return self.state.has(self.cobdFinishEvent, self.player)
             case "LY_SKIP":
-                return self.options.glitched_ly_skip.value == 1
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_ly_skip.value == 1
             case "KAPOUEH_SKIP":
-                return self.options.glitched_kapoueh_skip.value == 1
+                return (self.options.movement_ledge_grab.value != 1 or self.state.has("Ledge Grab", self.player)) and self.options.glitched_kapoueh_skip.value == 1
             case "AIRSWIM":
-                return self.options.glitched_airswims.value == 1
+                return (self.options.movement_swim.value != 1 or self.state.has("Swim", self.player)) and self.options.glitched_airswims.value == 1
             case "TORNADO_SKIP":
-                return self.options.glitched_tornado_skip.value == 1
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_tornado_skip.value == 1
             case "JANO_SKIP_OOB":
-                return self.options.glitched_jano_skip.value == 1
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_jano_skip.value == 1
             case "HOVER":
-                return self.state.has("Hover", self.player)
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player))
             case "LEDGE_GRAB":
-                return self.state.has("Ledge Grab", self.player)
+                return (self.options.movement_ledge_grab.value != 1 or self.state.has("Ledge Grab", self.player))
             case "SWIM":
-                return self.state.has("Swim", self.player)
+                return (self.options.movement_swim.value != 1 or self.state.has("Swim", self.player))
             case "LAVA_HOVER":
-                # We could write this as {hover, lava_hover} but you need to hover to be able to start
-                # the lava hover so this is faster overall.
-                return self.state.has("Hover", self.player) and self.state.has("Lava Hover", self.player)
+                hover = (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player))
+                lavaHover = (self.options.movement_lava_hover.value != 1 or self.state.has("Lava Hover", self.player))
+                return hover and lavaHover
             case "THINK":
                 # You get think from the first yellow lum in Woods of Light, so to have think
                 # they must be able to reach this.
