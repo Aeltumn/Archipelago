@@ -1317,7 +1317,7 @@ levels: list[LevelInfo] = [
                             1092: "Fragmented Silver Lum"
                         }
                     ),
-                    Tech("(HOVER && LEDGE_GRAB) || SWIM"): Checks(
+                    Tech("LEDGE_GRAB && HOVER"): Checks(
                         regularLums=[
                             1400
                         ],
@@ -1326,7 +1326,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("(HOVER && LEDGE_GRAB) || SWIM")
+                exitRequirement=Tech("LEDGE_GRAB && HOVER")
             )
         },
         portalId=960,
@@ -1355,7 +1355,7 @@ levels: list[LevelInfo] = [
                             842,
                         ]
                     ),
-                    Tech("AIRSWIM || HOVER"): Checks(
+                    Tech("(LEDGE_GRAB && AIRSWIM) || HOVER"): Checks(
                         regularLums=[
                             6,
                         ]
@@ -1991,7 +1991,7 @@ levels: list[LevelInfo] = [
                             356
                         ]
                     ),
-                    Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings"): Checks(
+                    Tech("HOVER && ((LEDGE_GRAB && TECHNICAL) || PURPLE_SWING)", "Stone and Fire 1 Swings"): Checks(
                         regularLums=[
                             354,
                             357,
@@ -2016,7 +2016,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings")
+                exitRequirement=Tech("HOVER && ((LEDGE_GRAB && TECHNICAL) || PURPLE_SWING)", "Stone and Fire 1 Swings")
             ),
             "plum_10": SubLevelInfo(
                 checks=Checks(
