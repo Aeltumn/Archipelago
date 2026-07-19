@@ -71,6 +71,11 @@ class RoomRandomisationSeed(FreeText):
     """A seed to use for room randomisation. If left blank the randomisation will be random. Can be used to use the same randomised layout in multiple games."""
     display_name = "Randomisation Seed"
 
+class RestrictiveRoomRandomisationPositions(FreeText):
+    """Restricts where rooms can be placed so all rooms have to match the same entrance-exit combination as the one they replace. This looks better visually but results in worse randomization of some levels."""
+    display_name = "Restrictive Room Randomisation Positions"
+    default = False
+
 class DamageLink(Toggle):
     """Whether death links should trigger every time Rayman takes damage instead of only when he respawns."""
     display_name = "Damage Link"
@@ -220,6 +225,7 @@ class Rayman2Options(PerGameCommonOptions):
 
     room_randomisation: RoomRandomisation
     room_randomisation_seed: RoomRandomisationSeed
+    restrictive_room_randomisation: RestrictiveRoomRandomisationPositions
     lum_bundle_size: LumBundleSize
     lumsanity: Lumsanity
     fragmented_silver_lums: FragmentedSilverLums
