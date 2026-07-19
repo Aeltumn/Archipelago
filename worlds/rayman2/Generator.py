@@ -31,10 +31,8 @@ class GeneratorCollection:
         """Returns the maximum amount of lums that can be obtained with how many checks are accessible"""
         lums = 0
 
-        # We assume the first three checks are taken by a Silver Lum, Elixir of Life and Knowledge of the Cave of Bad Dreams,
-        # we only want worst-case here so we can make sure the layout is not impossible, we assume there's plenty of checks
-        # anyway as we mostly do things random, we just deny impossible layouts.
-        checksForLums = self.checks - 3
+        # We assume the first three checks are taken by any progression items.
+        checksForLums = self.checks - 10
 
         # Take away up to 80 checks which are used for the cages
         if checksForLums > 0:

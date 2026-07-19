@@ -1634,7 +1634,7 @@ levels: list[LevelInfo] = [
                 behindRequirements={
                     Tech("SWIM"): Checks(
                         cages=[
-                            961
+                            861
                         ],
                         regularLums=[
                             178,

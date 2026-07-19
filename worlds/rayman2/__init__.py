@@ -613,16 +613,16 @@ class Rayman2World(World):
                     continue
 
             # Don't shuffle movement options that are not set to be randomised
-            if not self.options.movement_hover:
+            if self.options.movement_hover.value != 1:
                 if item.displayName == "Hover":
                     continue
-            if not self.options.movement_swim:
+            if self.options.movement_swim.value != 1:
                 if item.displayName == "Swim":
                     continue
-            if not self.options.movement_ledge_grab:
+            if self.options.movement_ledge_grab.value != 1:
                 if item.displayName == "Ledge Grab":
                     continue
-            if not self.options.movement_lava_hover:
+            if self.options.movement_lava_hover.value != 1:
                 if item.displayName == "Lava Hover":
                     continue
 
