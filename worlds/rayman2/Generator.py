@@ -211,6 +211,13 @@ class GeneratorState:
                     typeId += 1
                 if index == total - 1:
                     typeId += 2
+
+                # Type 3 is just Woods & Walk of Life/Power, so these would only randomise
+                # with each other which means the randomizer starts unnecessarily restrictive
+                # as it means you often need to get hover/ledge grab to start your rando.
+                if options.restrictive_room_randomisation.value != 1 and typeId == 3:
+                    typeId = 0
+
                 roomType = RoomType(typeId)
                 index += 1
 
@@ -387,6 +394,51 @@ class GeneratorState:
         """Adds a room from the remaining rooms of type [room_type] to [level]."""
         self.select_for_level(level, room_type, self.remaining.get(room_type, []), average_checks)
 
+    def attempt_woods_generation(self) -> bool:
+        """Attempts to place a level with enough checks in Woods of Light."""
+        # Determine which one the Woods of Light is
+        selectableLevels = list(filter(lambda it: it.name == "woods_of_light", self.levels.values()))
+
+        # Determine all actions we can currently take which are all equally valid
+        all_valid_placements_by_room = {}
+        for level in selectableLevels:
+            for roomType in level.baseGame.keys():
+                # Determine if there's rooms missing that need filling!
+                baseGameRooms = len(level.baseGame.get(roomType, []))
+                generatedRooms = len(level.generated.get(roomType, []))
+                if (not self.fixed_level_lengths and roomType == RoomType.STANDARD) or baseGameRooms > generatedRooms:
+                    sublist = all_valid_placements_by_room.get(roomType, [])
+                    all_valid_placements_by_room[roomType] = sublist
+                    sublist.append(level)
+
+        # For each room type determine which rooms we can still place
+        for roomType, remainingRooms in self.remaining.items():
+            # Get all levels we can place this room in
+            all_valid_placements = all_valid_placements_by_room.get(roomType, [])
+            if len(all_valid_placements) == 0:
+                continue
+            level = self.random.choice(all_valid_placements)
+
+            # Determine all rooms that can go here which have enough checks available!
+            selectableRooms = []
+            for roomId, roomInfo in remainingRooms:
+                check = 0
+                check += len(roomInfo.checks.superLums)
+                check += len(roomInfo.checks.cages)
+                check += len(roomInfo.checks.regularLums)
+                check += len(roomInfo.checks.special)
+
+                # Ideally we require 5 but that limits us to 9 rooms, the second best is 3 which limits to 11 rooms.
+                if check >= 3:
+                    selectableRooms.append([roomId, roomInfo])
+
+            # If we can place a room, place it!
+            if len(selectableRooms) > 0:
+                self.select_for_level(level, roomType, selectableRooms, 0, True)
+                return False
+
+        return True
+
     def attempt_zone_required_generation(self) -> bool:
         """Attempts to place any restrictive room."""
         # Determine all levels we can place something in currently
@@ -499,6 +551,9 @@ class GeneratorState:
 
     def generate(self):
         """Generates the level layout state."""
+        # Place a level with enough immediately accessible checks in Woods of Light
+        self.attempt_woods_generation()
+
         # We place twice, first we start by placing all restricted levels
         # in places where they will definitely be accessible followed by placing
         # all remaining levels wherever they fit to have enough lums.

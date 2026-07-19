@@ -128,10 +128,6 @@ class Rayman2World(World):
             region = Region(subLevelName, self.player, self.multiworld)
             self.multiworld.regions.append(region)
 
-            if lastRegion is not None:
-                # If this is not the first level of this world create a connection between
-                self.connect_internal(lastRegion, region)
-
             # Create an event for finishing this sub-region
             self.create_level_finish_event(region, subLevelInfo)
 
@@ -142,14 +138,6 @@ class Rayman2World(World):
             if firstRegion is None:
                 firstRegion = region
             lastRegion = region
-
-            # Create hooks for EEC and reverse EEC
-            if subLevelName == "learn_31" and self.options.glitched_early_echoing_caves.value:
-                self.create_entrance_portal(region, "EEC")
-
-            if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
-                tech = Tech("HOVER && PURPLE_SWING", "Fairy Glade Revisit Swing")
-                self.create_entrance_portal(region, "Reverse EEC", extra_rule=lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech))
 
         return [firstRegion, lastRegion]
 
@@ -203,8 +191,8 @@ class Rayman2World(World):
             base = portal.access_rule
             portal.access_rule = lambda state, base=base: self.get_lums(state) >= lumRequirement and base(state)
 
+        # If this is a mask requiring level we add that as a requirement!
         if require_all_masks and self.options.end_goal != 4:
-            # If this is a mask requiring level we add that as a requirement!
             base = portal.access_rule
             portal.access_rule = lambda state, base=base: (state.has("Water Mask", self.player) and \
                                                            state.has("Earth Mask", self.player) and \
@@ -218,13 +206,6 @@ class Rayman2World(World):
             portal.access_rule = lambda state, base=base, extra_rule=extra_rule: extra_rule(state) and base(state)
 
         return portal
-
-    def connect_internal(self, lastRegion: Region, region: Region):
-        """Connects the given region to the previous one."""
-        # Create an exit on the region that can be used when you finish that region
-        connection = f"{lastRegion.name} -> {region.name}"
-        exit = lastRegion.create_exit(connection)
-        exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
 
     def get_lums(self, state: CollectionState) -> int:
         """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
@@ -303,14 +284,11 @@ class Rayman2World(World):
         for extraLevelInfo in extra_levels:
             last_level: Region = None
             extra_rule: Callable[[CollectionState], bool] = None
-            isRevisit = False
             match extraLevelInfo.displayName:
                 case "The Fairly Glade #2 - Revisit":
                     last_level = self.get_region("cask_10")
-                    isRevisit = True
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
-                    isRevisit = True
                     tech = Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings")
                     extra_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
                 case "The Cave of Bad Dreams":
@@ -334,10 +312,6 @@ class Rayman2World(World):
             # Create an entrance in the source level
             self.create_entrance_portal(last_level, f"Portal to {firstRegion.name}", lum_gate=extraLevelInfo.lumGate,
                                         require_all_masks=extraLevelInfo.requireAllMasks, extra_rule=extra_rule)
-
-            # Create an exit back to the source level from the side-level only for the revisits
-            if isRevisit:
-                self.connect_internal(lastRegion, last_level)
 
         # Go through all location and create them
         for data in location_table:
@@ -454,6 +428,7 @@ class Rayman2World(World):
         portal = 0
         for chainId, chainLevels in self.levelChains.items():
             index = 0
+            firstRegion: Region | None = None
             lastRegion: Region | None = None
 
             # If this is a revisit we have to connect up the room properly back to where
@@ -471,7 +446,8 @@ class Rayman2World(World):
                 # Find the region for this level
                 region = self.get_region(subLevelName)
 
-                # If this is the first region we connect it to the map portal
+                # If this is the first region we connect it to the map portal, this gets skipped
+                # on the revisits as they are at the end of the line and there's no portals left
                 if index == 1:
                     portal += 1
                     portalName = f"Portal #{portal}"
@@ -480,14 +456,27 @@ class Rayman2World(World):
                     if mapmonde_exit is not None:
                         mapmonde_exit.connect(region)
 
-                # If this chain has a previous region it has an exit we have to connect to!
+                # If this is not the first level of this chain create a connection between
                 if lastRegion is not None:
-                    exits = list(lastRegion.get_exits())
-                    for exit in exits:
-                        if "->" in exit.name and not exit.name.startswith("Portal to"):
-                            exit.connect(region)
-                            break
-                lastRegion = region
+                    connection = f"{lastRegion.name} -> {region.name}"
+                    exit = lastRegion.create_exit(connection)
+                    exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
+                    exit.connect(region)
+
+                # Create connections for EEC and reverse EEC
+                if subLevelName == "learn_31" and self.options.glitched_early_echoing_caves.value:
+                    exit = self.create_entrance_portal(region, "EEC")
+                    exit.connect(self.get_region("Learn_32"))
+
+                if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
+                    tech = Tech("HOVER && PURPLE_SWING", "Fairy Glade Revisit Swing")
+                    exit = self.create_entrance_portal(region, "Reverse EEC",
+                                                extra_rule=lambda state, tech=tech: TechContext(self.player, state,
+                                                                                                self.options,
+                                                                                                self.sideTempleFinishEvent,
+                                                                                                self.cobdFinishEvent).has_tech(
+                                                    tech))
+                    exit.connect(self.get_region("learn_31"))
 
                 # If this region has a portal exit we link it up
                 regionExits = list(region.get_exits())
@@ -509,39 +498,31 @@ class Rayman2World(World):
                                 raise KeyError(f"Invalid exit name for side-level: {regionExit.name}")
 
                         # Connect this portal to the first level of the target chain
-                        firstRegion = self.levelChains[target][0]
-                        firstRegionObj = self.get_region(firstRegion)
-                        regionExit.connect(firstRegionObj)
+                        targetRegion = self.levelChains[target][0]
+                        regionObj = self.get_region(targetRegion)
+                        regionExit.connect(regionObj)
 
-                    # Hook up glitched logic EEC and Reverse EEC (we do it now as all regions are known to exist)
-                    if regionExit.name == "EEC":
-                        regionExit.connect(self.get_region("Learn_32"))
-                    if regionExit.name == "Reverse EEC":
-                        regionExit.connect(self.get_region("learn_31"))
+                # Store the first and last regions
+                if firstRegion is None:
+                    firstRegion = region
+                lastRegion = region
 
-                # If this is the last of a revisit we need to hook it back up to where we came from
-                if isRevisit and index == len(chainLevels):
-                    exits = list(region.get_exits())
-                    for exit in exits:
-                        if "->" in exit.name and not exit.name.startswith("Portal to"):
-                            # Determine the base game level where this side-area normally ends!
-                            target = None
-                            match chainId:
-                                case "side_temple":
-                                    target = self.get_region("plum_00")
-                                case "fairy_glade_revisit":
-                                    target = self.get_region("cask_10")
-                                case "cave_of_bad_dreams":
-                                    target = self.get_region("Ski_10")
-                                case "walk_of_life":
-                                    target = self.get_region("chase_10")
-                                case "walk_of_power":
-                                    target = self.get_region("earth_10")
-                                case _:
-                                    raise KeyError(f"Invalid exit name for side-level chain: {chainId}")
+            # If this is a revisit we have to hook up the end of the chain back to where it came from
+            last_level: Region | None = None
+            match chainId:
+                case "side_temple":
+                    last_level = self.get_region("plum_00")
+                case "fairy_glade_revisit":
+                    last_level = self.get_region("cask_10")
+                case _:
+                    continue
 
-                            exit.connect(target)
-                            break
+            # If this is the last of a revisit we need to hook it back up to where we came from
+            if isRevisit:
+                connection = f"{lastRegion.name} -> {last_level.name}"
+                exit = lastRegion.create_exit(connection)
+                exit.access_rule = lambda state: state.has(f"Finish {lastRegion.name}", self.player)
+                exit.connect(last_level)
 
     def connect_entrances(self) -> None:
         """Connect entrances of any disconnected regions in room randomisation mode."""
