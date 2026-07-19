@@ -148,7 +148,7 @@ class Rayman2World(World):
                 self.create_entrance_portal(region, "EEC")
 
             if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
-                tech = Tech("PURPLE_SWING", "Fairy Glade Revisit Swing")
+                tech = Tech("HOVER && PURPLE_SWING", "Fairy Glade Revisit Swing")
                 self.create_entrance_portal(region, "Reverse EEC", extra_rule=lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech))
 
         return [firstRegion, lastRegion]
