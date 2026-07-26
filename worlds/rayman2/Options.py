@@ -70,6 +70,7 @@ class BetterLevelPortals(Toggle):
 class RoomRandomisationSeed(FreeText):
     """A seed to use for room randomisation. If left blank the randomisation will be random. Can be used to use the same randomised layout in multiple games."""
     display_name = "Randomisation Seed"
+    default = ""
 
 class RestrictiveRoomRandomisationPositions(Toggle):
     """Restricts where rooms can be placed so all rooms have to match the same entrance-exit combination as the one they replace. This looks better visually but results in worse randomization of some levels."""

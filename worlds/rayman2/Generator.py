@@ -287,6 +287,12 @@ class GeneratorState:
                 if subLevelId == "plum_20":
                     newLevel.isSideTemple = True
 
+                # Type 3 is just Woods & Walk of Life/Power, so these would only randomise
+                # with each other which means the randomizer starts unnecessarily restrictive
+                # as it means you often need to get hover/ledge grab to start your rando.
+                if options.restrictive_room_randomisation.value != 1 and typeId == 3:
+                    typeId = 0
+
                 roomType = RoomType(typeId)
                 index += 1
 

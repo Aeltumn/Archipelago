@@ -533,7 +533,7 @@ class Rayman2World(World):
         if self.options.room_randomisation.value:
             # Run the custom generator
             random = Random(self.random.getrandbits(64))
-            if self.options.room_randomisation_seed.value != "":
+            if self.options.room_randomisation_seed.value != "None" and self.options.room_randomisation_seed.value != "":
                 random.seed(self.options.room_randomisation_seed.value)
             generator = GeneratorState(random, self.options.lumsanity.value, self.options.fixed_level_lengths.value)
             generator.assemble_initial_levels(self.options)
