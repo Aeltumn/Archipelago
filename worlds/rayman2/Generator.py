@@ -618,9 +618,7 @@ class GeneratorState:
     def generate(self):
         """Generates the level layout state."""
         # Place a level with enough immediately accessible checks in Woods of Light
-        while True:
-            if self.attempt_woods_generation():
-                break
+        self.attempt_woods_generation()
 
         # Start by placing all levels that hide some other level chain so no level
         # chains are inaccessible
