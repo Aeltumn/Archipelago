@@ -531,8 +531,9 @@ class GeneratorState:
             checks = 0
             checks += len(roomInfo.checks.superLums)
             checks += len(roomInfo.checks.cages)
-            checks += len(roomInfo.checks.regularLums)
             checks += len(roomInfo.checks.special)
+            if self.lumsanity:
+                checks += len(roomInfo.checks.regularLums)
             return checks >= 3
 
         def filter_zone_required_rooms(rooms: list[tuple[str, SubLevelInfo]]):
