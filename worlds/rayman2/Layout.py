@@ -2034,7 +2034,11 @@ levels: list[LevelInfo] = [
                 behindRequirements={
                     Tech("LEDGE_GRAB && HOVER"): Checks(
                           regularLums=[
-                                374,
+                                374
+                          ]
+                    ),
+                    Tech("LEDGE_GRAB && HOVER && PURPLE_SWING", "Stone and Fire 2 Swings"): Checks(
+                          regularLums=[
                                 387,
                                 385,
                                 389
