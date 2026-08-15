@@ -2068,7 +2068,8 @@ levels: list[LevelInfo] = [
                         416,
                         411
                     ]
-                )
+                ),
+                exitRequirement=Tech("SWIM")
             ),
             "cask_10": SubLevelInfo(
                 checks=Checks(
