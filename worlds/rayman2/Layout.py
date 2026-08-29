@@ -1014,7 +1014,7 @@ rayman_location_hints: Dict[int, str] = {
 extra_levels: list[LevelInfo] = [
     LevelInfo(
         "fairy_glade_revisit",
-        "The Fairly Glade #2 - Revisit",
+        "The Fairy Glade #2 - Revisit",
         {
             # The game does not distinguish this area but we do! We give it the custom ID of Learn_32.
             "Learn_32": SubLevelInfo(
