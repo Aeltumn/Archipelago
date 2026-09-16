@@ -284,7 +284,7 @@ class Rayman2World(World):
             last_level: Region = None
             extra_rule: Callable[[CollectionState], bool] = None
             match extraLevelInfo.displayName:
-                case "The Fairly Glade #2 - Revisit":
+                case "The Fairy Glade #2 - Revisit":
                     last_level = self.get_region("cask_10")
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
