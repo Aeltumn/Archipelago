@@ -238,7 +238,7 @@ class GeneratorState:
 
             # Link up which other level you must have accessed to gain access to these levels
             match levelInfo.displayName:
-                case "The Fairly Glade #2 - Revisit":
+                case "The Fairy Glade #2 - Revisit":
                     newLevel.zoneRequired = "cask_10"
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     newLevel.zoneRequired = "plum_00"
