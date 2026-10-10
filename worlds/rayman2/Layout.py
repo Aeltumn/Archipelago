@@ -1778,7 +1778,7 @@ levels: list[LevelInfo] = [
                     }
                 ),
                 behindRequirements={
-                    Tech("HOVER && PURPLE_SWING", "Menhir Hills 2 Swings"): Checks(
+                    Tech("COBD_SKIP || (HOVER && PURPLE_SWING)", "Menhir Hills 2 Swings"): Checks(
                         regularLums=[
                             227,
                             219,
@@ -1975,7 +1975,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("SWIM")
+                exitRequirement=Tech("SWIM || (HOVER && TECHNICAL)")
             ),
             "whale_10": SubLevelInfo(
                 behindRequirements={
