@@ -1294,7 +1294,7 @@ extra_levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech("HOVER || LEDGE_GRAB"): Checks(
+                    Tech("TECHNICAL"): Checks(
                         regularLums=[
                             1262,
                             1263,
@@ -1319,7 +1319,7 @@ extra_levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("HOVER || LEDGE_GRAB")
+                exitRequirement=Tech("TECHNICAL")
             )
         },
         lumGate=5,
@@ -1957,7 +1957,7 @@ levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("(LEDGE_GRAB && AIRSWIM) || PURPLE_SWING || TECHNICAL", "Whale Bay 1 Swing")
+                exitRequirement=Tech("(LEDGE_GRAB && AIRSWIM) || PURPLE_SWING || (TECHNICAL && HOVER)", "Whale Bay 1 Swing")
             ),
             "whale_05": SubLevelInfo(
                 behindRequirements={
