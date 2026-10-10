@@ -262,6 +262,10 @@ class Rayman2World(World):
 
     def create_regions(self) -> None:
         """Creates all regions available in the game."""
+        # Assert that we can generate
+        if self.options.instant_portal_access.value == 1 and self.options.unlock_level_checks.value == 1:
+            raise ValueError("Cannot have both Instant Portal Access and Add Unlock Level Checks enabled!")
+
         # Start by creating the menu
         menu = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu)
@@ -721,6 +725,6 @@ class Rayman2World(World):
         if not self.options.room_randomisation:
             return
 
-        spoiler_handle.write(f"\nRayman 2 slot information:\n")
+        spoiler_handle.write(f"\n{self.player_name} (Rayman 2) level chains:\n")
         for id, chain in self.levelChains.items():
-            spoiler_handle.write(f"Level Chain {id}: {chain}\n")
+            spoiler_handle.write(f"{id}: {chain}\n")
