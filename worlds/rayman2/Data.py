@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from BaseClasses import ItemClassification
-from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, rayman_location_hints
+from .Layout import Checks, LevelInfo, Tech, levels, extra_levels, rayman_location_hints, rayman_portal_ids
 
 
 @dataclass
@@ -11,6 +11,7 @@ class ItemDefinition:
     progressionClassification: ItemClassification
     endGoals: List[int]
     fragmented: bool
+    portalUnlocks: int
 
 
 
@@ -22,6 +23,7 @@ class LocationDefinition:
     id: int
     tech: Tech
     fragmented: bool
+    portalUnlocks: int
     chainCompletion: str | None = None
 
 
@@ -65,6 +67,22 @@ rayman_item_name_to_id: Dict[str, int] = {
     "Iron Mountains 1 Swings": 1651650,
     "Iron Mountains 3 Swings": 1651651,
     "Powered Shots": 1651652,
+    "Unlocked Fairy Glade Portal": 1651653,
+    "Unlocked Marshes of Awakening Portal": 1651654,
+    "Unlocked Bayou Portal": 1651655,
+    "Unlocked Sanctuary of Water and Ice Portal": 1651656,
+    "Unlocked Menhir Hills Portal": 1651657,
+    "Unlocked Canopy Portal": 1651658,
+    "Unlocked Whale Bay Portal": 1651659,
+    "Unlocked Sanctuary of Stone and Fire Portal": 1651660,
+    "Unlocked Echoing Caves Portal": 1651661,
+    "Unlocked Precipice Portal": 1651662,
+    "Unlocked Top of the World Portal": 1651663,
+    "Unlocked Sanctuary of Rock and Lava Portal": 1651664,
+    "Unlocked Beneath the Sanctuary of Rock and Lava Portal": 1651665,
+    "Unlocked Tomb of the Ancients Portal": 1651666,
+    "Unlocked Iron Mountains Portal": 1651667,
+    "Unlocked Prison Ship Portal": 1651668,
 }
 fragmented_names = [
     "Fairy Glade Revisit Swing",
@@ -105,7 +123,7 @@ def create_rayman_location_names():
     return names
 
 # Creates items and locations for every input
-def create(subLevelName, levelName, id, itemName, progressionClassification: ItemClassification, endGoals: List[int], tech: Tech, fragmented: bool, chainCompletion: str | None = None):
+def create(subLevelName, levelName, id, itemName, progressionClassification: ItemClassification, endGoals: List[int], tech: Tech, fragmented: bool = False, portalUnlocks: int = 0, chainCompletion: str | None = None):
     hint = rayman_location_hints[id]
     displayName = f"{levelName} - {hint}"
 
@@ -115,6 +133,7 @@ def create(subLevelName, levelName, id, itemName, progressionClassification: Ite
             progressionClassification=progressionClassification,
             endGoals=endGoals,
             fragmented=fragmented,
+            portalUnlocks=portalUnlocks,
         )
     )
     location_table.append(
@@ -125,6 +144,7 @@ def create(subLevelName, levelName, id, itemName, progressionClassification: Ite
             id=base_id + id,
             tech=tech,
             fragmented=fragmented,
+            portalUnlocks=portalUnlocks,
             chainCompletion=chainCompletion,
         )
     )
@@ -132,15 +152,15 @@ def create(subLevelName, levelName, id, itemName, progressionClassification: Ite
 def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
     # Create checks for all regular lums
     for lum in checks.regularLums:
-        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech, False)
+        create(subLevelName, levelName, lum, "Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech)
 
     # Create checks for all super lums
     for superLum in checks.superLums:
-        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech, False)
+        create(subLevelName, levelName, superLum, "Super Lum", ItemClassification.progression_deprioritized_skip_balancing, [1, 2, 3, 4, 5], tech)
 
     # Create checks for all cages
     for cage in checks.cages:
-        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, [3, 5], tech, False)
+        create(subLevelName, levelName, cage, "Cage", ItemClassification.progression_deprioritized_skip_balancing, [3, 5], tech)
 
     # Create checks for all special checks
     for specialItem, name in checks.special.items():
@@ -165,6 +185,7 @@ def createForChecks(subLevelName, levelName, checks: Checks, tech: Tech):
                     progressionClassification=ItemClassification.progression,
                     endGoals=endGoals,
                     fragmented=True,
+                    portalUnlocks=0,
                 )
             )
 
@@ -194,6 +215,12 @@ for levelInfo in allLevels:
     if levelInfo.chain is not None and levelInfo.portalId is not None:
         if levelInfo.chain == "bayou":
             # The Bayou portal defaults to Swim not one of the fragmented silver lums.
-            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), False, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, "Swim", ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), False, 0, levelInfo.chain)
         else:
-            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), True, levelInfo.chain)
+            create("Menu", "Hall of Doors", levelInfo.portalId, fragmented_names.pop(0), ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), True, 0, levelInfo.chain)
+
+# Create portal checks
+portalIndex = 1
+for id in rayman_portal_ids:
+    create("Menu", "Hall of Doors", id, rayman_location_hints[id], ItemClassification.progression, [1, 2, 3, 4, 5], Tech(), False, portalIndex)
+    portalIndex = portalIndex + 1

@@ -29,7 +29,44 @@ class LevelInfo:
     requireAllMasks: bool = False
     portalId: int | None = None
 
+rayman_portal_ids: list[int] = [
+    822,
+    806,
+    809,
+    801,
+    815,
+    810,
+    803,
+    821,
+    814,
+    805,
+    811,
+    818,
+    813,
+    802,
+    817,
+    808
+]
+
 rayman_location_hints: Dict[int, str] = {
+    # Unlock Portals
+    822: "Unlocked Fairy Glade Portal",
+    806: "Unlocked Marshes of Awakening Portal",
+    809: "Unlocked Bayou Portal",
+    801: "Unlocked Sanctuary of Water and Ice Portal",
+    815: "Unlocked Menhir Hills Portal",
+    810: "Unlocked Canopy Portal",
+    803: "Unlocked Whale Bay Portal",
+    821: "Unlocked Sanctuary of Stone and Fire Portal",
+    814: "Unlocked Echoing Caves Portal",
+    805: "Unlocked Precipice Portal",
+    811: "Unlocked Top of the World Portal",
+    818: "Unlocked Sanctuary of Rock and Lava Portal",
+    813: "Unlocked Beneath the Sanctuary of Rock and Lava Portal",
+    802: "Unlocked Tomb of the Ancients Portal",
+    817: "Unlocked Iron Mountains Portal",
+    808: "Unlocked Prison Ship Portal",
+
     # Woods of Light
     # learn_10
     1176: "Talking to Murfy #1",

@@ -53,8 +53,13 @@ class LumBundleSize(Range):
     default = 1
 
 class InstantPortalAccess(Toggle):
-    """Whether all portals should be accessible as soon as you obtain enough lums. Will speed up the game considerably."""
+    """Whether all portals should be accessible as soon as you obtain enough lums. Will speed up the game considerably, cannot be combined with 'Add Unlock Level Checks'."""
     display_name = "Instant Portal Access"
+    default = False
+
+class UnlockLevelChecks(Toggle):
+    """Whether to create checks for unlocking each individual portal. Will slow down the game, cannot be combined with 'Instant Portal Access'."""
+    display_name = "Add Unlock Level Checks"
     default = False
 
 class FixedLevelLengths(Toggle):
@@ -63,7 +68,7 @@ class FixedLevelLengths(Toggle):
     default = False
 
 class BetterLevelPortals(Toggle):
-    """Whether portals in the Hall of Doors in room randomisation mode should allow you to teleport to individual sub-levels instead of always going to the first sub-level. Makes it easier to revisit levels and get missed checks."""
+    """Whether portals in the Hall of Doors should allow you to teleport to individual sub-levels instead of always going to the first sub-level. Makes it easier to revisit levels and get missed checks."""
     display_name = "Better Level Portals"
     default = False
 
@@ -232,6 +237,7 @@ class Rayman2Options(PerGameCommonOptions):
     fragmented_silver_lums: FragmentedSilverLums
 
     instant_portal_access: InstantPortalAccess
+    unlock_level_checks: UnlockLevelChecks
     fixed_level_lengths: FixedLevelLengths
     better_level_portals: BetterLevelPortals
     

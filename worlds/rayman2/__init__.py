@@ -6,7 +6,7 @@ from BaseClasses import CollectionState, Tutorial, ItemClassification, Item, Reg
 from worlds.AutoWorld import WebWorld, World
 from .Data import item_table, location_table, rayman_item_name_to_id, create_rayman_location_names
 from .Generator import GeneratorState
-from .Layout import SubLevelInfo, Tech, LevelInfo, levels, extra_levels
+from .Layout import SubLevelInfo, Tech, LevelInfo, levels, extra_levels, rayman_location_hints, rayman_portal_ids
 from .Options import create_option_groups, Rayman2Options
 from .Tech import TechContext
 
@@ -113,7 +113,9 @@ class Rayman2World(World):
     def apply_access_requirement(self, accessible, tech: Tech):
         """Applies the relevant access requirement to an accessible object."""
         if not tech.always_true:
-            accessible.access_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
+            accessible.access_rule = lambda state, tech=tech: TechContext(self.player, state, self.options,
+                                                                          self.sideTempleFinishEvent,
+                                                                          self.cobdFinishEvent).has_tech(tech)
 
     def create_level(self, sublevels: dict[str, SubLevelInfo], levelChain: list[str]) -> Tuple[
         Region | None, Region | None]:
@@ -166,8 +168,27 @@ class Rayman2World(World):
 
         # Require the minimum amount of portals to be made previously so this one is reachable
         if portals > 0:
-            portal.access_rule = lambda state, portals=portals: state.has(self.portalEvents.get(portals, "Finish Unknown Level"),
-                                                         self.player)
+            if self.options.unlock_level_checks.value:
+                # Require that you completed the last portal (so you can access it on the HOD) and
+                # that you received the check, and that you have completed the previous lum gate!
+                lumRequirement = 0
+                if portals == 5 or portals == 6 or portals == 7 or portals == 8:
+                    lumRequirement = self.options.first_gate_required.value
+                elif portals == 9 or portals == 10 or portals == 11 or portals == 12 or portals == 13:
+                    lumRequirement = self.options.second_gate_required.value
+                elif portals == 14 or portals == 15:
+                    lumRequirement = self.options.third_gate_required.value
+                elif portals == 16 or portals == 17:
+                    lumRequirement = self.options.fourth_gate_required.value
+                portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: state.has(
+                    self.portalEvents.get(portals, "Finish Unknown Level"),
+                    self.player) and state.has(
+                    rayman_location_hints[rayman_portal_ids[min(portals - 1, 15)]],
+                    self.player) and self.get_lums(state) >= lumRequirement
+            else:
+                portal.access_rule = lambda state, portals=portals: state.has(
+                    self.portalEvents.get(portals, "Finish Unknown Level"),
+                    self.player)
 
         # Determine the lum requirement to reach this portal
         if lum_gate is not None:
@@ -188,7 +209,8 @@ class Rayman2World(World):
                     lumRequirement = self.options.walk_of_power_required.value
 
             base = portal.access_rule
-            portal.access_rule = lambda state, base=base, lumRequirement=lumRequirement: self.get_lums(state) >= lumRequirement and base(state)
+            portal.access_rule = lambda state, base=base, lumRequirement=lumRequirement: self.get_lums(
+                state) >= lumRequirement and base(state)
 
         # If this is a mask requiring level we add that as a requirement!
         if require_all_masks and self.options.end_goal != 4:
@@ -212,8 +234,8 @@ class Rayman2World(World):
             bundleSize = self.options.lum_bundle_size.value
             leftoverBundleSize = 710 % self.options.lum_bundle_size.value
             return state.prog_items[self.player]["Lum"] + (bundleSize * state.prog_items[self.player]["Lum Bundle"]) + (
-                        leftoverBundleSize * state.prog_items[self.player]["Leftover Lum Bundle"]) + (
-                        5 * state.prog_items[self.player]["Super Lum"])
+                    leftoverBundleSize * state.prog_items[self.player]["Leftover Lum Bundle"]) + (
+                    5 * state.prog_items[self.player]["Super Lum"])
         else:
             # Start with all super lums you have
             lumCount = (5 * state.prog_items[self.player]["Super Lum"])
@@ -258,11 +280,6 @@ class Rayman2World(World):
             # Create a portal for each level on the hall of doors
             portalsRequired = portal
 
-            # Since the Crow's Nest portal appears after getting 4 masks you don't actually need
-            # to complete the iron mountains!
-            if levelInfo.requireAllMasks:
-                portalsRequired -= 1
-
             # If portals are instantly accessible you only ever need 1 at most (Woods of Light)!
             if portalsRequired > 1 and self.options.instant_portal_access.value:
                 portalsRequired = 1
@@ -289,7 +306,9 @@ class Rayman2World(World):
                 case "The Sanctuary of Stone and Fire - Side Temple":
                     last_level = self.get_region("plum_00")
                     tech = Tech("HOVER && (TECHNICAL || PURPLE_SWING)", "Stone and Fire 1 Swings")
-                    extra_rule = lambda state, tech=tech: TechContext(self.player, state, self.options, self.sideTempleFinishEvent, self.cobdFinishEvent).has_tech(tech)
+                    extra_rule = lambda state, tech=tech: TechContext(self.player, state, self.options,
+                                                                      self.sideTempleFinishEvent,
+                                                                      self.cobdFinishEvent).has_tech(tech)
                 case "The Cave of Bad Dreams":
                     last_level = self.get_region("Ski_10")
                     extra_rule = lambda state: state.has("Knowledge of the Cave of Bad Dreams", self.player)
@@ -339,6 +358,11 @@ class Rayman2World(World):
                 if data.fragmented:
                     continue
 
+            # Don't create portal items if level checks are off
+            if self.options.unlock_level_checks.value != 1:
+                if data.portalUnlocks > 0:
+                    continue
+
             # Don't shuffle movement options that are not set to be randomised
             if not self.options.movement_hover:
                 if data.itemName == "Hover":
@@ -363,8 +387,19 @@ class Rayman2World(World):
             if data.chainCompletion is not None:
                 base = location.access_rule
                 level_chain = data.chainCompletion
-                location.access_rule = lambda state, base=base, level_chain=level_chain: base(state) and state.has(f"Finish {self.levelChains.get(level_chain)[-1]}",
-                                                         self.player)
+                location.access_rule = lambda state, base=base, level_chain=level_chain: base(state) and state.has(
+                    f"Finish {self.levelChains.get(level_chain)[-1]}",
+                    self.player)
+
+            # Portals cannot be collected unless you finish the level chain that gives them and until you
+            # have at least the last lum gate amount of lums
+            if self.options.unlock_level_checks.value == 1:
+                if data.portalUnlocks > 0:
+                    base = location.access_rule
+                    portals = data.portalUnlocks
+                    location.access_rule = lambda state, base=base, portals=portals: base(state) and state.has(
+                        self.portalEvents.get(portals, "Finish Unknown Level"),
+                        self.player)
 
             # Add this location to this region
             region.locations.append(location)
@@ -403,7 +438,7 @@ class Rayman2World(World):
                     location = Rayman2Location(self.player, name, self.location_name_to_id[name], menu)
                     location.access_rule = lambda state, bundleSize=bundleSize, i=i: self.can_obtain_lums(state,
                                                                                                           bundleSize * (
-                                                                                                                      i + 1))
+                                                                                                                  i + 1))
                     menu.locations.append(location)
             if leftoverBundleSize > 0:
                 location = Rayman2Location(self.player, "Leftover Lum Bundle",
@@ -459,7 +494,8 @@ class Rayman2World(World):
                 if lastRegion is not None:
                     connection = f"{lastRegion.name} -> {region.name}"
                     exit = lastRegion.create_exit(connection)
-                    exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}", self.player)
+                    exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}",
+                                                                                      self.player)
                     exit.connect(region)
 
                 # Create connections for EEC and reverse EEC
@@ -470,11 +506,12 @@ class Rayman2World(World):
                 if subLevelName == "Learn_32" and self.options.glitched_reverse_early_echoing_caves.value:
                     tech = Tech("HOVER && PURPLE_SWING", "Fairy Glade Revisit Swing")
                     exit = self.create_entrance_portal(region, "Reverse EEC",
-                                                extra_rule=lambda state, tech=tech: TechContext(self.player, state,
-                                                                                                self.options,
-                                                                                                self.sideTempleFinishEvent,
-                                                                                                self.cobdFinishEvent).has_tech(
-                                                    tech))
+                                                       extra_rule=lambda state, tech=tech: TechContext(self.player,
+                                                                                                       state,
+                                                                                                       self.options,
+                                                                                                       self.sideTempleFinishEvent,
+                                                                                                       self.cobdFinishEvent).has_tech(
+                                                           tech))
                     exit.connect(self.get_region("learn_31"))
 
                 # If this region has a portal exit we link it up
@@ -520,7 +557,8 @@ class Rayman2World(World):
             if isRevisit:
                 connection = f"{lastRegion.name} -> {last_level.name}"
                 exit = lastRegion.create_exit(connection)
-                exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}", self.player)
+                exit.access_rule = lambda state, lastRegion=lastRegion: state.has(f"Finish {lastRegion.name}",
+                                                                                  self.player)
                 exit.connect(last_level)
 
     def connect_entrances(self) -> None:
@@ -606,6 +644,11 @@ class Rayman2World(World):
                 if item.displayName == "Lava Hover":
                     continue
 
+            # Don't create portal items if level checks are off
+            if self.options.unlock_level_checks.value != 1:
+                if item.portalUnlocks > 0:
+                    continue
+
             # Make an item filler based on the list of end goals it provided
             if self.options.end_goal.value in item.endGoals:
                 itempool.append(self.create_item(item.displayName, item.progressionClassification))
@@ -653,10 +696,10 @@ class Rayman2World(World):
             ],
             "damage_link": self.options.damage_link.value,
             "automatic_movement": (
-                self.options.movement_hover.value +
-                2 * self.options.movement_swim.value +
-                4 * self.options.movement_ledge_grab.value +
-                8 * self.options.movement_lava_hover.value
+                    self.options.movement_hover.value +
+                    2 * self.options.movement_swim.value +
+                    4 * self.options.movement_ledge_grab.value +
+                    8 * self.options.movement_lava_hover.value
             ),
             "fragmented_lums": self.options.fragmented_silver_lums.value,
             "death_link": self.options.death_link.value,
@@ -665,6 +708,7 @@ class Rayman2World(World):
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "accessible_portals": self.options.instant_portal_access.value,
+            "unlock_levels": self.options.unlock_level_checks.value,
             "lumsanity": self.options.lumsanity.value,
             "lum_bundle_size": self.options.lum_bundle_size.value,
             "portal_finish_events": self.portalEvents,
