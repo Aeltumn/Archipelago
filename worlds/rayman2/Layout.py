@@ -1904,7 +1904,9 @@ levels: list[LevelInfo] = [
                         288,
                         289,
                         299,
-                        300
+                        300,
+                        297,
+                        298
                     ],
                     cages=[
                         874,
@@ -1913,10 +1915,6 @@ levels: list[LevelInfo] = [
                 ),
                 behindRequirements={
                     Tech("PURPLE_SWING", "Canopy 3 Swing"): Checks(
-                        regularLums=[
-                            297,
-                            298
-                        ],
                         superLums=[
                             292
                         ]
