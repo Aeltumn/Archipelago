@@ -1294,7 +1294,7 @@ extra_levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech("TECHNICAL"): Checks(
+                    Tech("HOVER || LEDGE_GRAB || TECHNICAL"): Checks(
                         regularLums=[
                             1262,
                             1263,
@@ -1319,7 +1319,7 @@ extra_levels: list[LevelInfo] = [
                         ]
                     )
                 },
-                exitRequirement=Tech("TECHNICAL")
+                exitRequirement=Tech("HOVER || LEDGE_GRAB || TECHNICAL")
             )
         },
         lumGate=5,
