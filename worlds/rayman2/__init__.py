@@ -226,7 +226,7 @@ class Rayman2World(World):
 
     def has_portals_up_to(self, state: CollectionState, portals: int) -> bool:
         """Returns whether all portals up to and including the given portal are present."""
-        for i in range(0, max(portals, 16)):
+        for i in range(0, min(portals, 16)):
             if not state.has(rayman_location_hints[rayman_portal_ids[i]], self.player):
                 return False
         return True
