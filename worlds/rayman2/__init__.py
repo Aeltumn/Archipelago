@@ -169,8 +169,8 @@ class Rayman2World(World):
         # Require the minimum amount of portals to be made previously so this one is reachable
         if portals > 0:
             if self.options.unlock_level_checks.value:
-                # Require that you completed the last portal (so you can access it on the HOD) and
-                # that you received the check, and that you have completed the previous lum gate!
+                # Require that you have the corresponding lum requirement so the portal
+                # shows up and that you have all portals leading up to this one.
                 lumRequirement = 0
                 if portals == 5 or portals == 6 or portals == 7 or portals == 8:
                     lumRequirement = self.options.first_gate_required.value
@@ -180,11 +180,7 @@ class Rayman2World(World):
                     lumRequirement = self.options.third_gate_required.value
                 elif portals == 16 or portals == 17:
                     lumRequirement = self.options.fourth_gate_required.value
-                portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: state.has(
-                    self.portalEvents.get(portals, "Finish Unknown Level"),
-                    self.player) and state.has(
-                    rayman_location_hints[rayman_portal_ids[min(portals - 1, 15)]],
-                    self.player) and self.get_lums(state) >= lumRequirement
+                portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(state) >= lumRequirement and self.has_portals_up_to(state, portals)
             else:
                 portal.access_rule = lambda state, portals=portals: state.has(
                     self.portalEvents.get(portals, "Finish Unknown Level"),
@@ -227,6 +223,13 @@ class Rayman2World(World):
             portal.access_rule = lambda state, base=base, extra_rule=extra_rule: extra_rule(state) and base(state)
 
         return portal
+
+    def has_portals_up_to(self, state: CollectionState, portals: int) -> bool:
+        """Returns whether all portals up to and including the given portal are present."""
+        for i in range(0, max(portals, 16)):
+            if not state.has(rayman_location_hints[rayman_portal_ids[i]], self.player):
+                return False
+        return True
 
     def get_lums(self, state: CollectionState) -> int:
         """Returns the amount of lums currently within state. Accounts for accessible lums in non-lumsanity."""
@@ -708,7 +711,7 @@ class Rayman2World(World):
             "fragmented_lums": self.options.fragmented_silver_lums.value,
             "death_link": self.options.death_link.value,
             "death_link_amnesty": self.options.death_link_amnesty.value,
-            "better_level_portals": self.options.better_level_portals.value,
+            "better_level_portals": self.options.improved_portal_teleporting.value,
             "end_goal": self.options.end_goal.value,
             "room_randomisation": self.options.room_randomisation.value,
             "accessible_portals": self.options.instant_portal_access.value,

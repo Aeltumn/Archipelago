@@ -67,10 +67,10 @@ class FixedLevelLengths(Toggle):
     display_name = "Fixed Level Lengths"
     default = False
 
-class BetterLevelPortals(Toggle):
-    """Whether portals in the Hall of Doors should allow you to teleport to individual sub-levels instead of always going to the first sub-level. Makes it easier to revisit levels and get missed checks."""
-    display_name = "Better Level Portals"
-    default = False
+class ImprovedPortalTeleporting(Toggle):
+    """Whether portals in the Hall of Doors should allow you to teleport to individual rooms directly. Makes it easier to revisit levels and get missed checks."""
+    display_name = "Improved Portal Teleporting"
+    default = True
 
 class RoomRandomisationSeed(FreeText):
     """A seed to use for room randomisation. If left blank the randomisation will be random. Can be used to use the same randomised layout in multiple games."""
@@ -239,7 +239,7 @@ class Rayman2Options(PerGameCommonOptions):
     instant_portal_access: InstantPortalAccess
     unlock_level_checks: UnlockLevelChecks
     fixed_level_lengths: FixedLevelLengths
-    better_level_portals: BetterLevelPortals
+    improved_portal_teleporting: ImprovedPortalTeleporting
     
     movement_hover: MovementHover
     movement_ledge_grab: MovementLedgeGrab
