@@ -1065,7 +1065,8 @@ extra_levels: list[LevelInfo] = [
                             844
                         ]
                     )
-                }
+                },
+                exitRequirement=Tech("KAPOUEH_SKIP || PURPLE_SWING", "Fairy Glade Revisit Swing"),
             ),
         }
     ),
