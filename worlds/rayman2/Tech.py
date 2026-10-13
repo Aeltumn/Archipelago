@@ -144,7 +144,7 @@ class TechContext:
             case "LY_SKIP":
                 return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_ly_skip.value == 1
             case "KAPOUEH_SKIP":
-                return (self.options.movement_ledge_grab.value != 1 or self.state.has("Ledge Grab", self.player)) and self.options.glitched_kapoueh_skip.value == 1
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and (self.options.movement_ledge_grab.value != 1 or self.state.has("Ledge Grab", self.player)) and self.options.glitched_kapoueh_skip.value == 1
             case "AIRSWIM":
                 return (self.options.movement_swim.value != 1 or self.state.has("Swim", self.player)) and self.options.glitched_airswims.value == 1
             case "TORNADO_SKIP":
