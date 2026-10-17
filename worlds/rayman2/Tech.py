@@ -148,7 +148,7 @@ class TechContext:
             case "AIRSWIM":
                 return (self.options.movement_swim.value != 1 or self.state.has("Swim", self.player)) and self.options.glitched_airswims.value == 1
             case "TORNADO_SKIP":
-                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_tornado_skip.value == 1
+                return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and (self.options.movement_ledge_grab.value != 1 or self.state.has("Ledge Grab", self.player)) and self.options.glitched_tornado_skip.value == 1
             case "JANO_SKIP_OOB":
                 return (self.options.movement_hover.value != 1 or self.state.has("Hover", self.player)) and self.options.glitched_jano_skip.value == 1
             case "HOVER":

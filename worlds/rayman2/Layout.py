@@ -2105,7 +2105,7 @@ levels: list[LevelInfo] = [
                         411
                     ]
                 ),
-                exitRequirement=Tech("SWIM")
+                exitRequirement=Tech("SWIM && (AIRSWIM || LEDGE_GRAB)")
             ),
             "cask_10": SubLevelInfo(
                 checks=Checks(
