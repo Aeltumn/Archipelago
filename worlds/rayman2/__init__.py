@@ -66,7 +66,6 @@ class Rayman2World(World):
         self.last_item_bundle = []
         self.last_tech_bundle = set()
         self.last_region_bundle = []
-        self.last_state = None
 
         # If not in lumsanity mode we have to determine the available lums
         # using accessible regions which means we have to check reachability
@@ -167,36 +166,40 @@ class Rayman2World(World):
         portal = source.create_exit(name)
 
         # Require the minimum amount of portals to be made previously so this one is reachable
+        alreadyCheckedLums = False
         if portals > 0:
             if self.options.unlock_level_checks.value:
-                # Require that you have the corresponding lum requirement so the portal
-                # shows up and that you have all portals leading up to this one.
-                lumRequirement = 0
-                if portals == 5 or portals == 6 or portals == 7 or portals == 8:
-                    lumRequirement = self.options.first_gate_required.value
-                elif portals == 9 or portals == 10 or portals == 11 or portals == 12 or portals == 13:
-                    lumRequirement = self.options.second_gate_required.value
-                elif portals == 14 or portals == 15:
-                    lumRequirement = self.options.third_gate_required.value
-                elif portals == 16 or portals == 17:
-                    lumRequirement = self.options.fourth_gate_required.value
-
                 if self.options.instant_portal_access.value:
-                    portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
-                        state) >= lumRequirement and state.has(rayman_location_hints[rayman_portal_ids[portals - 1]],
-                                                               self.player)
+                    unlockItem = rayman_location_hints[rayman_portal_ids[portals - 1]]
+                    portal.access_rule = lambda state, unlockItem=unlockItem: state.has(unlockItem, self.player)
                 else:
-                    portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
-                        state) >= lumRequirement and self.has_portals_up_to(state, portals)
+                    # Since we only unlock portals in order and here we don't check if you have earned
+                    # the requirements to access each portal we have to re-check against the maximum
+                    # lum gate you have encountered up until this point.
+                    lumRequirement = 0
+                    if portals >= 16:
+                        lumRequirement = max(lumRequirement, self.options.fourth_gate_required.value)
+                    if portals >= 14:
+                        lumRequirement = max(lumRequirement, self.options.third_gate_required.value)
+                    if portals >= 9:
+                        lumRequirement = max(lumRequirement, self.options.second_gate_required.value)
+                    if portals >= 5:
+                        lumRequirement = max(lumRequirement, self.options.first_gate_required.value)
+
+                    portal.access_rule = lambda state, portals=portals,lumRequirement=lumRequirement: (
+                            self.has_portals_up_to(state,portals) and self.get_lums(state) >= lumRequirement)
+                    alreadyCheckedLums = True
             else:
                 # In instant portal mode we don't require anything!
-                if not self.options.instant_portal_access.value:
+                if self.options.instant_portal_access.value:
+                    portal.access_rule = lambda state: True
+                else:
                     portal.access_rule = lambda state, portals=portals: state.has(
                         self.portalEvents.get(portals, "Finish Unknown Level"),
                         self.player)
 
         # Determine the lum requirement to reach this portal
-        if lum_gate is not None:
+        if lum_gate is not None and not alreadyCheckedLums:
             # Determine the lum requirement based on when the last lum gate was
             lumRequirement = 0
             match lum_gate:
@@ -437,21 +440,22 @@ class Rayman2World(World):
 
         # Create lum bundles
         if self.options.lumsanity.value and self.options.lum_bundle_size.value > 1:
+            total = len(self.bundle_lums)
+            assert(total == 710)
             bundleSize = self.options.lum_bundle_size.value
-            bundleCount = 710 // bundleSize
-            leftoverBundleSize = 710 % bundleSize
+            bundleCount = total // bundleSize
+            leftoverBundleSize = total % bundleSize
             if bundleCount > 0:
                 for i in range(0, bundleCount):
                     name = f"Lum Bundle #{i + 1}"
+                    amount = bundleSize * (i + 1)
                     location = Rayman2Location(self.player, name, self.location_name_to_id[name], menu)
-                    location.access_rule = lambda state, bundleSize=bundleSize, i=i: self.can_obtain_lums(state,
-                                                                                                          bundleSize * (
-                                                                                                                  i + 1))
+                    location.access_rule = lambda state, amount=amount: self.can_obtain_lums(state, amount)
                     menu.locations.append(location)
             if leftoverBundleSize > 0:
                 location = Rayman2Location(self.player, "Leftover Lum Bundle",
                                            self.location_name_to_id["Leftover Lum Bundle"], menu)
-                location.access_rule = lambda state: self.can_obtain_lums(state, 710)
+                location.access_rule = lambda state, total=total: self.can_obtain_lums(state, total)
                 menu.locations.append(location)
 
     def connect_levels(self):
@@ -587,6 +591,7 @@ class Rayman2World(World):
 
             # Connect up the map based on the generator's work, ignoring the base level chains
             self.levelChains = generator.levelChains
+            print(f"Level chains: {self.levelChains}")
             self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
 
         # Determine the portal events based on the level chains
@@ -687,8 +692,8 @@ class Rayman2World(World):
         self.connect_levels()
 
     def get_filler_item_name(self) -> str:
-        """If necessary as a fallback, any filler items should be lums."""
-        return "Lum"
+        """There cannot be filler items!"""
+        raise KeyError("Rayman 2 does not have filler items.")
 
     def fill_slot_data(self):
         """Includes all information needed by the game into the slot data."""
