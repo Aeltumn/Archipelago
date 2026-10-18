@@ -591,7 +591,6 @@ class Rayman2World(World):
 
             # Connect up the map based on the generator's work, ignoring the base level chains
             self.levelChains = generator.levelChains
-            print(f"Level chains: {self.levelChains}")
             self.sideTempleFinishEvent = generator.collected.sideTempleFinishEvent
 
         # Determine the portal events based on the level chains
