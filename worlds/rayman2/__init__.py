@@ -183,14 +183,17 @@ class Rayman2World(World):
 
                 if self.options.instant_portal_access.value:
                     portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
-                        state) >= lumRequirement and state.has(rayman_location_hints[rayman_portal_ids[portals]], self.player)
+                        state) >= lumRequirement and state.has(rayman_location_hints[rayman_portal_ids[portals - 1]],
+                                                               self.player)
                 else:
                     portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
                         state) >= lumRequirement and self.has_portals_up_to(state, portals)
             else:
-                portal.access_rule = lambda state, portals=portals: state.has(
-                    self.portalEvents.get(portals, "Finish Unknown Level"),
-                    self.player)
+                # In instant portal mode we don't require anything!
+                if not self.options.instant_portal_access.value:
+                    portal.access_rule = lambda state, portals=portals: state.has(
+                        self.portalEvents.get(portals, "Finish Unknown Level"),
+                        self.player)
 
         # Determine the lum requirement to reach this portal
         if lum_gate is not None:
@@ -288,10 +291,6 @@ class Rayman2World(World):
 
             # Create a portal for each level on the hall of doors
             portalsRequired = portal
-
-            # If portals are instantly accessible you only ever need 1 at most (Woods of Light)!
-            if portalsRequired > 1 and self.options.instant_portal_access.value:
-                portalsRequired = 1
 
             # Update the lum gate based on the last we saw
             if levelInfo.lumGate is not None:
