@@ -45,7 +45,8 @@ rayman_portal_ids: list[int] = [
     813,
     802,
     817,
-    808
+    808,
+    812
 ]
 
 rayman_location_hints: Dict[int, str] = {
@@ -66,6 +67,7 @@ rayman_location_hints: Dict[int, str] = {
     802: "Unlocked Tomb of the Ancients Portal",
     817: "Unlocked Iron Mountains Portal",
     808: "Unlocked Prison Ship Portal",
+    812: "Unlocked Crow's Nest Portal",
 
     # Woods of Light
     # learn_10

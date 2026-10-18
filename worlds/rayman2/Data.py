@@ -83,6 +83,7 @@ rayman_item_name_to_id: Dict[str, int] = {
     "Unlocked Tomb of the Ancients Portal": 1651666,
     "Unlocked Iron Mountains Portal": 1651667,
     "Unlocked Prison Ship Portal": 1651668,
+    "Unlocked Crow's Nest Portal": 1651669,
 }
 fragmented_names = [
     "Fairy Glade Revisit Swing",
