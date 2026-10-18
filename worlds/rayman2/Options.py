@@ -53,12 +53,12 @@ class LumBundleSize(Range):
     default = 1
 
 class InstantPortalAccess(Toggle):
-    """Whether all portals should be accessible as soon as you obtain enough lums. Will speed up the game considerably, cannot be combined with 'Add Unlock Level Checks'."""
+    """Whether all portals should be accessible as soon as you obtain enough lums."""
     display_name = "Instant Portal Access"
     default = False
 
 class UnlockLevelChecks(Toggle):
-    """Whether to create checks for unlocking each individual portal. Will slow down the game, cannot be combined with 'Instant Portal Access'."""
+    """Whether to create checks for unlocking each individual portal. Will slow down the game. If combined with 'Instant Portal Access' you can access levels in any order without needing to receive connecting portals."""
     display_name = "Add Unlock Level Checks"
     default = False
 

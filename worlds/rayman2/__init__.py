@@ -180,7 +180,13 @@ class Rayman2World(World):
                     lumRequirement = self.options.third_gate_required.value
                 elif portals == 16 or portals == 17:
                     lumRequirement = self.options.fourth_gate_required.value
-                portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(state) >= lumRequirement and self.has_portals_up_to(state, portals)
+
+                if self.options.instant_portal_access.value:
+                    portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
+                        state) >= lumRequirement and self.has(rayman_location_hints[rayman_portal_ids[portals]], self.player)
+                else:
+                    portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
+                        state) >= lumRequirement and self.has_portals_up_to(state, portals)
             else:
                 portal.access_rule = lambda state, portals=portals: state.has(
                     self.portalEvents.get(portals, "Finish Unknown Level"),
@@ -265,10 +271,6 @@ class Rayman2World(World):
 
     def create_regions(self) -> None:
         """Creates all regions available in the game."""
-        # Assert that we can generate
-        if self.options.instant_portal_access.value == 1 and self.options.unlock_level_checks.value == 1:
-            raise ValueError("Cannot have both Instant Portal Access and Add Unlock Level Checks enabled!")
-
         # Start by creating the menu
         menu = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu)
