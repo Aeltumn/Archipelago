@@ -183,7 +183,7 @@ class Rayman2World(World):
 
                 if self.options.instant_portal_access.value:
                     portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
-                        state) >= lumRequirement and self.has(rayman_location_hints[rayman_portal_ids[portals]], self.player)
+                        state) >= lumRequirement and state.has(rayman_location_hints[rayman_portal_ids[portals]], self.player)
                 else:
                     portal.access_rule = lambda state, portals=portals, lumRequirement=lumRequirement: self.get_lums(
                         state) >= lumRequirement and self.has_portals_up_to(state, portals)
