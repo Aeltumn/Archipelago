@@ -1626,7 +1626,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech("PURPLE_SWING", "Bayou 2 Swing"): Checks(
+                    Tech("(HOVER && LEDGE_GRAB && TECHNICAL) || PURPLE_SWING", "Bayou 2 Swing"): Checks(
                         regularLums=[
                             150,
                             136,
@@ -1643,7 +1643,7 @@ levels: list[LevelInfo] = [
                         ]
                     ),
                 },
-                exitRequirement=Tech("PURPLE_SWING", "Bayou 2 Swing"),
+                exitRequirement=Tech("(HOVER && LEDGE_GRAB && TECHNICAL) || PURPLE_SWING", "Bayou 2 Swing"),
             )
         },
         portalId=967,
@@ -2357,6 +2357,13 @@ levels: list[LevelInfo] = [
         {
             "earth_10": SubLevelInfo(
                 behindRequirements={
+                    Tech("HOVER", "Rock and Lava 1 Swing"): Checks(
+                        cages=[
+                            # You can jump on the barrel to grab the checkpoint without ledge grab
+                            # or the swings then walk forward to get the cage.
+                            900,
+                        ]
+                    ),
                     Tech("HOVER && PURPLE_SWING", "Rock and Lava 1 Swing"): Checks(
                         regularLums=[
                             555,
@@ -2366,7 +2373,6 @@ levels: list[LevelInfo] = [
                             554
                         ],
                         cages=[
-                            900,
                             901
                         ],
                         superLums=[
