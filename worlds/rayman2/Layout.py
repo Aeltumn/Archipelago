@@ -1339,9 +1339,9 @@ levels: list[LevelInfo] = [
                 checks=Checks(
                     regularLums=[
                         1396,
-                        1397,
                         1398,
-                        1399
+                        1399,
+                        1400
                     ],
                     cages=[
                         840,
@@ -1354,7 +1354,7 @@ levels: list[LevelInfo] = [
                 behindRequirements={
                     Tech("LEDGE_GRAB && HOVER"): Checks(
                         regularLums=[
-                            1400
+                            1397
                         ],
                         cages=[
                             841,
