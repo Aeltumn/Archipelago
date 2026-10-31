@@ -1824,7 +1824,7 @@ levels: list[LevelInfo] = [
                     ]
                 ),
                 behindRequirements={
-                    Tech("LEDGE_GRAB && PURPLE_SWING", "Menhir Hills 3 Swing"): Checks(
+                    Tech("HOVER || (LEDGE_GRAB && PURPLE_SWING)", "Menhir Hills 3 Swing"): Checks(
                         regularLums=[
                             241,
                             242
